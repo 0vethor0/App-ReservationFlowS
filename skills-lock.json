@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "skills": {
+    "auth0-android": {
+      "source": "auth0/agent-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/auth0/skills/auth0-android/SKILL.md",
+      "computedHash": "165b0501be08ae22399689a95c7d5bbee91b562949bfc06c608260ebadfd1e53"
+    },
+    "building-flutter-apps": {
+      "source": "sgaabdu4/building-flutter-apps",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "6fb210f257bd3d82de0ca568c202d89573aaaae9c632c3eb804778650ada112b"
+    },
+    "flutter-add-widget-preview": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "skillPath": "skills/flutter-add-widget-preview/SKILL.md",
+      "computedHash": "369ed3ebdc1f81ee337551ad1d1dd9ec6e768ed2bdf65d32ad442117a6ba79b6"
+    },
+    "flutter-add-widget-test": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "skillPath": "skills/flutter-add-widget-test/SKILL.md",
+      "computedHash": "f4ea905ae155d1bca76f5431bf6ed31f31e3d40146493e7ae4285eac39ba4ffd"
+    },
+    "flutter-animations": {
+      "source": "madteacher/mad-agents-skills",
+      "sourceType": "github",
+      "skillPath": "flutter-animations/SKILL.md",
+      "computedHash": "0c62d299cfdb82a8a22eadcb9b58c998cb6ceb85368a342689143a0278e4c7bb"
+    },
+    "flutter-app-architecture": {
+      "source": "evanca/flutter-ai-rules",
+      "sourceType": "github",
+      "skillPath": "skills/flutter-app-architecture/SKILL.md",
+      "computedHash": "e00919f610d0817756ff5f7400c8c2f6509418f05f4a4198a6cde5bd575c3542"
+    },
+    "flutter-apply-architecture-best-practices": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "skillPath": "skills/flutter-apply-architecture-best-practices/SKILL.md",
+      "computedHash": "baeb208b1cab90c559677626dbd101b96ba93f803cbed85122abdadeb3283a8b"
+    },
+    "flutter-build-responsive-layout": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "skillPath": "skills/flutter-build-responsive-layout/SKILL.md",
+      "computedHash": "6d74a9504c4e355c4c62f6fcb6c6dc0df67b56dd6616bea199e4e58f75b7729b"
+    },
+    "flutter-ui-design": {
+      "source": "k9i-0/flutter_autonomous_template",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/flutter-ui-design/SKILL.md",
+      "computedHash": "dc5f2cb8431c049e147516f8f4237b3a6bd9766b33fe844dbe67df3488bff357"
+    }
+  }
+}
