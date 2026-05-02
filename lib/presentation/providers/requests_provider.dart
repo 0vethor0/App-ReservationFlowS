@@ -1,4 +1,5 @@
 /// Provider de solicitudes de reservación.
+library;
 import 'package:flutter/material.dart';
 import '../../domain/entities/entities.dart';
 

@@ -1,4 +1,5 @@
 /// Dashboard Principal — métricas, gráfico de utilización, próximas reservas.
+library;
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -145,7 +146,7 @@ class _DashboardBody extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Consumer<RequestsProvider>(
-                      builder: (_, rp, __) => InkWell(
+                      builder: (_, rp, _) => InkWell(
                         borderRadius: BorderRadius.circular(24),
                         onTap: () {},
                         child: Container(

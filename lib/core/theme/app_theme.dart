@@ -2,6 +2,7 @@
 ///
 /// Utiliza Google Fonts (Poppins para títulos, Inter para body),
 /// bordes redondeados generosos (20–24), y paleta azul/blanco.
+library;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';

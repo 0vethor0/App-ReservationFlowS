@@ -1,4 +1,5 @@
 /// Botón con efecto neon, gradiente y animación de escala al presionar.
+library;
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/neon_decoration.dart';

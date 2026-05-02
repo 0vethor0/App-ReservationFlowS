@@ -1,4 +1,5 @@
 /// Register Screen — formulario completo con validación en tiempo real.
+library;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -205,7 +206,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 duration: const Duration(milliseconds: 600),
                 delay: const Duration(milliseconds: 500),
                 child: Consumer<AuthProvider>(
-                  builder: (_, auth, __) => NeonButton(
+                  builder: (_, auth, _) => NeonButton(
                     text: AppStrings.createAccount, onPressed: _handleRegister, isLoading: auth.isLoading,
                   ),
                 ),

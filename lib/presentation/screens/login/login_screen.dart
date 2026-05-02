@@ -1,4 +1,5 @@
 /// Login Screen con diseño "Neon White".
+library;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -59,8 +60,8 @@ class _LoginScreenState extends State<LoginScreen> {
   void _goToDashboard() {
     Navigator.of(context).pushReplacement(
       PageRouteBuilder<void>(
-        pageBuilder: (_, __, ___) => const DashboardScreen(),
-        transitionsBuilder: (_, a, __, child) =>
+        pageBuilder: (_, _, _) => const DashboardScreen(),
+        transitionsBuilder: (_, a, _, child) =>
             FadeTransition(opacity: a, child: child),
         transitionDuration: const Duration(milliseconds: 400),
       ),
@@ -70,8 +71,8 @@ class _LoginScreenState extends State<LoginScreen> {
   void _goToRegister() {
     Navigator.of(context).push(
       PageRouteBuilder<void>(
-        pageBuilder: (_, __, ___) => const RegisterScreen(),
-        transitionsBuilder: (_, a, __, child) => SlideTransition(
+        pageBuilder: (_, _, _) => const RegisterScreen(),
+        transitionsBuilder: (_, a, _, child) => SlideTransition(
           position: Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero)
               .animate(CurvedAnimation(parent: a, curve: Curves.easeOutCubic)),
           child: child,
@@ -158,7 +159,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   duration: const Duration(milliseconds: 600),
                   delay: const Duration(milliseconds: 400),
                   child: Consumer<AuthProvider>(
-                    builder: (_, auth, __) => NeonButton(
+                    builder: (_, auth, _) => NeonButton(
                       text: AppStrings.login,
                       onPressed: _handleLogin,
                       isLoading: auth.isLoading,

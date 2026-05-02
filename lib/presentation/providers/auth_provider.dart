@@ -1,4 +1,5 @@
 /// Provider de autenticación con Supabase.
+library;
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../domain/entities/entities.dart';

@@ -1,6 +1,7 @@
 /// Entidades del dominio para BeamReserve.
 ///
 /// Clases puras de Dart sin dependencias externas.
+library;
 
 class UserEntity {
   const UserEntity({

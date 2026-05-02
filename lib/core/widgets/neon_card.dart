@@ -1,4 +1,5 @@
 /// Card con sombra neon y bordes redondeados.
+library;
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/neon_decoration.dart';

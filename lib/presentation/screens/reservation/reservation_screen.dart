@@ -1,4 +1,5 @@
 /// Pantalla de Reservación de Videobeam — selector, calendario, horarios.
+library;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -91,7 +92,7 @@ class _VideobeamSelector extends StatelessWidget {
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           itemCount: videobeams.length,
-          separatorBuilder: (_, __) => const SizedBox(width: 12),
+          separatorBuilder: (_, _) => const SizedBox(width: 12),
           itemBuilder: (_, i) {
             final v = videobeams[i];
             final isSelected = selected?.id == v.id;
@@ -152,7 +153,7 @@ class _CalendarSection extends StatelessWidget {
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           itemCount: days.length,
-          separatorBuilder: (_, __) => const SizedBox(width: 10),
+          separatorBuilder: (_, _) => const SizedBox(width: 10),
           itemBuilder: (_, i) {
             final d = days[i];
             final isSelected = d.year == selectedDate.year && d.month == selectedDate.month && d.day == selectedDate.day;

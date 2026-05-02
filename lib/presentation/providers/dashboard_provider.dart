@@ -1,4 +1,5 @@
 /// Provider del dashboard con métricas y reservas del día.
+library;
 import 'package:flutter/material.dart';
 import '../../domain/entities/entities.dart';
 

@@ -1,4 +1,5 @@
 /// TextField con animación de borde y glow neon al recibir foco.
+library;
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/neon_decoration.dart';

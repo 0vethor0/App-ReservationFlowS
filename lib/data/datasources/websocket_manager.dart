@@ -1,4 +1,5 @@
 /// WebSocket Manager para comunicación en tiempo real.
+library;
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';

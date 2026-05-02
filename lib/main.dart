@@ -1,6 +1,7 @@
 /// Punto de entrada principal de BeamReserve.
 ///
 /// Configura flutter_dotenv, Supabase, y los Providers globales.
+library;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
