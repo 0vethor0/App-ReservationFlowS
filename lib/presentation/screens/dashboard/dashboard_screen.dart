@@ -11,8 +11,11 @@ import '../../../core/widgets/neon_card.dart';
 import '../../../core/widgets/neon_button.dart';
 import '../../providers/dashboard_provider.dart';
 import '../../providers/requests_provider.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/reservation_provider.dart';
 import '../reservation/reservation_screen.dart';
 import '../requests/requests_screen.dart';
+import 'package:go_router/go_router.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -77,6 +80,55 @@ class _DashboardBody extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               const SizedBox(height: 20),
+              // Header with user info and action buttons
+              Consumer<AuthProvider>(
+                builder: (context, auth, _) {
+                  final user = auth.currentUser;
+                  return FadeInDown(
+                    duration: const Duration(milliseconds: 500),
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 20),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(AppStrings.hello,
+                                    style: GoogleFonts.inter(fontSize: 14, color: AppColors.textSecondary)),
+                                Text(user?.fullName ?? 'Usuario',
+                                    style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                              ],
+                            ),
+                          ),
+                          Row(
+                            children: [
+                              _HeaderIconButton(
+                                icon: Icons.settings_outlined,
+                                onTap: () {
+                                  context.push('/profile');
+                                },
+                              ),
+                              const SizedBox(width: 8),
+                              _HeaderIconButton(
+                                icon: Icons.logout,
+                                onTap: () async {
+                                  await auth.signOut();
+                                  if (context.mounted) {
+                                    context.go('/login');
+                                  }
+                                },
+                                isLogout: true,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
               // Title
               FadeInDown(
                 duration: const Duration(milliseconds: 500),
@@ -207,10 +259,22 @@ class _DashboardBody extends StatelessWidget {
                     Text(AppStrings.viewAll, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.primaryBlue)),
                   ]),
                   const SizedBox(height: 12),
-                  ...dash.upcomingReservations.map((r) => FadeInUp(
-                    duration: const Duration(milliseconds: 400),
-                    child: _ReservationTile(reservation: r),
-                  )),
+                  Consumer<ReservationProvider>(
+                    builder: (context, resProv, _) {
+                      if (resProv.isLoading) {
+                        return const Center(child: CircularProgressIndicator(color: AppColors.primaryBlue));
+                      }
+                      if (resProv.reservations.isEmpty) {
+                        return Text('No hay reservaciones', style: GoogleFonts.inter(color: AppColors.textSecondary));
+                      }
+                      return Column(
+                        children: resProv.reservations.take(3).map((r) => FadeInUp(
+                          duration: const Duration(milliseconds: 400),
+                          child: _ReservationTile(reservation: r),
+                        )).toList(),
+                      );
+                    },
+                  ),
                 ]),
               ),
               const SizedBox(height: 24),
@@ -344,41 +408,124 @@ class _BarChartPainter extends CustomPainter {
   bool shouldRepaint(covariant _BarChartPainter old) => old.progress != progress;
 }
 
+class _HeaderIconButton extends StatefulWidget {
+  const _HeaderIconButton({required this.icon, required this.onTap, this.isLogout = false});
+  final IconData icon;
+  final VoidCallback onTap;
+  final bool isLogout;
+
+  @override
+  State<_HeaderIconButton> createState() => _HeaderIconButtonState();
+}
+
+class _HeaderIconButtonState extends State<_HeaderIconButton> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+  bool _isPressed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(duration: const Duration(milliseconds: 150), vsync: this);
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.92).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final iconColor = widget.isLogout ? AppColors.error : AppColors.primaryBlue;
+    final bgColor = widget.isLogout ? AppColors.errorLight : AppColors.lightBlue;
+    return AnimatedBuilder(
+      animation: _scaleAnimation,
+      builder: (context, child) => Transform.scale(scale: _scaleAnimation.value, child: child),
+      child: GestureDetector(
+        onTapDown: (_) {
+          setState(() => _isPressed = true);
+          _controller.forward();
+        },
+        onTapUp: (_) {
+          setState(() => _isPressed = false);
+          _controller.reverse();
+          widget.onTap();
+        },
+        onTapCancel: () {
+          setState(() => _isPressed = false);
+          _controller.reverse();
+        },
+        child: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: iconColor.withValues(alpha: _isPressed ? 0.4 : 0.2)),
+          ),
+          child: Icon(widget.icon, color: iconColor, size: 22),
+        ),
+      ),
+    );
+  }
+}
+
 class _ReservationTile extends StatelessWidget {
   const _ReservationTile({required this.reservation});
   final dynamic reservation;
 
   @override
   Widget build(BuildContext context) {
-    return NeonCard(
-      padding: const EdgeInsets.all(16),
-      child: Row(children: [
-        // Time badge
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-          decoration: BoxDecoration(
-            color: AppColors.primaryBlue.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.15)),
+    // Extracción segura de datos
+    final startTimeRaw = reservation['hora_inicio'] as String? ?? '';
+    final locationRaw = reservation['productos']?['ubicacion'] as String? ?? 'Desconocida';
+    final videobeamNameRaw = reservation['productos']?['nombre'] as String? ?? 'Videobeam';
+    
+    // Parseo seguro de fecha
+    String formattedTime = '';
+    try {
+      if (startTimeRaw.isNotEmpty) {
+        final dt = DateTime.parse(startTimeRaw).toLocal();
+        formattedTime = '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+      }
+    } catch (e) {
+      formattedTime = startTimeRaw;
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: NeonCard(
+        padding: const EdgeInsets.all(16),
+        child: Row(children: [
+          // Time badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppColors.primaryBlue.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.15)),
+            ),
+            child: Column(children: [
+              Text('HOY', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.primaryBlue)),
+              Text(formattedTime, style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.primaryBlue)),
+            ]),
           ),
-          child: Column(children: [
-            Text('HOY', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.primaryBlue)),
-            Text(reservation.startTime as String, style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.primaryBlue)),
-          ]),
-        ),
-        const SizedBox(width: 14),
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(reservation.location as String, style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 2),
-          Text('${reservation.videobeamName} • ${reservation.department}',
-              style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary)),
-        ])),
-        CircleAvatar(
-          radius: 20, backgroundColor: AppColors.lightBlue,
-          child: Text((reservation.userName as String).substring(0, 1),
-              style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: AppColors.primaryBlue)),
-        ),
-      ]),
+          const SizedBox(width: 14),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(locationRaw, style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 2),
+            Text(videobeamNameRaw,
+                style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary)),
+          ])),
+          CircleAvatar(
+            radius: 20, backgroundColor: AppColors.lightBlue,
+            child: Text('U',
+                style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: AppColors.primaryBlue)),
+          ),
+        ]),
+      ),
     );
   }
 }

@@ -3,6 +3,7 @@
 /// Configura flutter_dotenv, Supabase, y los Providers globales.
 library;
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
@@ -15,7 +16,7 @@ import 'presentation/providers/auth_provider.dart';
 import 'presentation/providers/dashboard_provider.dart';
 import 'presentation/providers/reservation_provider.dart';
 import 'presentation/providers/requests_provider.dart';
-import 'presentation/screens/splash/splash_screen.dart';
+import 'core/router/app_router.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,10 +27,13 @@ Future<void> main() async {
   // Initialize date formatting for Spanish locale
   await initializeDateFormatting('es', null);
 
-  // Initialize Supabase
+  // Initialize Supabase (pointing to InsForge)
   await Supabase.initialize(
-    url: dotenv.env['SUPABASE_URL'] ?? '',
-    anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
+    url: dotenv.env['INSFORGE_URL'] ?? '',
+    anonKey: dotenv.env['API_KEY_INSFORGE'] ?? '',
+    authOptions: const FlutterAuthClientOptions(
+      authFlowType: AuthFlowType.pkce, // Prueba cambiar a implicit si este falla
+    ),
   );
 
   // System UI overlay style
@@ -45,14 +49,31 @@ Future<void> main() async {
   runApp(const BeamReserveApp());
 }
 
-class BeamReserveApp extends StatelessWidget {
+class BeamReserveApp extends StatefulWidget {
   const BeamReserveApp({super.key});
+
+  @override
+  State<BeamReserveApp> createState() => _BeamReserveAppState();
+}
+
+class _BeamReserveAppState extends State<BeamReserveApp> {
+  late final AuthProvider _authProvider;
+  late final GoRouter _router;
+
+  @override
+  void initState() {
+    super.initState();
+    // Create the provider instance once
+    _authProvider = AuthProvider();
+    // Create the router instance once, passing the provider
+    _router = AppRouter.router(_authProvider);
+  }
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider.value(value: _authProvider),
         ChangeNotifierProvider(create: (_) => DashboardProvider()),
         ChangeNotifierProvider(create: (_) => ReservationProvider()),
         ChangeNotifierProvider(create: (_) => RequestsProvider()),
@@ -62,11 +83,11 @@ class BeamReserveApp extends StatelessWidget {
           ),
         ),
       ],
-      child: MaterialApp(
+      child: MaterialApp.router(
         title: 'BeamReserve',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
-        home: const SplashScreen(),
+        routerConfig: _router,
       ),
     );
   }

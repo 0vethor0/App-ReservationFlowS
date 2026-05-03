@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:intl/intl.dart';
+import 'package:table_calendar/table_calendar.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/neon_card.dart';
@@ -56,6 +57,7 @@ class ReservationScreen extends StatelessWidget {
                 child: _TimeSlotGrid(
                   slots: prov.generateTimeSlots(),
                   selectedSlots: prov.selectedTimeSlots,
+                  occupiedSlots: const {}, // In a real scenario, map from prov.reservations
                   onToggle: (s) => prov.toggleTimeSlot(s),
                 ),
               ),
@@ -143,42 +145,43 @@ class _CalendarSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final now = DateTime.now();
-    final days = List.generate(14, (i) => now.add(Duration(days: i)));
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text(AppStrings.selectDate, style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w600)),
       const SizedBox(height: 12),
-      SizedBox(
-        height: 80,
-        child: ListView.separated(
-          scrollDirection: Axis.horizontal,
-          itemCount: days.length,
-          separatorBuilder: (_, _) => const SizedBox(width: 10),
-          itemBuilder: (_, i) {
-            final d = days[i];
-            final isSelected = d.year == selectedDate.year && d.month == selectedDate.month && d.day == selectedDate.day;
-            return GestureDetector(
-              onTap: () => onDateSelected(d),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 250),
-                width: 54, height: 74,
-                decoration: BoxDecoration(
-                  color: isSelected ? AppColors.primaryBlue : AppColors.background,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: isSelected ? AppColors.primaryBlue : AppColors.border.withValues(alpha: 0.3)),
-                  boxShadow: isSelected ? [BoxShadow(color: AppColors.primaryBlue.withValues(alpha: 0.30), blurRadius: 16, spreadRadius: 2)] : [],
-                ),
-                child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  Text(DateFormat('EEE', 'es').format(d).substring(0, 3).toUpperCase(),
-                      style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600,
-                          color: isSelected ? Colors.white.withValues(alpha: 0.8) : AppColors.textTertiary)),
-                  const SizedBox(height: 4),
-                  Text('${d.day}', style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.w700,
-                      color: isSelected ? Colors.white : AppColors.textPrimary)),
-                ]),
-              ),
-            );
-          },
+      NeonCard(
+        padding: const EdgeInsets.all(8),
+        glowOpacity: 0.05,
+        child: TableCalendar(
+          locale: 'es_ES',
+          firstDay: DateTime.now(),
+          lastDay: DateTime.now().add(const Duration(days: 90)),
+          focusedDay: selectedDate,
+          currentDay: selectedDate,
+          calendarFormat: CalendarFormat.week,
+          availableCalendarFormats: const {CalendarFormat.week: 'Semana'},
+          startingDayOfWeek: StartingDayOfWeek.monday,
+          headerStyle: HeaderStyle(
+            titleTextStyle: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+            formatButtonVisible: false,
+            leftChevronIcon: const Icon(Icons.chevron_left, color: AppColors.primaryBlue),
+            rightChevronIcon: const Icon(Icons.chevron_right, color: AppColors.primaryBlue),
+          ),
+          calendarStyle: CalendarStyle(
+            defaultTextStyle: GoogleFonts.inter(color: AppColors.textPrimary),
+            weekendTextStyle: GoogleFonts.inter(color: AppColors.textSecondary),
+            todayDecoration: BoxDecoration(
+              color: AppColors.primaryBlue,
+              shape: BoxShape.circle,
+              boxShadow: [BoxShadow(color: AppColors.primaryBlue.withValues(alpha: 0.3), blurRadius: 10, spreadRadius: 2)],
+            ),
+            selectedDecoration: BoxDecoration(
+              color: AppColors.primaryBlue,
+              shape: BoxShape.circle,
+              boxShadow: [BoxShadow(color: AppColors.primaryBlue.withValues(alpha: 0.5), blurRadius: 15, spreadRadius: 3)],
+            ),
+          ),
+          onDaySelected: (selectedDay, focusedDay) => onDateSelected(selectedDay),
+          selectedDayPredicate: (day) => isSameDay(selectedDate, day),
         ),
       ),
     ]);
@@ -186,9 +189,10 @@ class _CalendarSection extends StatelessWidget {
 }
 
 class _TimeSlotGrid extends StatelessWidget {
-  const _TimeSlotGrid({required this.slots, required this.selectedSlots, required this.onToggle});
+  const _TimeSlotGrid({required this.slots, required this.selectedSlots, required this.occupiedSlots, required this.onToggle});
   final List<String> slots;
   final Set<String> selectedSlots;
+  final Set<String> occupiedSlots;
   final ValueChanged<String> onToggle;
 
   @override
@@ -196,32 +200,60 @@ class _TimeSlotGrid extends StatelessWidget {
     // Show a subset for UI (8am - 6pm key slots)
     final displaySlots = slots.where((s) {
       final h = int.parse(s.split(':')[0]);
-      final m = int.parse(s.split(':')[1]);
-      return h >= 8 && h <= 18 && m == 0;
+      return h >= 8 && h <= 18;
     }).toList();
 
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(AppStrings.selectTime, style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w600)),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(AppStrings.selectTime, style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w600)),
+          Row(
+            children: [
+              Container(width: 10, height: 10, decoration: BoxDecoration(color: AppColors.primaryBlue, shape: BoxShape.circle, boxShadow: [BoxShadow(color: AppColors.primaryBlue.withValues(alpha: 0.5), blurRadius: 5)])),
+              const SizedBox(width: 4),
+              Text('Seleccionado', style: GoogleFonts.inter(fontSize: 10, color: AppColors.textSecondary)),
+              const SizedBox(width: 8),
+              Container(width: 10, height: 10, decoration: const BoxDecoration(color: AppColors.surfaceLight, shape: BoxShape.circle)),
+              const SizedBox(width: 4),
+              Text('Disponible', style: GoogleFonts.inter(fontSize: 10, color: AppColors.textSecondary)),
+              const SizedBox(width: 8),
+              Container(width: 10, height: 10, decoration: const BoxDecoration(color: AppColors.error, shape: BoxShape.circle)),
+              const SizedBox(width: 4),
+              Text('Ocupado', style: GoogleFonts.inter(fontSize: 10, color: AppColors.textSecondary)),
+            ],
+          )
+        ],
+      ),
       const SizedBox(height: 12),
-      Wrap(spacing: 10, runSpacing: 10,
+      Wrap(spacing: 8, runSpacing: 8,
         children: displaySlots.map((s) {
           final isSelected = selectedSlots.contains(s);
+          final isOccupied = occupiedSlots.contains(s);
+          
           return GestureDetector(
-            onTap: () => onToggle(s),
+            onTap: isOccupied ? null : () => onToggle(s),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+              width: 80,
+              padding: const EdgeInsets.symmetric(vertical: 10),
               decoration: BoxDecoration(
                 gradient: isSelected ? AppColors.primaryGradient : null,
-                color: isSelected ? null : AppColors.surfaceLight,
-                borderRadius: BorderRadius.circular(12),
+                color: isOccupied ? AppColors.error.withValues(alpha: 0.1) : (isSelected ? null : AppColors.surfaceLight),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: isOccupied ? AppColors.error.withValues(alpha: 0.5) : Colors.transparent,
+                ),
                 boxShadow: isSelected
-                    ? [BoxShadow(color: AppColors.primaryBlue.withValues(alpha: 0.30), blurRadius: 12, spreadRadius: 1)]
+                    ? [BoxShadow(color: AppColors.primaryBlue.withValues(alpha: 0.40), blurRadius: 10, spreadRadius: 1)]
                     : [],
               ),
+              alignment: Alignment.center,
               child: Text(s, style: GoogleFonts.inter(
-                fontSize: 14, fontWeight: FontWeight.w600,
-                color: isSelected ? Colors.white : AppColors.textPrimary)),
+                fontSize: 13, fontWeight: FontWeight.w600,
+                color: isOccupied ? AppColors.error : (isSelected ? Colors.white : AppColors.textPrimary),
+                decoration: isOccupied ? TextDecoration.lineThrough : null,
+              )),
             ),
           );
         }).toList(),

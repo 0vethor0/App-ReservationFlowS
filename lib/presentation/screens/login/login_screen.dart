@@ -12,8 +12,7 @@ import '../../../core/widgets/neon_button.dart';
 import '../../../core/widgets/neon_card.dart';
 import '../../../core/utils/validators.dart';
 import '../../providers/auth_provider.dart';
-import '../register/register_screen.dart';
-import '../dashboard/dashboard_screen.dart';
+import 'package:go_router/go_router.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -58,28 +57,11 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _goToDashboard() {
-    Navigator.of(context).pushReplacement(
-      PageRouteBuilder<void>(
-        pageBuilder: (_, _, _) => const DashboardScreen(),
-        transitionsBuilder: (_, a, _, child) =>
-            FadeTransition(opacity: a, child: child),
-        transitionDuration: const Duration(milliseconds: 400),
-      ),
-    );
+    context.go('/');
   }
 
   void _goToRegister() {
-    Navigator.of(context).push(
-      PageRouteBuilder<void>(
-        pageBuilder: (_, _, _) => const RegisterScreen(),
-        transitionsBuilder: (_, a, _, child) => SlideTransition(
-          position: Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero)
-              .animate(CurvedAnimation(parent: a, curve: Curves.easeOutCubic)),
-          child: child,
-        ),
-        transitionDuration: const Duration(milliseconds: 350),
-      ),
-    );
+    context.push('/register');
   }
 
   @override

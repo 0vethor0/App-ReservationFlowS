@@ -12,6 +12,7 @@ import '../../../core/widgets/neon_button.dart';
 import '../../../core/widgets/neon_card.dart';
 import '../../../core/utils/validators.dart';
 import '../../providers/auth_provider.dart';
+import 'package:go_router/go_router.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -80,7 +81,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         SnackBar(content: const Text('Cuenta creada exitosamente'), backgroundColor: AppColors.success,
           behavior: SnackBarBehavior.floating, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
       );
-      Navigator.of(context).pop();
+      // GoRouter will automatically redirect based on auth state, but we can explicitly go
+      context.go('/');
     }
   }
 
@@ -244,7 +246,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   Text(AppStrings.hasAccount, style: GoogleFonts.inter(fontSize: 14, color: AppColors.textSecondary)),
                   const SizedBox(width: 6),
                   GestureDetector(
-                    onTap: () => Navigator.of(context).pop(),
+                    onTap: () => context.go('/login'),
                     child: Text(AppStrings.signIn, style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.primaryBlue)),
                   ),
                 ]),

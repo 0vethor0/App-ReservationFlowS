@@ -57,6 +57,35 @@ abstract final class AppStrings {
   static const String currentWeek = 'Semana Actual';
   static const String upcomingReservations = 'PRÓXIMAS RESERVAS';
   static const String viewAll = 'Ver todas';
+  static const String hello = 'Hola,';
+  static const String settings = 'Configuración';
+
+  // ─── Profile ───
+  static const String profileSettings = 'Configuración de Perfil';
+  static const String personalInfo = 'Información Personal';
+  static const String firstName = 'Nombre';
+  static const String lastName = 'Apellido';
+  static const String department = 'Departamento';
+  static const String role = 'Rol';
+  static const String requestAdmin = 'Solicitar ser Administrador';
+  static const String requestAdminDesc = 'Envía una solicitud para obtener permisos de administrador';
+  static const String adminRequestSent = 'Solicitud enviada';
+  static const String alreadyAdmin = 'Ya eres administrador';
+  static const String usagePolicies = 'Políticas de Uso del Sistema';
+  static const String policiesTitle = 'Políticas de Uso';
+  static const String policiesContent =
+      '1. Uso Responsable: Los proyectores deben ser utilizados únicamente para fines institucionales.\n\n'
+      '2. Reservación: Las reservaciones deben realizarse con al menos 24 horas de anticipación.\n\n'
+      '3. Cancelación: Las reservaciones pueden ser canceladas hasta 2 horas antes del horario establecido.\n\n'
+      '4. Cuidado del Equipo: El usuario es responsable del cuidado del equipo durante su uso.\n\n'
+      '5. Reporte de Daños: Cualquier daño o mal funcionamiento debe ser reportado inmediatamente.\n\n'
+      '6. Tiempo Máximo: El tiempo máximo de uso por reservación es de 4 horas.\n\n'
+      '7. Prioridad: Las solicitudes de alta prioridad requieren aprobación de un administrador.';
+  static const String saveChanges = 'Guardar Cambios';
+  static const String changesSaved = 'Cambios guardados exitosamente';
+  static const String developer = 'Ing. Vincent Fernandez';
+  static const String developedBy = 'Desarrollado por';
+  static const String githubProfile = 'GitHub del desarrollador';
 
   // ─── Navigation ───
   static const String dashboard = 'Dashboard';

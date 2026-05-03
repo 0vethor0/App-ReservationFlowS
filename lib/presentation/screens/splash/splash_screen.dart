@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
-import '../login/login_screen.dart';
+import 'package:go_router/go_router.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -58,14 +58,7 @@ class _SplashScreenState extends State<SplashScreen>
     _progressController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         if (!mounted) return;
-        Navigator.of(context).pushReplacement(
-          PageRouteBuilder<void>(
-            pageBuilder: (context, animation, secondaryAnimation) => const LoginScreen(),
-            transitionsBuilder: (context, animation, sec, child) =>
-                FadeTransition(opacity: animation, child: child),
-            transitionDuration: const Duration(milliseconds: 500),
-          ),
-        );
+        context.go('/');
       }
     });
   }
