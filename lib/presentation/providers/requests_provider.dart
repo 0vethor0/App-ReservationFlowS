@@ -1,12 +1,15 @@
 /// Provider de solicitudes de reservación.
 library;
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../domain/entities/entities.dart';
 
 class RequestsProvider extends ChangeNotifier {
   RequestsProvider() {
     loadRequests();
   }
+
+  final SupabaseClient _supabase = Supabase.instance.client;
 
   List<ReservationEntity> _allRequests = [];
   String _activeFilter = 'Pendientes';
@@ -48,83 +51,46 @@ class RequestsProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    await Future<void>.delayed(const Duration(milliseconds: 600));
+    try {
+      final data = await _supabase
+          .from('reservas')
+          .select('*, productos(*), perfiles(*)');
 
-    _allRequests = [
-      ReservationEntity(
-        id: 'r1',
-        userId: 'u1',
-        userName: 'Carlos Mendoza',
-        videobeamId: 'v1',
-        videobeamName: 'Epson Pro EX9220',
-        location: 'Sala Juntas A',
-        date: DateTime.now(),
-        startTime: '09:30',
-        endTime: '11:30',
-        status: ReservationStatus.pending,
-        department: 'Dpto. de Ventas',
-        priority: RequestPriority.high,
-      ),
-      ReservationEntity(
-        id: 'r2',
-        userId: 'u2',
-        userName: 'Ana Silva',
-        videobeamId: 'v3',
-        videobeamName: 'BenQ TH685P',
-        location: 'Sala Capacitación',
-        date: DateTime.now().add(const Duration(days: 1)),
-        startTime: '14:00',
-        endTime: '16:00',
-        status: ReservationStatus.pending,
-        department: 'Recursos Humanos',
-        priority: RequestPriority.normal,
-      ),
-      ReservationEntity(
-        id: 'r3',
-        userId: 'u3',
-        userName: 'María López',
-        videobeamId: 'v2',
-        videobeamName: 'Sony VPL-PHZ60',
-        location: 'Auditorio Principal',
-        date: DateTime.now().add(const Duration(days: 2)),
-        startTime: '10:00',
-        endTime: '12:00',
-        status: ReservationStatus.pending,
-        department: 'Marketing',
-        priority: RequestPriority.normal,
-      ),
-      ReservationEntity(
-        id: 'r4',
-        userId: 'u4',
-        userName: 'Pedro García',
-        videobeamId: 'v4',
-        videobeamName: 'ViewSonic PX701-4K',
-        location: 'Sala Conferencias B',
-        date: DateTime.now().subtract(const Duration(days: 1)),
-        startTime: '15:00',
-        endTime: '17:00',
-        status: ReservationStatus.approved,
-        department: 'Ingeniería',
-        priority: RequestPriority.normal,
-      ),
-      ReservationEntity(
-        id: 'r5',
-        userId: 'u5',
-        userName: 'Laura Martínez',
-        videobeamId: 'v1',
-        videobeamName: 'Epson Pro EX9220',
-        location: 'Sala Juntas A',
-        date: DateTime.now().subtract(const Duration(days: 2)),
-        startTime: '08:00',
-        endTime: '10:00',
-        status: ReservationStatus.rejected,
-        department: 'Finanzas',
-        priority: RequestPriority.high,
-      ),
-    ];
+      _allRequests = data.map((r) {
+        final p = r['productos'] as Map<String, dynamic>;
+        final u = r['perfiles'] as Map<String, dynamic>;
+        return ReservationEntity(
+          id: r['id'].toString(),
+          userId: u['id'].toString(),
+          userName: '${u['primer_nombre']} ${u['primer_apellido'] ?? ''}',
+          videobeamId: p['id'].toString(),
+          videobeamName: p['nombre'] as String,
+          location: p['ubicacion'] as String,
+          date: DateTime.parse(r['hora_inicio']),
+          startTime: r['hora_inicio'].substring(11, 16),
+          endTime: r['hora_fin'].substring(11, 16),
+          status: _mapStatus(r['estado_reserva']),
+          department: u['carrera'] as String? ?? '',
+          priority: RequestPriority.normal,
+          userAvatarUrl: u['foto_url'],
+        );
+      }).toList();
+    } catch (e) {
+      debugPrint('Error loading requests: $e');
+    }
 
     _isLoading = false;
     notifyListeners();
+  }
+
+  ReservationStatus _mapStatus(String status) {
+    switch (status) {
+      case 'aprobado': return ReservationStatus.approved;
+      case 'rechazado': return ReservationStatus.rejected;
+      case 'completado': return ReservationStatus.completed;
+      case 'cancelado': return ReservationStatus.cancelled;
+      default: return ReservationStatus.pending;
+    }
   }
 
   void setFilter(String filter) {
@@ -137,49 +103,21 @@ class RequestsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void approveRequest(String id) {
-    final index = _allRequests.indexWhere((r) => r.id == id);
-    if (index != -1) {
-      final req = _allRequests[index];
-      _allRequests[index] = ReservationEntity(
-        id: req.id,
-        userId: req.userId,
-        userName: req.userName,
-        videobeamId: req.videobeamId,
-        videobeamName: req.videobeamName,
-        location: req.location,
-        date: req.date,
-        startTime: req.startTime,
-        endTime: req.endTime,
-        status: ReservationStatus.approved,
-        department: req.department,
-        priority: req.priority,
-        userAvatarUrl: req.userAvatarUrl,
-      );
-      notifyListeners();
+  Future<void> approveRequest(String id) async {
+    try {
+      await _supabase.from('reservas').update({'estado_reserva': 'aprobado'}).eq('id', id);
+      await loadRequests();
+    } catch (e) {
+      debugPrint('Error approving request: $e');
     }
   }
 
-  void rejectRequest(String id) {
-    final index = _allRequests.indexWhere((r) => r.id == id);
-    if (index != -1) {
-      final req = _allRequests[index];
-      _allRequests[index] = ReservationEntity(
-        id: req.id,
-        userId: req.userId,
-        userName: req.userName,
-        videobeamId: req.videobeamId,
-        videobeamName: req.videobeamName,
-        location: req.location,
-        date: req.date,
-        startTime: req.startTime,
-        endTime: req.endTime,
-        status: ReservationStatus.rejected,
-        department: req.department,
-        priority: req.priority,
-        userAvatarUrl: req.userAvatarUrl,
-      );
-      notifyListeners();
+  Future<void> rejectRequest(String id) async {
+    try {
+      await _supabase.from('reservas').update({'estado_reserva': 'rechazado'}).eq('id', id);
+      await loadRequests();
+    } catch (e) {
+      debugPrint('Error rejecting request: $e');
     }
   }
 }

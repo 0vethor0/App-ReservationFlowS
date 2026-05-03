@@ -7,6 +7,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/neon_button.dart';
@@ -18,7 +21,8 @@ class AdditionalUserDataScreen extends StatefulWidget {
   const AdditionalUserDataScreen({super.key});
 
   @override
-  State<AdditionalUserDataScreen> createState() => _AdditionalUserDataScreenState();
+  State<AdditionalUserDataScreen> createState() =>
+      _AdditionalUserDataScreenState();
 }
 
 class _AdditionalUserDataScreenState extends State<AdditionalUserDataScreen> {
@@ -26,7 +30,7 @@ class _AdditionalUserDataScreenState extends State<AdditionalUserDataScreen> {
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _profileController = TextEditingController();
-  
+
   String? _selectedCareer;
   File? _imageFile;
   final ImagePicker _picker = ImagePicker();
@@ -39,7 +43,7 @@ class _AdditionalUserDataScreenState extends State<AdditionalUserDataScreen> {
     'Ingeniería Mecánica',
     'Administración de Sistemas',
     'Ingeniería Agronómica',
-    'Postgrado'
+    'Postgrado',
   ];
 
   @override
@@ -60,36 +64,58 @@ class _AdditionalUserDataScreenState extends State<AdditionalUserDataScreen> {
       );
 
       if (pickedFile != null) {
-        // Validate size < 20MB
-        final size = await pickedFile.length();
-        if (size > 20 * 1024 * 1024) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('La imagen debe ser menor a 20MB')),
-            );
-          }
-          return;
-        }
-
-        // Validate format (jpg/png) - simple check by extension
+        // Validate format (jpg/png/jpeg)
         final ext = pickedFile.name.toLowerCase();
-        if (!ext.endsWith('.jpg') && !ext.endsWith('.jpeg') && !ext.endsWith('.png')) {
+        if (!ext.endsWith('.jpg') &&
+            !ext.endsWith('.jpeg') &&
+            !ext.endsWith('.png')) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Solo se permiten formatos JPG y PNG')),
+              const SnackBar(
+                content: Text('Solo se permiten formatos JPG y PNG'),
+              ),
             );
           }
           return;
         }
 
-        setState(() {
-          _imageFile = File(pickedFile.path);
-        });
+        // Compress image
+        final dir = await getTemporaryDirectory();
+        final targetPath =
+            '${dir.absolute.path}/temp_${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+        final XFile? compressedFile =
+            await FlutterImageCompress.compressAndGetFile(
+              pickedFile.path,
+              targetPath,
+              quality: 70,
+              minWidth: 400,
+              minHeight: 400,
+            );
+
+        if (compressedFile != null) {
+          final size = await compressedFile.length();
+          // Restricción de Tamaño: 2MB máximo después de compresión
+          if (size > 2 * 1024 * 1024) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('La imagen es demasiado grande (máx 2MB)'),
+                ),
+              );
+            }
+            return;
+          }
+
+          setState(() {
+            _imageFile = File(compressedFile.path);
+          });
+        }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al seleccionar imagen: $e')),
+          SnackBar(content: Text('Error al procesar la imagen: $e')),
         );
       }
     }
@@ -107,7 +133,10 @@ class _AdditionalUserDataScreenState extends State<AdditionalUserDataScreen> {
           child: Wrap(
             children: <Widget>[
               ListTile(
-                leading: const Icon(Icons.photo_library, color: AppColors.primaryBlue),
+                leading: const Icon(
+                  Icons.photo_library,
+                  color: AppColors.primaryBlue,
+                ),
                 title: const Text('Galería'),
                 onTap: () {
                   Navigator.of(context).pop();
@@ -115,7 +144,10 @@ class _AdditionalUserDataScreenState extends State<AdditionalUserDataScreen> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.photo_camera, color: AppColors.primaryBlue),
+                leading: const Icon(
+                  Icons.photo_camera,
+                  color: AppColors.primaryBlue,
+                ),
                 title: const Text('Cámara'),
                 onTap: () {
                   Navigator.of(context).pop();
@@ -131,10 +163,12 @@ class _AdditionalUserDataScreenState extends State<AdditionalUserDataScreen> {
 
   Future<void> _handleSave() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
-    
+
     if (_imageFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor, sube una foto de rostro obligatoria')),
+        const SnackBar(
+          content: Text('Por favor, sube una foto de rostro obligatoria'),
+        ),
       );
       return;
     }
@@ -147,16 +181,43 @@ class _AdditionalUserDataScreenState extends State<AdditionalUserDataScreen> {
     }
 
     final auth = context.read<AuthProvider>();
-    
-    // In a real app, you would upload _imageFile to InsForge Storage here
-    // and get the photoUrl back. For now, we'll pass an empty string or local path
+
+    String uploadedPhotoUrl = '';
+
+    // Subir la imagen a Supabase Storage
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user != null && _imageFile != null) {
+        // 1. Definimos el nombre del archivo
+        final fileName = "avatar_${DateTime.now().millisecondsSinceEpoch}.jpg";
+
+        // 2. CONCATENAMOS: El RLS exige que el primer nivel sea el UID
+        final path = "${user.id}/$fileName";
+
+        await Supabase.instance.client.storage
+            .from('fotosUsuarios')
+            .upload(path, _imageFile!);
+
+        uploadedPhotoUrl = Supabase.instance.client.storage
+            .from('fotosUsuarios')
+            .getPublicUrl(path);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error al subir la imagen: $e')));
+      }
+      return; // Stop if upload fails
+    }
+
     final success = await auth.saveAdditionalData(
       firstName: _firstNameController.text.trim(),
       lastName: _lastNameController.text.trim(),
       role: 'usuario',
       career: _selectedCareer!,
       profile: _profileController.text.trim(),
-      photoUrl: '', // Mock for now
+      photoUrl: uploadedPhotoUrl,
     );
 
     if (!mounted) return;
@@ -233,10 +294,12 @@ class _AdditionalUserDataScreenState extends State<AdditionalUserDataScreen> {
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                              color: AppColors.primaryBlue.withValues(
+                                alpha: 0.1,
+                              ),
                               blurRadius: 15,
                               spreadRadius: 2,
-                            )
+                            ),
                           ],
                         ),
                         child: _imageFile != null
@@ -249,12 +312,19 @@ class _AdditionalUserDataScreenState extends State<AdditionalUserDataScreen> {
                             : const Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.add_a_photo, color: AppColors.primaryBlue, size: 32),
+                                  Icon(
+                                    Icons.add_a_photo,
+                                    color: AppColors.primaryBlue,
+                                    size: 32,
+                                  ),
                                   SizedBox(height: 8),
                                   Text(
                                     'Añadir foto',
-                                    style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
-                                  )
+                                    style: TextStyle(
+                                      color: AppColors.textSecondary,
+                                      fontSize: 12,
+                                    ),
+                                  ),
                                 ],
                               ),
                       ),
@@ -274,21 +344,22 @@ class _AdditionalUserDataScreenState extends State<AdditionalUserDataScreen> {
                           controller: _firstNameController,
                           label: 'Primer Nombre',
                           hint: 'Ej: Juan',
-                          validator: (v) => v == null || v.isEmpty ? 'Requerido' : null,
+                          validator: (v) =>
+                              v == null || v.isEmpty ? 'Requerido' : null,
                         ),
                         const SizedBox(height: 16),
                         NeonTextField(
                           controller: _lastNameController,
                           label: 'Primer Apellido',
                           hint: 'Ej: Pérez',
-                          validator: (v) => v == null || v.isEmpty ? 'Requerido' : null,
+                          validator: (v) =>
+                              v == null || v.isEmpty ? 'Requerido' : null,
                         ),
                         const SizedBox(height: 16),
                         Text(
                           'Carrera / Programa',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w500,
-                              ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w500),
                         ),
                         const SizedBox(height: 8),
                         Container(
@@ -296,17 +367,29 @@ class _AdditionalUserDataScreenState extends State<AdditionalUserDataScreen> {
                           decoration: BoxDecoration(
                             color: AppColors.surfaceLight,
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: AppColors.border.withValues(alpha: 0.3)),
+                            border: Border.all(
+                              color: AppColors.border.withValues(alpha: 0.3),
+                            ),
                           ),
                           child: DropdownButtonHideUnderline(
                             child: DropdownButton<String>(
                               isExpanded: true,
                               value: _selectedCareer,
-                              hint: Text('Selecciona una carrera', style: GoogleFonts.inter(color: AppColors.textTertiary)),
+                              hint: Text(
+                                'Selecciona una carrera',
+                                style: GoogleFonts.inter(
+                                  color: AppColors.textTertiary,
+                                ),
+                              ),
                               items: _careers.map((String value) {
                                 return DropdownMenuItem<String>(
                                   value: value,
-                                  child: Text(value, style: GoogleFonts.inter(color: AppColors.textPrimary)),
+                                  child: Text(
+                                    value,
+                                    style: GoogleFonts.inter(
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
                                 );
                               }).toList(),
                               onChanged: (newValue) {
@@ -322,7 +405,8 @@ class _AdditionalUserDataScreenState extends State<AdditionalUserDataScreen> {
                           controller: _profileController,
                           label: 'Perfil / Rol',
                           hint: 'Ej: estudiante, docente, coordinador-docente',
-                          validator: (v) => v == null || v.isEmpty ? 'Requerido' : null,
+                          validator: (v) =>
+                              v == null || v.isEmpty ? 'Requerido' : null,
                         ),
                       ],
                     ),

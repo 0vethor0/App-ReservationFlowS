@@ -182,7 +182,7 @@ class AuthProvider extends ChangeNotifier {
     try {
       await _supabase.auth.signInWithOAuth(
         OAuthProvider.google,
-        redirectTo: 'com.beamreserve.beam_reserve://login-callback',
+        redirectTo: 'io.supabase.flutter://reset-callback/',
       );
       _isLoading = false;
       notifyListeners();

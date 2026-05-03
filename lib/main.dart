@@ -27,12 +27,12 @@ Future<void> main() async {
   // Initialize date formatting for Spanish locale
   await initializeDateFormatting('es', null);
 
-  // Initialize Supabase (pointing to InsForge)
+  // Initialize Supabase
   await Supabase.initialize(
-    url: dotenv.env['INSFORGE_URL'] ?? '',
-    anonKey: dotenv.env['API_KEY_INSFORGE'] ?? '',
+    url: dotenv.env['SUPABASE_URL'] ?? '',
+    anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
     authOptions: const FlutterAuthClientOptions(
-      authFlowType: AuthFlowType.pkce, // Prueba cambiar a implicit si este falla
+      authFlowType: AuthFlowType.pkce,
     ),
   );
 
