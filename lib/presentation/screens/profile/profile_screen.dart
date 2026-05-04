@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/neon_card.dart';
@@ -13,66 +14,119 @@ import '../../../core/widgets/neon_button.dart';
 import '../../providers/auth_provider.dart';
 import '../dashboard/dashboard_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  Map<String, dynamic>? _userProfile;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserProfile();
+  }
+
+  Future<void> _fetchUserProfile() async {
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user != null) {
+        final data = await Supabase.instance.client
+            .from('perfiles')
+            .select()
+            .eq('id', user.id)
+            .single();
+        setState(() {
+          _userProfile = data;
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching profile: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
-    final user = auth.currentUser;
+    final authUser = auth.currentUser;
+
+    String fullName = '';
+    if (_userProfile != null) {
+      fullName = '${_userProfile!['primer_nombre'] ?? ''} ${_userProfile!['primer_apellido'] ?? ''}'.trim();
+    }
+    if (fullName.isEmpty) {
+      fullName = authUser?.fullName ?? 'Usuario';
+    }
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: _ProfileAppBar(),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 16),
-              // Profile header
-              FadeInDown(
-                duration: const Duration(milliseconds: 500),
-                child: _ProfileHeader(
-                  avatarUrl: user?.avatarUrl,
-                  fullName: user?.fullName ?? 'Usuario',
-                  email: user?.email ?? '',
-                  role: user?.role,
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator(color: AppColors.primaryBlue))
+            : SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 16),
+                    // Profile header
+                    FadeInDown(
+                      duration: const Duration(milliseconds: 500),
+                      child: _ProfileHeader(
+                        avatarUrl: _userProfile?['foto_url'] ?? authUser?.avatarUrl,
+                        fullName: fullName,
+                        email: authUser?.email ?? '',
+                        role: _userProfile?['rol'] ?? authUser?.role,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    // Personal info card
+                    FadeInUp(
+                      duration: const Duration(milliseconds: 500),
+                      delay: const Duration(milliseconds: 100),
+                      child: _PersonalInfoCard(
+                        userProfile: _userProfile,
+                        email: authUser?.email ?? '',
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Request admin button
+                    FadeInUp(
+                      duration: const Duration(milliseconds: 500),
+                      delay: const Duration(milliseconds: 200),
+                      child: _RequestAdminCard(role: _userProfile?['rol'] ?? authUser?.role),
+                    ),
+                    const SizedBox(height: 16),
+                    // Usage policies
+                    FadeInUp(
+                      duration: const Duration(milliseconds: 500),
+                      delay: const Duration(milliseconds: 300),
+                      child: const _UsagePoliciesCard(),
+                    ),
+                    const SizedBox(height: 32),
+                    // Developer footer
+                    FadeInUp(
+                      duration: const Duration(milliseconds: 500),
+                      delay: const Duration(milliseconds: 400),
+                      child: const _DeveloperFooter(),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
                 ),
               ),
-              const SizedBox(height: 24),
-              // Personal info card
-              FadeInUp(
-                duration: const Duration(milliseconds: 500),
-                delay: const Duration(milliseconds: 100),
-                child: _PersonalInfoCard(user: user),
-              ),
-              const SizedBox(height: 16),
-              // Request admin button
-              FadeInUp(
-                duration: const Duration(milliseconds: 500),
-                delay: const Duration(milliseconds: 200),
-                child: _RequestAdminCard(role: user?.role),
-              ),
-              const SizedBox(height: 16),
-              // Usage policies
-              FadeInUp(
-                duration: const Duration(milliseconds: 500),
-                delay: const Duration(milliseconds: 300),
-                child: const _UsagePoliciesCard(),
-              ),
-              const SizedBox(height: 32),
-              // Developer footer
-              FadeInUp(
-                duration: const Duration(milliseconds: 500),
-                delay: const Duration(milliseconds: 400),
-                child: const _DeveloperFooter(),
-              ),
-              const SizedBox(height: 24),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -167,18 +221,18 @@ class _ProfileHeader extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
             decoration: BoxDecoration(
-              color: role.toString() == 'UserRole.admin' ? AppColors.successLight : AppColors.lightBlue,
+              color: (role.toString() == 'UserRole.admin' || role.toString() == 'admin') ? AppColors.successLight : AppColors.lightBlue,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: role.toString() == 'UserRole.admin' ? AppColors.success.withValues(alpha: 0.3) : AppColors.primaryBlue.withValues(alpha: 0.2),
+                color: (role.toString() == 'UserRole.admin' || role.toString() == 'admin') ? AppColors.success.withValues(alpha: 0.3) : AppColors.primaryBlue.withValues(alpha: 0.2),
               ),
             ),
             child: Text(
-              role.toString() == 'UserRole.admin' ? 'Administrador' : 'Usuario',
+              (role.toString() == 'UserRole.admin' || role.toString() == 'admin') ? 'Administrador' : 'Usuario',
               style: GoogleFonts.inter(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: role.toString() == 'UserRole.admin' ? AppColors.success : AppColors.primaryBlue,
+                color: (role.toString() == 'UserRole.admin' || role.toString() == 'admin') ? AppColors.success : AppColors.primaryBlue,
               ),
             ),
           ),
@@ -204,15 +258,16 @@ class _AvatarFallback extends StatelessWidget {
 }
 
 class _PersonalInfoCard extends StatelessWidget {
-  const _PersonalInfoCard({required this.user});
-  final dynamic user;
+  const _PersonalInfoCard({required this.userProfile, required this.email});
+  final Map<String, dynamic>? userProfile;
+  final String email;
 
   @override
   Widget build(BuildContext context) {
-    final fullName = user?.fullName ?? '';
-    final nameParts = fullName.split(' ');
-    final firstName = nameParts.isNotEmpty ? nameParts.first : '';
-    final lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
+    final firstName = userProfile?['primer_nombre'] ?? '';
+    final lastName = userProfile?['primer_apellido'] ?? '';
+    final carrera = userProfile?['carrera'] ?? 'No especificado';
+    final especialidad = userProfile?['especialidad'] ?? 'No especificado';
 
     return NeonCard(
       padding: const EdgeInsets.all(20),
@@ -235,32 +290,15 @@ class _PersonalInfoCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
-          _InfoRow(label: AppStrings.firstName, value: firstName, icon: Icons.badge_outlined),
+          _InfoRow(label: AppStrings.firstName, value: firstName.isNotEmpty ? firstName : 'No especificado', icon: Icons.badge_outlined),
           const SizedBox(height: 12),
-          _InfoRow(label: AppStrings.lastName, value: lastName, icon: Icons.badge_outlined),
+          _InfoRow(label: AppStrings.lastName, value: lastName.isNotEmpty ? lastName : 'No especificado', icon: Icons.badge_outlined),
           const SizedBox(height: 12),
-          _InfoRow(label: AppStrings.email, value: user?.email ?? '', icon: Icons.email_outlined),
+          _InfoRow(label: AppStrings.email, value: email.isNotEmpty ? email : 'No especificado', icon: Icons.email_outlined),
           const SizedBox(height: 12),
-          _InfoRow(label: AppStrings.phone, value: user?.phone ?? 'No especificado', icon: Icons.phone_outlined),
+          _InfoRow(label: 'Carrera', value: carrera, icon: Icons.school_outlined),
           const SizedBox(height: 12),
-          _InfoRow(label: AppStrings.department, value: user?.department ?? 'No especificado', icon: Icons.business_outlined),
-          const SizedBox(height: 20),
-          NeonButton(
-            text: AppStrings.saveChanges,
-            height: 48,
-            borderRadius: 16,
-            icon: Icons.check,
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(AppStrings.changesSaved),
-                  backgroundColor: AppColors.success,
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-              );
-            },
-          ),
+          _InfoRow(label: 'Especialidad / Perfil', value: especialidad, icon: Icons.work_outline),
         ],
       ),
     );
@@ -308,7 +346,7 @@ class _RequestAdminCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isAdmin = role.toString() == 'UserRole.admin';
+    final isAdmin = role.toString() == 'UserRole.admin' || role.toString() == 'admin';
 
     return NeonCard(
       padding: const EdgeInsets.all(20),

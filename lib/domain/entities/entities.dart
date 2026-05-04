@@ -23,7 +23,7 @@ class UserEntity {
   final UserRole role;
 }
 
-enum UserRole { user, admin }
+enum UserRole { user, admin, superAdmin }
 
 class VideobeamEntity {
   const VideobeamEntity({

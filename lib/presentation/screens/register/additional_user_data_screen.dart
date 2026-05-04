@@ -195,11 +195,11 @@ class _AdditionalUserDataScreenState extends State<AdditionalUserDataScreen> {
         final path = "${user.id}/$fileName";
 
         await Supabase.instance.client.storage
-            .from('fotosUsuarios')
+            .from('profile-photos')
             .upload(path, _imageFile!);
 
         uploadedPhotoUrl = Supabase.instance.client.storage
-            .from('fotosUsuarios')
+            .from('profile-photos')
             .getPublicUrl(path);
       }
     } catch (e) {

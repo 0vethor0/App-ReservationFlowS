@@ -5,8 +5,38 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../domain/entities/entities.dart';
 
 class DashboardProvider extends ChangeNotifier {
+  RealtimeChannel? _realtimeChannel;
+
   DashboardProvider() {
     loadDashboard();
+    _setupRealtime();
+  }
+
+  void _setupRealtime() {
+    _realtimeChannel = _supabase.channel('dashboard_metrics')
+      ..onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'productos',
+          callback: (payload) {
+            loadDashboard();
+          })
+      ..onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'reservas',
+          callback: (payload) {
+            loadDashboard();
+          })
+      ..subscribe();
+  }
+
+  @override
+  void dispose() {
+    if (_realtimeChannel != null) {
+      _supabase.removeChannel(_realtimeChannel!);
+    }
+    super.dispose();
   }
 
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -27,9 +57,9 @@ class DashboardProvider extends ChangeNotifier {
       // 1. Get all products to calculate equipment metrics
       final products = await _supabase.from('productos').select();
       final totalEquipment = products.length;
-      final availableEquipment = products.where((p) => p['estado'] == 'disponible').length;
-      final inMaintenance = products.where((p) => p['estado'] == 'mantenimiento').length;
-      final inUseNow = products.where((p) => p['estado'] == 'en_uso').length;
+      final availableEquipment = products.where((p) => p['id_estado'] == 1).length;
+      final inMaintenance = products.where((p) => p['id_estado'] == 3 || p['id_estado'] == 4).length;
+      final inUseNow = products.where((p) => p['id_estado'] == 2).length;
 
       // 2. Get reservations for today and tomorrow (upcoming)
       final now = DateTime.now();

@@ -57,12 +57,28 @@ class AuthProvider extends ChangeNotifier {
           .eq('id', userId)
           .maybeSingle();
 
-      _hasAdditionalData =
-          response != null && response['primer_nombre'] != null;
+      if (response != null) {
+        final primerNombre = response['primer_nombre']?.toString().trim() ?? '';
+        final primerApellido =
+            response['primer_apellido']?.toString().trim() ?? '';
+        final carrera = response['carrera']?.toString().trim() ?? '';
+        final especialidad = response['especialidad']?.toString().trim() ?? '';
+
+        _hasAdditionalData =
+            primerNombre.isNotEmpty &&
+            primerApellido.isNotEmpty &&
+            carrera.isNotEmpty &&
+            especialidad.isNotEmpty;
+      } else {
+        _hasAdditionalData = false;
+      }
 
       if (response != null && _currentUser != null) {
         final roleStr = response['rol'] as String? ?? 'usuario';
-        final role = roleStr == 'admin' ? UserRole.admin : UserRole.user;
+
+        final preciseRole = roleStr == 'super-admin'
+            ? UserRole.superAdmin
+            : (roleStr == 'admin' ? UserRole.admin : UserRole.user);
 
         _currentUser = UserEntity(
           id: _currentUser!.id,
@@ -71,7 +87,7 @@ class AuthProvider extends ChangeNotifier {
           phone: _currentUser!.phone,
           avatarUrl: _currentUser!.avatarUrl,
           department: _currentUser!.department,
-          role: role,
+          role: preciseRole,
         );
       }
     } catch (e) {
@@ -104,7 +120,7 @@ class AuthProvider extends ChangeNotifier {
         'correo': _currentUser!.email,
         'foto_url': photoUrl ?? '',
         'carrera': career,
-        'perfil': profile,
+        'especialidad': profile,
       });
 
       _hasAdditionalData = true;
