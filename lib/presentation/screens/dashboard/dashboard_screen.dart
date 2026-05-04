@@ -184,7 +184,7 @@ class _DashboardBody extends StatelessWidget {
                 const SizedBox(height: 28),
 
                 // Utilization Chart
-                UtilizationChart(data: m.weeklyUtilization),
+                const UtilizationChart(),
 
                 const SizedBox(height: 28),
 

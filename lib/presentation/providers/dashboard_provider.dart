@@ -46,10 +46,14 @@ class DashboardProvider extends ChangeNotifier {
 
   DashboardMetrics _metrics = const DashboardMetrics();
   List<ReservationEntity> _upcomingReservations = [];
+  List<ReservationEntity> _myReservations = [];
+  DateTime _filterDate = DateTime.now();
   bool _isLoading = true;
 
   DashboardMetrics get metrics => _metrics;
   List<ReservationEntity> get upcomingReservations => _upcomingReservations;
+  List<ReservationEntity> get myReservations => _myReservations;
+  DateTime get filterDate => _filterDate;
   bool get isLoading => _isLoading;
 
   Future<void> loadDashboard() async {
@@ -102,8 +106,7 @@ class DashboardProvider extends ChangeNotifier {
           .eq('estado_reserva', 'pendiente');
       final pendingRequests = pendingCountResponse.length;
 
-      // 3. Calculate weekly utilization (mocking the logic since it needs aggregation)
-      // In a real app, this would be a Supabase RPC
+      // 3. Calculate weekly utilization
       final weeklyUtilization = [72.0, 65.0, 45.0, 88.0, 92.0, 30.0, 18.0];
 
       _metrics = DashboardMetrics(
@@ -117,25 +120,11 @@ class DashboardProvider extends ChangeNotifier {
       );
 
       // Map to entities for upcoming reservations
-      _upcomingReservations = reservationsData.map((r) {
-        final p = r['productos'] as Map<String, dynamic>;
-        final u = r['perfiles'] as Map<String, dynamic>;
-        return ReservationEntity(
-          id: r['id'].toString(),
-          userId: u['id'].toString(),
-          userName: '${u['primer_nombre']} ${u['primer_apellido'] ?? ''}',
-          videobeamId: p['id'].toString(),
-          videobeamName: p['nombre'] as String,
-          date: DateTime.parse(r['hora_inicio']),
-          startTime: r['hora_inicio'].substring(11, 16),
-          endTime: r['hora_fin'].substring(11, 16),
-          status: _mapStatus(r['estado_reserva']),
-          department: u['carrera'] as String? ?? '',
-          priority:
-              RequestPriority.normal, // Not explicitly in schema, defaulting
-          userAvatarUrl: u['foto_url'],
-        );
-      }).toList();
+      _upcomingReservations = reservationsData.map((r) => _mapToEntity(r)).toList();
+      
+      // 4. Load My Reservations filtered by _filterDate (on creado_en)
+      await loadMyReservations();
+      
     } catch (e) {
       debugPrint('Error loading dashboard: $e');
     }
@@ -144,11 +133,81 @@ class DashboardProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  ReservationStatus _mapStatus(String status) {
-    switch (status) {
+  Future<void> loadMyReservations() async {
+    _myReservations = []; // Limpiar antes de cargar
+    notifyListeners();
+
+    try {
+      final user = _supabase.auth.currentUser;
+      if (user == null) return;
+
+      // Get internal profile id
+      final profileData = await _supabase
+          .from('perfiles')
+          .select('id')
+          .eq('correo', user.email!)
+          .single();
+      final profileId = profileData['id'];
+
+      final startOfDay = DateTime(_filterDate.year, _filterDate.month, _filterDate.day);
+      final endOfDay = startOfDay.add(const Duration(days: 1));
+
+      // Filtramos por 'hora_inicio' (la fecha de la reserva) para que coincida con el uso esperado
+      final data = await _supabase
+          .from('reservas')
+          .select('*, productos(*), perfiles(*)')
+          .eq('id_usuario', profileId)
+          .gte('hora_inicio', startOfDay.toUtc().toIso8601String())
+          .lt('hora_inicio', endOfDay.toUtc().toIso8601String())
+          .order('hora_inicio', ascending: true);
+
+      _myReservations = data.map((r) => _mapToEntity(r)).toList();
+    } catch (e) {
+      debugPrint('Error loading my reservations: $e');
+    }
+  }
+
+  void nextDate() {
+    _filterDate = _filterDate.add(const Duration(days: 1));
+    loadMyReservations();
+    notifyListeners();
+  }
+
+  void previousDate() {
+    _filterDate = _filterDate.subtract(const Duration(days: 1));
+    loadMyReservations();
+    notifyListeners();
+  }
+
+  ReservationEntity _mapToEntity(Map<String, dynamic> r) {
+    final p = r['productos'] as Map<String, dynamic>;
+    final u = r['perfiles'] as Map<String, dynamic>;
+    return ReservationEntity(
+      id: r['id'].toString(),
+      userId: u['id'].toString(),
+      userName: '${u['primer_nombre']} ${u['primer_apellido'] ?? ''}',
+      videobeamId: p['id'].toString(),
+      videobeamName: p['nombre'] as String,
+      date: DateTime.parse(r['hora_inicio']),
+      startTime: r['hora_inicio'].substring(11, 16),
+      endTime: r['hora_fin'].substring(11, 16),
+      status: _mapStatus(r['estado_reserva']),
+      department: u['especialidad'] as String? ?? u['carrera'] as String? ?? '',
+      priority: RequestPriority.normal,
+      userAvatarUrl: u['foto_url'],
+      notes: r['notas'],
+    );
+  }
+
+  ReservationStatus _mapStatus(String? status) {
+    if (status == null) return ReservationStatus.pending;
+    switch (status.toLowerCase()) {
       case 'aprobado':
+      case 'aprobada':
         return ReservationStatus.approved;
       case 'rechazado':
+      case 'rechazada':
+      case 'desaprobado':
         return ReservationStatus.rejected;
       case 'completado':
         return ReservationStatus.completed;

@@ -211,13 +211,26 @@ class _LogoSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(children: [
       Container(
-        width: 80, height: 80,
+        width: 80,
+        height: 80,
         decoration: BoxDecoration(
           color: AppColors.surfaceLight,
           borderRadius: BorderRadius.circular(20),
-          boxShadow: [BoxShadow(color: AppColors.primaryBlue.withValues(alpha: 0.12), blurRadius: 20, spreadRadius: 2)],
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primaryBlue.withValues(alpha: 0.12),
+              blurRadius: 20,
+              spreadRadius: 2,
+            )
+          ],
         ),
-        child: Center(child: CustomPaint(size: const Size(40, 40), painter: _LogoPainter())),
+        child: Center(
+          child: Image.asset(
+            'assets/icon/icon.png',
+            width: 50,
+            height: 50,
+          ),
+        ),
       ),
       const SizedBox(height: 20),
       Text(AppStrings.appName, style: GoogleFonts.poppins(fontSize: 28, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
@@ -271,21 +284,3 @@ class _SocialButton extends StatelessWidget {
   }
 }
 
-class _LogoPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = AppColors.primaryBlue..strokeWidth = size.width * 0.08..strokeCap = StrokeCap.round..style = PaintingStyle.stroke;
-    final cy = size.height / 2;
-    final l = size.width * 0.15, r = size.width * 0.85;
-    final a = size.width * 0.2;
-    canvas.drawLine(Offset(l, size.height * 0.2), Offset(l, size.height * 0.8), paint);
-    canvas.drawPath(Path()..moveTo(l, size.height * 0.2)..quadraticBezierTo(size.width * 0.55, size.height * 0.2, size.width * 0.55, cy * 0.85), paint);
-    canvas.drawPath(Path()..moveTo(l, size.height * 0.8)..quadraticBezierTo(size.width * 0.55, size.height * 0.8, size.width * 0.55, cy * 1.15), paint);
-    canvas.drawLine(Offset(size.width * 0.55, cy), Offset(r, cy), paint);
-    canvas.drawLine(Offset(r - a * 0.6, cy - a * 0.5), Offset(r, cy), paint);
-    canvas.drawLine(Offset(r - a * 0.6, cy + a * 0.5), Offset(r, cy), paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
