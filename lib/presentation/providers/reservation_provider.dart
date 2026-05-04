@@ -16,7 +16,8 @@ class ReservationProvider extends ChangeNotifier {
   List<dynamic> _reservations = [];
   VideobeamEntity? _selectedVideobeam;
   DateTime _selectedDate = DateTime.now();
-  final Set<String> _selectedTimeSlots = {};
+  TimeOfDay? _startTime;
+  TimeOfDay? _endTime;
   bool _isLoading = false;
   String? _error;
 
@@ -24,7 +25,8 @@ class ReservationProvider extends ChangeNotifier {
   List<dynamic> get reservations => _reservations;
   VideobeamEntity? get selectedVideobeam => _selectedVideobeam;
   DateTime get selectedDate => _selectedDate;
-  Set<String> get selectedTimeSlots => _selectedTimeSlots;
+  TimeOfDay? get startTime => _startTime;
+  TimeOfDay? get endTime => _endTime;
   bool get isLoading => _isLoading;
   String? get error => _error;
 
@@ -62,34 +64,24 @@ class ReservationProvider extends ChangeNotifier {
 
   void selectDate(DateTime date) {
     _selectedDate = date;
-    _selectedTimeSlots.clear();
+    _startTime = null;
+    _endTime = null;
     notifyListeners();
   }
 
-  void toggleTimeSlot(String slot) {
-    if (_selectedTimeSlots.contains(slot)) {
-      _selectedTimeSlots.remove(slot);
-    } else {
-      _selectedTimeSlots.add(slot);
-    }
+  void setStartTime(TimeOfDay time) {
+    _startTime = time;
     notifyListeners();
   }
 
-  List<String> generateTimeSlots() {
-    final slots = <String>[];
-    for (int hour = 7; hour < 21; hour++) {
-      for (int min = 0; min < 60; min += 15) {
-        final h = hour.toString().padLeft(2, '0');
-        final m = min.toString().padLeft(2, '0');
-        slots.add('$h:$m');
-      }
-    }
-    return slots;
+  void setEndTime(TimeOfDay time) {
+    _endTime = time;
+    notifyListeners();
   }
 
   Future<bool> confirmReservation() async {
-    if (_selectedVideobeam == null || _selectedTimeSlots.isEmpty) {
-      _error = 'Selecciona un equipo y al menos un horario';
+    if (_selectedVideobeam == null || _startTime == null || _endTime == null) {
+      _error = 'Selecciona un equipo y un horario (inicio y fin)';
       notifyListeners();
       return false;
     }
@@ -98,19 +90,14 @@ class ReservationProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final sortedSlots = _selectedTimeSlots.toList()..sort();
-      final startTimeStr = sortedSlots.first;
-      final endTimeStr = sortedSlots.last;
-      
-      // Parse to DateTime
       final startDateTime = DateTime(
         _selectedDate.year, _selectedDate.month, _selectedDate.day,
-        int.parse(startTimeStr.split(':')[0]), int.parse(startTimeStr.split(':')[1])
+        _startTime!.hour, _startTime!.minute
       );
-      // End time is actually +15m or +1h depending on slot size. Let's assume +1 hour for simplicity here.
+      
       final endDateTime = DateTime(
         _selectedDate.year, _selectedDate.month, _selectedDate.day,
-        int.parse(endTimeStr.split(':')[0]) + 1, int.parse(endTimeStr.split(':')[1])
+        _endTime!.hour, _endTime!.minute
       );
 
       final user = _supabase.auth.currentUser;
@@ -167,7 +154,8 @@ class ReservationProvider extends ChangeNotifier {
   void reset() {
     _selectedVideobeam = null;
     _selectedDate = DateTime.now();
-    _selectedTimeSlots.clear();
+    _startTime = null;
+    _endTime = null;
     _error = null;
     notifyListeners();
   }

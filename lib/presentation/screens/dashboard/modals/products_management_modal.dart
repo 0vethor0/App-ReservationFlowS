@@ -1,5 +1,6 @@
 /// Modal para gestionar equipos (productos).
 library;
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -19,7 +20,12 @@ class ProductsManagementModal extends StatefulWidget {
 class _ProductsManagementModalState extends State<ProductsManagementModal> {
   final _supabase = Supabase.instance.client;
   List<Map<String, dynamic>> _products = [];
-  List<Map<String, dynamic>> _estados = [];
+  final List<Map<String, dynamic>> _estados = const [
+    {"idx": 0, "id": 1, "nombre": "disponible"},
+    {"idx": 1, "id": 2, "nombre": "no_disponible"},
+    {"idx": 2, "id": 3, "nombre": "inhabilitado"},
+    {"idx": 3, "id": 4, "nombre": "en_revision"},
+  ];
   bool _isLoading = true;
 
   @override
@@ -35,11 +41,9 @@ class _ProductsManagementModalState extends State<ProductsManagementModal> {
           .from('productos')
           .select()
           .order('fecha_registro', ascending: false);
-      final ests = await _supabase.from('estados_producto').select();
       if (mounted) {
         setState(() {
           _products = List<Map<String, dynamic>>.from(prods);
-          _estados = List<Map<String, dynamic>>.from(ests);
           _isLoading = false;
         });
       }
@@ -153,6 +157,19 @@ class _ProductsManagementModalState extends State<ProductsManagementModal> {
               final auth = context.read<AuthProvider>();
               final adminId = auth.currentUser?.id;
 
+              if (adminId == null) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Error: No se pudo obtener el ID del administrador',
+                      ),
+                    ),
+                  );
+                }
+                return;
+              }
+
               final data = {
                 'nombre': nameCtrl.text.trim(),
                 'descripcion': descCtrl.text.trim(),
@@ -170,6 +187,11 @@ class _ProductsManagementModalState extends State<ProductsManagementModal> {
                 }
               } catch (e) {
                 debugPrint('Error saving product: $e');
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error al guardar el equipo: $e')),
+                  );
+                }
               }
               if (mounted) {
                 Navigator.pop(ctx);
@@ -184,11 +206,28 @@ class _ProductsManagementModalState extends State<ProductsManagementModal> {
   }
 
   Future<void> _deleteProduct(String id) async {
+    final auth = context.read<AuthProvider>();
+    final adminId = auth.currentUser?.id;
+
+    if (adminId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Error: No se pudo obtener el ID del administrador'),
+        ),
+      );
+      return;
+    }
+
     try {
       await _supabase.from('productos').delete().eq('id', id);
       _loadData();
     } catch (e) {
       debugPrint('Error deleting product: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al eliminar el equipo: $e')),
+        );
+      }
     }
   }
 
@@ -222,113 +261,112 @@ class _ProductsManagementModalState extends State<ProductsManagementModal> {
               child: CircularProgressIndicator(color: AppColors.primaryBlue),
             )
           : _products.isEmpty
-              ? Center(
-                  child: Text(
-                    'No hay equipos registrados',
-                    style: GoogleFonts.inter(color: AppColors.textSecondary),
-                  ),
-                )
-              : ListView.separated(
-                  padding: const EdgeInsets.all(20),
-                  itemCount: _products.length,
-                  separatorBuilder: (context, index) =>
-                      const SizedBox(height: 12),
-                  itemBuilder: (context, i) {
-                    final p = _products[i];
-                    final estadoNombre = _estados.firstWhere(
-                      (e) => e['id'] == p['id_estado'],
-                      orElse: () => {'nombre': 'Desconocido'},
-                    )['nombre'];
+          ? Center(
+              child: Text(
+                'No hay equipos registrados',
+                style: GoogleFonts.inter(color: AppColors.textSecondary),
+              ),
+            )
+          : ListView.separated(
+              padding: const EdgeInsets.all(20),
+              itemCount: _products.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 12),
+              itemBuilder: (context, i) {
+                final p = _products[i];
+                final estadoNombre = _estados.firstWhere(
+                  (e) => e['id'] == p['id_estado'],
+                  orElse: () => {'nombre': 'Desconocido'},
+                )['nombre'];
 
-                    Color statusColor = AppColors.primaryBlue;
-                    if (p['id_estado'] == 1) statusColor = AppColors.success;
-                    if (p['id_estado'] == 2) statusColor = AppColors.warning;
-                    if (p['id_estado'] == 3) statusColor = AppColors.error;
-                    if (p['id_estado'] == 4) statusColor = AppColors.accentOrange;
+                Color statusColor = AppColors.primaryBlue;
+                if (p['id_estado'] == 1) statusColor = AppColors.success;
+                if (p['id_estado'] == 2) statusColor = AppColors.warning;
+                if (p['id_estado'] == 3) statusColor = AppColors.error;
+                if (p['id_estado'] == 4) statusColor = AppColors.accentOrange;
 
-                    return NeonCard(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
+                return NeonCard(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceLight,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(Icons.videocam, color: statusColor),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              p['nombre'] ?? '',
+                              style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              p['descripcion'] ?? '',
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                color: AppColors.textSecondary,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: statusColor.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: statusColor.withValues(alpha: 0.3),
+                                ),
+                              ),
+                              child: Text(
+                                estadoNombre.toString().toUpperCase(),
+                                style: GoogleFonts.inter(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: statusColor,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Column(
                         children: [
-                          Container(
-                            width: 48,
-                            height: 48,
-                            decoration: BoxDecoration(
-                              color: AppColors.surfaceLight,
-                              borderRadius: BorderRadius.circular(12),
+                          IconButton(
+                            icon: const Icon(
+                              Icons.edit_outlined,
+                              color: AppColors.primaryBlue,
                             ),
-                            child: Icon(Icons.videocam, color: statusColor),
+                            onPressed: () => _showForm(p),
                           ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  p['nombre'] ?? '',
-                                  style: GoogleFonts.poppins(
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.textPrimary,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  p['descripcion'] ?? '',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 12,
-                                    color: AppColors.textSecondary,
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 2,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: statusColor.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(
-                                      color: statusColor.withValues(alpha: 0.3),
-                                    ),
-                                  ),
-                                  child: Text(
-                                    estadoNombre.toString().toUpperCase(),
-                                    style: GoogleFonts.inter(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w600,
-                                      color: statusColor,
-                                    ),
-                                  ),
-                                ),
-                              ],
+                          IconButton(
+                            icon: const Icon(
+                              Icons.delete_outline,
+                              color: AppColors.error,
                             ),
-                          ),
-                          Column(
-                            children: [
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.edit_outlined,
-                                  color: AppColors.primaryBlue,
-                                ),
-                                onPressed: () => _showForm(p),
-                              ),
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.delete_outline,
-                                  color: AppColors.error,
-                                ),
-                                onPressed: () => _deleteProduct(p['id']),
-                              ),
-                            ],
+                            onPressed: () => _deleteProduct(p['id']),
                           ),
                         ],
                       ),
-                    );
-                  },
-                ),
+                    ],
+                  ),
+                );
+              },
+            ),
     );
   }
 }
