@@ -20,6 +20,7 @@ class ReservationProvider extends ChangeNotifier {
   TimeOfDay? _endTime;
   bool _isLoading = false;
   String? _error;
+  String _notes = '';
 
   List<VideobeamEntity> get videobeams => _videobeams;
   List<dynamic> get reservations => _reservations;
@@ -29,13 +30,19 @@ class ReservationProvider extends ChangeNotifier {
   TimeOfDay? get endTime => _endTime;
   bool get isLoading => _isLoading;
   String? get error => _error;
+  String get notes => _notes;
 
   Future<void> _loadVideobeams() async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      final data = await _supabase.from('productos').select();
+      // Filtramos para obtener solo los productos con id_estado = 1 (disponible)
+      final data = await _supabase
+          .from('productos')
+          .select('*, estados_producto(nombre)')
+          .eq('id_estado', 1);
+          
       _videobeams = data.map((item) {
         return VideobeamEntity(
           id: item['id'].toString(),
@@ -43,9 +50,7 @@ class ReservationProvider extends ChangeNotifier {
           brand: item['marca'] as String? ?? '',
           model: item['modelo'] as String? ?? '',
           location: item['ubicacion'] as String? ?? '',
-          status: (item['estado'] == 'disponible')
-              ? VideobeamStatus.available
-              : (item['estado'] == 'en_uso' ? VideobeamStatus.inUse : VideobeamStatus.maintenance),
+          status: VideobeamStatus.available, // Solo mostramos los disponibles
         );
       }).toList();
       await fetchReservations();
@@ -79,6 +84,11 @@ class ReservationProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setNotes(String notes) {
+    _notes = notes;
+    notifyListeners();
+  }
+
   Future<bool> confirmReservation() async {
     if (_selectedVideobeam == null || _startTime == null || _endTime == null) {
       _error = 'Selecciona un equipo y un horario (inicio y fin)';
@@ -103,13 +113,28 @@ class ReservationProvider extends ChangeNotifier {
       final user = _supabase.auth.currentUser;
       if (user == null) throw Exception('No user logged in');
 
+      // 1. Localizar al usuario en la tabla 'perfiles' para obtener su ID interno
+      final profileData = await _supabase
+          .from('perfiles')
+          .select('id')
+          .eq('correo', user.email!)
+          .single();
+      
+      final profileId = profileData['id'];
+
+      debugPrint('Confirmando reserva: id_producto=${_selectedVideobeam!.id}, id_usuario=$profileId');
+
       await _supabase.from('reservas').insert({
-        'perfil_id': user.id,
-        'producto_id': int.parse(_selectedVideobeam!.id),
+        'id_usuario': profileId,
+        'id_producto': _selectedVideobeam!.id,
         'hora_inicio': startDateTime.toIso8601String(),
         'hora_fin': endDateTime.toIso8601String(),
         'estado_reserva': 'pendiente',
+        'notas': _notes,
       });
+
+      debugPrint('Reserva insertada con éxito');
+
 
       _isLoading = false;
       _error = null;
@@ -117,16 +142,23 @@ class ReservationProvider extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
+      debugPrint('Error confirmando reserva: $e');
       _isLoading = false;
       _error = 'Error confirmando reserva: $e';
       notifyListeners();
       return false;
     }
+
   }
 
   Future<void> fetchReservations() async {
     try {
-      final data = await _supabase.from('reservas').select('*, productos(*)');
+      // Filtramos solo las reservaciones con estado 'aprobada'
+      final data = await _supabase
+          .from('reservas')
+          .select('*, productos(*)')
+          .eq('estado_reserva', 'aprobada')
+          .order('hora_inicio', ascending: true);
       _reservations = data;
       notifyListeners();
     } catch (e) {
@@ -156,6 +188,7 @@ class ReservationProvider extends ChangeNotifier {
     _selectedDate = DateTime.now();
     _startTime = null;
     _endTime = null;
+    _notes = '';
     _error = null;
     notifyListeners();
   }

@@ -44,9 +44,9 @@ class ReservationSummary extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           SummaryRow(
-            icon: Icons.location_on_outlined,
-            label: AppStrings.location,
-            value: provider.selectedVideobeam?.location ?? '',
+            icon: Icons.description_outlined,
+            label: 'Notas',
+            value: provider.notes.isEmpty ? 'Sin notas adicionales' : provider.notes,
           ),
           const SizedBox(height: 8),
           SummaryRow(
@@ -59,7 +59,10 @@ class ReservationSummary extends StatelessWidget {
           NeonButton(
             text: AppStrings.confirmReservation,
             onPressed: () async {
+              debugPrint('>>> BOTÓN CONFIRMAR PRESIONADO <<<');
               final success = await provider.confirmReservation();
+              debugPrint('Resultado confirmación: $success');
+              
               if (!context.mounted) return;
               if (success) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -73,6 +76,13 @@ class ReservationSummary extends StatelessWidget {
                   ),
                 );
                 provider.reset();
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(provider.error ?? 'Error desconocido'),
+                    backgroundColor: AppColors.error,
+                  ),
+                );
               }
             },
             isLoading: provider.isLoading,

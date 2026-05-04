@@ -15,6 +15,8 @@ import 'components/videobeam_selector.dart';
 import 'components/calendar_section.dart';
 import 'components/time_slot_grid.dart';
 import 'components/reservation_summary.dart';
+import 'components/description_screen.dart';
+import 'reservation_calendar_view.dart';
 
 class ReservationScreen extends StatelessWidget {
   const ReservationScreen({super.key});
@@ -31,16 +33,38 @@ class ReservationScreen extends StatelessWidget {
               children: [
                 const SizedBox(height: 20),
 
-                // Title
+                // Title & Calendar Button
                 FadeInDown(
                   duration: const Duration(milliseconds: 500),
-                  child: Text(
-                    AppStrings.reserve,
-                    style: GoogleFonts.poppins(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        AppStrings.reserve,
+                        style: GoogleFonts.poppins(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const ReservationCalendarView(),
+                            ),
+                          );
+                        },
+                        icon: const Icon(
+                          Icons.calendar_month_rounded,
+                          color: AppColors.primaryBlue,
+                          size: 28,
+                        ),
+                        tooltip: 'Ver calendario',
+                      ),
+                    ],
                   ),
                 ),
 
@@ -80,6 +104,18 @@ class ReservationScreen extends StatelessWidget {
                     endTime: provider.endTime,
                     onStartTimeSelected: (t) => provider.setStartTime(t),
                     onEndTimeSelected: (t) => provider.setEndTime(t),
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                // Description field
+                FadeInUp(
+                  duration: const Duration(milliseconds: 500),
+                  delay: const Duration(milliseconds: 350),
+                  child: DescriptionScreen(
+                    notes: provider.notes,
+                    onChanged: (val) => provider.setNotes(val),
                   ),
                 ),
 

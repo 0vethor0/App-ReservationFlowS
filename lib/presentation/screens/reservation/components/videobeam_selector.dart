@@ -50,21 +50,21 @@ class VideobeamSelector extends StatelessWidget {
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? AppColors.primaryBlue.withValues(alpha: 0.06)
-                        : AppColors.background,
+                        ? AppColors.primaryBlue.withValues(alpha: 0.12)
+                        : AppColors.surfaceLight,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                       color: isSelected
                           ? AppColors.primaryBlue
-                          : AppColors.border.withValues(alpha: 0.3),
-                      width: isSelected ? 2 : 1,
+                          : AppColors.border.withValues(alpha: 0.2),
+                      width: isSelected ? 2.5 : 1,
                     ),
                     boxShadow: isSelected
                         ? [
                             BoxShadow(
-                              color: AppColors.primaryBlue.withValues(alpha: 0.15),
-                              blurRadius: 12,
-                              spreadRadius: 1,
+                              color: AppColors.primaryBlue.withValues(alpha: 0.25),
+                              blurRadius: 15,
+                              spreadRadius: 2,
                             ),
                           ]
                         : [],
@@ -73,16 +73,27 @@ class VideobeamSelector extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Icon(
-                        Icons.videocam_outlined,
-                        color: isAvailable ? AppColors.primaryBlue : AppColors.disabled,
-                        size: 22,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Icon(
+                            Icons.videocam_outlined,
+                            color: isAvailable ? AppColors.primaryBlue : AppColors.disabled,
+                            size: 22,
+                          ),
+                          if (isSelected)
+                            const Icon(
+                              Icons.check_circle,
+                              color: AppColors.primaryBlue,
+                              size: 18,
+                            ),
+                        ],
                       ),
                       Text(
                         v.name,
                         style: GoogleFonts.inter(
                           fontSize: 12,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
                           color: isAvailable ? AppColors.textPrimary : AppColors.disabled,
                         ),
                         maxLines: 2,
@@ -94,24 +105,24 @@ class VideobeamSelector extends StatelessWidget {
                             width: 6,
                             height: 6,
                             decoration: BoxDecoration(
-                              color: v.status == VideobeamStatus.available
-                                  ? AppColors.success
-                                  : v.status == VideobeamStatus.inUse
-                                      ? AppColors.accentOrange
-                                      : AppColors.error,
+                              color: AppColors.success,
                               shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.success.withValues(alpha: 0.4),
+                                  blurRadius: 4,
+                                  spreadRadius: 1,
+                                )
+                              ],
                             ),
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            v.status == VideobeamStatus.available
-                                ? 'Disponible'
-                                : v.status == VideobeamStatus.inUse
-                                    ? 'En Uso'
-                                    : 'Mant.',
+                            'Disponible',
                             style: GoogleFonts.inter(
                               fontSize: 10,
-                              color: AppColors.textTertiary,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.success,
                             ),
                           ),
                         ],

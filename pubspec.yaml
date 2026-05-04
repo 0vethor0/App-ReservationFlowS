@@ -27,6 +27,7 @@ dependencies:
   flutter_image_compress: ^2.4.0
   path_provider: ^2.1.5
   modal_bottom_sheet: ^3.0.0
+  syncfusion_flutter_calendar: ^33.2.4
 
 dev_dependencies:
   flutter_test:
