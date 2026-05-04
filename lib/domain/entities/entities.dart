@@ -31,7 +31,6 @@ class VideobeamEntity {
     required this.name,
     required this.brand,
     required this.model,
-    required this.location,
     this.status = VideobeamStatus.available,
     this.imageUrl,
   });
@@ -40,7 +39,6 @@ class VideobeamEntity {
   final String name;
   final String brand;
   final String model;
-  final String location;
   final VideobeamStatus status;
   final String? imageUrl;
 }
@@ -54,7 +52,6 @@ class ReservationEntity {
     required this.userName,
     required this.videobeamId,
     required this.videobeamName,
-    required this.location,
     required this.date,
     required this.startTime,
     required this.endTime,
@@ -62,6 +59,7 @@ class ReservationEntity {
     this.department,
     this.priority = RequestPriority.normal,
     this.userAvatarUrl,
+    this.notes,
   });
 
   final String id;
@@ -69,7 +67,6 @@ class ReservationEntity {
   final String userName;
   final String videobeamId;
   final String videobeamName;
-  final String location;
   final DateTime date;
   final String startTime;
   final String endTime;
@@ -77,6 +74,7 @@ class ReservationEntity {
   final String? department;
   final RequestPriority priority;
   final String? userAvatarUrl;
+  final String? notes;
 }
 
 enum ReservationStatus { pending, approved, rejected, completed, cancelled }

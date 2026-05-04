@@ -49,7 +49,6 @@ class ReservationProvider extends ChangeNotifier {
           name: item['nombre'] as String? ?? 'Videobeam',
           brand: item['marca'] as String? ?? '',
           model: item['modelo'] as String? ?? '',
-          location: item['ubicacion'] as String? ?? '',
           status: VideobeamStatus.available, // Solo mostramos los disponibles
         );
       }).toList();

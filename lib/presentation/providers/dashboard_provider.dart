@@ -1,5 +1,6 @@
 /// Provider del dashboard con métricas y reservas del día.
 library;
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../domain/entities/entities.dart';
@@ -15,19 +16,21 @@ class DashboardProvider extends ChangeNotifier {
   void _setupRealtime() {
     _realtimeChannel = _supabase.channel('dashboard_metrics')
       ..onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'productos',
-          callback: (payload) {
-            loadDashboard();
-          })
+        event: PostgresChangeEvent.all,
+        schema: 'public',
+        table: 'productos',
+        callback: (payload) {
+          loadDashboard();
+        },
+      )
       ..onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'reservas',
-          callback: (payload) {
-            loadDashboard();
-          })
+        event: PostgresChangeEvent.all,
+        schema: 'public',
+        table: 'reservas',
+        callback: (payload) {
+          loadDashboard();
+        },
+      )
       ..subscribe();
   }
 
@@ -57,15 +60,26 @@ class DashboardProvider extends ChangeNotifier {
       // 1. Get all products to calculate equipment metrics
       final products = await _supabase.from('productos').select();
       final totalEquipment = products.length;
-      final availableEquipment = products.where((p) => p['id_estado'] == 1).length;
-      final inMaintenance = products.where((p) => p['id_estado'] == 3 || p['id_estado'] == 4).length;
+      final availableEquipment = products
+          .where((p) => p['id_estado'] == 1)
+          .length;
+      final inMaintenance = products
+          .where((p) => p['id_estado'] == 3 || p['id_estado'] == 4)
+          .length;
       final inUseNow = products.where((p) => p['id_estado'] == 2).length;
 
       // 2. Get reservations for today and tomorrow (upcoming)
       final now = DateTime.now();
       final tomorrow = now.add(const Duration(days: 1));
       final startOfToday = DateTime(now.year, now.month, now.day);
-      final endOfTomorrow = DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 23, 59, 59);
+      final endOfTomorrow = DateTime(
+        tomorrow.year,
+        tomorrow.month,
+        tomorrow.day,
+        23,
+        59,
+        59,
+      );
 
       final reservationsData = await _supabase
           .from('reservas')
@@ -76,11 +90,11 @@ class DashboardProvider extends ChangeNotifier {
       // Filter for today's count
       final reservationsToday = reservationsData.where((r) {
         final date = DateTime.parse(r['hora_inicio']);
-        return date.year == now.year && date.month == now.month && date.day == now.day;
+        return date.year == now.year &&
+            date.month == now.month &&
+            date.day == now.day;
       }).length;
 
-
-      
       // Correct way for pending count
       final pendingCountResponse = await _supabase
           .from('reservas')
@@ -112,17 +126,16 @@ class DashboardProvider extends ChangeNotifier {
           userName: '${u['primer_nombre']} ${u['primer_apellido'] ?? ''}',
           videobeamId: p['id'].toString(),
           videobeamName: p['nombre'] as String,
-          location: p['ubicacion'] as String,
           date: DateTime.parse(r['hora_inicio']),
           startTime: r['hora_inicio'].substring(11, 16),
           endTime: r['hora_fin'].substring(11, 16),
           status: _mapStatus(r['estado_reserva']),
           department: u['carrera'] as String? ?? '',
-          priority: RequestPriority.normal, // Not explicitly in schema, defaulting
+          priority:
+              RequestPriority.normal, // Not explicitly in schema, defaulting
           userAvatarUrl: u['foto_url'],
         );
       }).toList();
-
     } catch (e) {
       debugPrint('Error loading dashboard: $e');
     }
@@ -133,11 +146,16 @@ class DashboardProvider extends ChangeNotifier {
 
   ReservationStatus _mapStatus(String status) {
     switch (status) {
-      case 'aprobado': return ReservationStatus.approved;
-      case 'rechazado': return ReservationStatus.rejected;
-      case 'completado': return ReservationStatus.completed;
-      case 'cancelado': return ReservationStatus.cancelled;
-      default: return ReservationStatus.pending;
+      case 'aprobado':
+        return ReservationStatus.approved;
+      case 'rechazado':
+        return ReservationStatus.rejected;
+      case 'completado':
+        return ReservationStatus.completed;
+      case 'cancelado':
+        return ReservationStatus.cancelled;
+      default:
+        return ReservationStatus.pending;
     }
   }
 
