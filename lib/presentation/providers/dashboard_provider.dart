@@ -1,4 +1,9 @@
 /// Provider del dashboard con métricas y reservas del día.
+/// Este provider se encarga de cargar las métricas y las reservas del día y
+/// mostrarlas en la interfaz de usuario.
+/// También se encarga de cargar las reservas del día.
+/// También se encarga de cargar las reservas del día.
+
 library;
 
 import 'package:flutter/material.dart';

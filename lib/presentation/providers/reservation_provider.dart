@@ -1,4 +1,13 @@
 /// Provider de reservaciones.
+/// Este provider se encarga de cargar los videobeams y las reservaciones y
+/// mostrarlas en la interfaz de usuario.
+/// También se encarga de seleccionar un videobeam y una fecha y hora de inicio y fin.
+/// También se encarga de confirmar la reservación.
+/// También se encarga de eliminar la reservación.
+/// También se encarga de resetear la reservación.
+/// También se encarga de mostrar el estado de carga.
+/// También se encarga de mostrar el estado de error.
+/// También se encarga de mostrar el estado de éxito.
 library;
 import 'package:flutter/material.dart';
 import '../../domain/entities/entities.dart';
@@ -109,10 +118,48 @@ class ReservationProvider extends ChangeNotifier {
         _endTime!.hour, _endTime!.minute
       );
 
+      final dateStr = '${_selectedDate.year}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.day.toString().padLeft(2, '0')}';
+
+      final existingReservations = await _supabase
+          .from('reservas')
+          .select('*')
+          .eq('id_producto', _selectedVideobeam!.id)
+          .eq('estado_reserva', 'aprobada')
+          .like('hora_inicio', '$dateStr%');
+
+      if (existingReservations.isNotEmpty) {
+        final startMinutes = _startTime!.hour * 60 + _startTime!.minute;
+        final endMinutes = _endTime!.hour * 60 + _endTime!.minute;
+
+        for (final reservation in existingReservations) {
+          final existingStart = DateTime.parse(reservation['hora_inicio'] as String);
+          final existingEnd = DateTime.parse(reservation['hora_fin'] as String);
+
+          final existingStartMinutes = existingStart.hour * 60 + existingStart.minute;
+          final existingEndMinutes = existingEnd.hour * 60 + existingEnd.minute;
+
+          if ((startMinutes >= existingStartMinutes && startMinutes < existingEndMinutes) ||
+              (endMinutes > existingStartMinutes && endMinutes <= existingEndMinutes) ||
+              (startMinutes <= existingStartMinutes && endMinutes >= existingEndMinutes)) {
+            final existingDate = existingStart.day;
+            final existingMonth = existingStart.month;
+            final existingYear = existingStart.year;
+
+            if (existingDate == _selectedDate.day &&
+                existingMonth == _selectedDate.month &&
+                existingYear == _selectedDate.year) {
+              _isLoading = false;
+              _error = 'El bloque de horas seleccionado ya está reservado por otro usuario';
+              notifyListeners();
+              return false;
+            }
+          }
+        }
+      }
+
       final user = _supabase.auth.currentUser;
       if (user == null) throw Exception('No user logged in');
 
-      // 1. Localizar al usuario en la tabla 'perfiles' para obtener su ID interno
       final profileData = await _supabase
           .from('perfiles')
           .select('id')

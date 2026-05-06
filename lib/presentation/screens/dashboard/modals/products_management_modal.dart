@@ -23,8 +23,7 @@ class _ProductsManagementModalState extends State<ProductsManagementModal> {
   final List<Map<String, dynamic>> _estados = const [
     {"idx": 0, "id": 1, "nombre": "disponible"},
     {"idx": 1, "id": 2, "nombre": "no_disponible"},
-    {"idx": 2, "id": 3, "nombre": "inhabilitado"},
-    {"idx": 3, "id": 4, "nombre": "en_revision"},
+    {"idx": 2, "id": 3, "nombre": "inhabilitado"}
   ];
   bool _isLoading = true;
 

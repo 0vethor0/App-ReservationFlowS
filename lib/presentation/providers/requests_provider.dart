@@ -1,4 +1,9 @@
 /// Provider de solicitudes de reservación.
+/// Este provider se encarga de cargar las solicitudes de reservación y
+/// mostrarlas en la interfaz de usuario.
+/// También se encarga de aprobar y rechazar las solicitudes de reservación.
+/// También se encarga de filtrar las solicitudes de reservación por estado.
+
 library;
 
 import 'package:flutter/material.dart';

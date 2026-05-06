@@ -51,11 +51,31 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> _checkAdditionalData(String userId) async {
     try {
-      final response = await _supabase
+      var response = await _supabase
           .from('perfiles')
           .select()
           .eq('id', userId)
           .maybeSingle();
+
+      if (response == null) {
+        final session = _supabase.auth.currentSession;
+        if (session != null && session.expiresAt != null) {
+          final expiresAt = DateTime.fromMillisecondsSinceEpoch(session.expiresAt! * 1000);
+          if (DateTime.now().isAfter(expiresAt)) {
+            debugPrint('DEBUG: Token expirado, intentando refresh...');
+            try {
+              await _supabase.auth.refreshSession();
+              response = await _supabase
+                  .from('perfiles')
+                  .select()
+                  .eq('id', userId)
+                  .maybeSingle();
+            } catch (refreshError) {
+              debugPrint('DEBUG: Error al refresh token: $refreshError');
+            }
+          }
+        }
+      }
 
       if (response != null) {
         final primerNombre = response['primer_nombre']?.toString().trim() ?? '';
@@ -91,9 +111,40 @@ class AuthProvider extends ChangeNotifier {
         );
       }
     } catch (e) {
-      debugPrint('DEBUG: Error cargando perfil: $e');
-      _error = 'Error cargando perfil: $e';
-      _hasAdditionalData = false;
+      final errorStr = e.toString();
+      if (errorStr.contains('JWT expired') || errorStr.contains('401') || errorStr.contains('Unauthorized')) {
+        debugPrint('DEBUG: Token expirado, intentando refresh de sesión...');
+        try {
+          await _supabase.auth.refreshSession();
+          final response = await _supabase
+              .from('perfiles')
+              .select()
+              .eq('id', userId)
+              .maybeSingle();
+          
+          if (response != null) {
+            final primerNombre = response['primer_nombre']?.toString().trim() ?? '';
+            final primerApellido = response['primer_apellido']?.toString().trim() ?? '';
+            final carrera = response['carrera']?.toString().trim() ?? '';
+            final especialidad = response['especialidad']?.toString().trim() ?? '';
+
+            _hasAdditionalData =
+                primerNombre.isNotEmpty &&
+                primerApellido.isNotEmpty &&
+                carrera.isNotEmpty &&
+                especialidad.isNotEmpty;
+          } else {
+            _hasAdditionalData = false;
+          }
+        } catch (refreshError) {
+          debugPrint('DEBUG: Error al refresh token: $refreshError');
+          _hasAdditionalData = false;
+        }
+      } else {
+        debugPrint('DEBUG: Error cargando perfil: $e');
+        _error = 'Error cargando perfil: $e';
+        _hasAdditionalData = false;
+      }
     }
   }
 
