@@ -3,6 +3,7 @@
 /// Provee efectos de glow (BoxShadow) reutilizables con
 /// blur: 18–25, spread: 2–4, opacidad 25–40%.
 library;
+
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
 

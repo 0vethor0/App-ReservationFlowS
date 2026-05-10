@@ -6,11 +6,7 @@ import '../../../../domain/entities/entities.dart';
 import '../../../providers/requests_provider.dart';
 
 class RequestCard extends StatelessWidget {
-  const RequestCard({
-    super.key,
-    required this.request,
-    required this.provider,
-  });
+  const RequestCard({super.key, required this.request, required this.provider});
 
   final ReservationEntity request;
   final RequestsProvider provider;
@@ -363,13 +359,13 @@ class _ActionButton extends StatelessWidget {
     return OutlinedButton(
       onPressed: onPressed,
       style: OutlinedButton.styleFrom(
-        backgroundColor: isPrimary ? const Color(0xFF007BFF) : Colors.transparent,
+        backgroundColor: isPrimary
+            ? const Color(0xFF007BFF)
+            : Colors.transparent,
         side: BorderSide(
           color: isPrimary ? const Color(0xFF007BFF) : Colors.grey[300]!,
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         padding: const EdgeInsets.symmetric(vertical: 14),
       ),
       child: Text(

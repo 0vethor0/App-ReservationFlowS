@@ -53,7 +53,9 @@ class RequestsScreen extends StatelessWidget {
                           size: 20,
                         ),
                         border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 16,
+                        ),
                       ),
                     ),
                   ),
@@ -72,7 +74,8 @@ class RequestsScreen extends StatelessWidget {
                   child: Row(
                     children: [
                       _FilterChipItem(
-                        label: '${AppStrings.pending} (${provider.pendingCount})',
+                        label:
+                            '${AppStrings.pending} (${provider.pendingCount})',
                         isActive: provider.activeFilter == 'Pendientes',
                         onTap: () => provider.setFilter('Pendientes'),
                       ),
@@ -104,29 +107,29 @@ class RequestsScreen extends StatelessWidget {
                         ),
                       )
                     : provider.filteredRequests.isEmpty
-                        ? Center(
-                            child: Text(
-                              'No hay solicitudes',
-                              style: GoogleFonts.inter(
-                                color: AppColors.textTertiary,
-                              ),
-                            ),
-                          )
-                        : ListView.builder(
-                            padding: const EdgeInsets.only(bottom: 20),
-                            itemCount: provider.filteredRequests.length,
-                            itemBuilder: (_, i) {
-                              final req = provider.filteredRequests[i];
-                              return FadeInUp(
-                                duration: const Duration(milliseconds: 400),
-                                delay: Duration(milliseconds: i * 80),
-                                child: RequestCard(
-                                  request: req,
-                                  provider: provider,
-                                ),
-                              );
-                            },
+                    ? Center(
+                        child: Text(
+                          'No hay solicitudes',
+                          style: GoogleFonts.inter(
+                            color: AppColors.textTertiary,
                           ),
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.only(bottom: 20),
+                        itemCount: provider.filteredRequests.length,
+                        itemBuilder: (_, i) {
+                          final req = provider.filteredRequests[i];
+                          return FadeInUp(
+                            duration: const Duration(milliseconds: 400),
+                            delay: Duration(milliseconds: i * 80),
+                            child: RequestCard(
+                              request: req,
+                              provider: provider,
+                            ),
+                          );
+                        },
+                      ),
               ),
             ],
           ),

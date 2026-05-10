@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -32,24 +31,24 @@ class _UtilizationChartState extends State<UtilizationChart> {
         .stream(primaryKey: ['id'])
         .order('hora_inicio', ascending: true)
         .listen((data) {
-      if (!mounted) return;
-      
-      for (final r in data) {
-        final id = r['id'].toString();
-        final eventType = r['@eventType'] as String?;
-        
-        if (eventType == 'INSERT' && !_shownInsertIds.contains(id)) {
-          _shownInsertIds.add(id);
-          _mostrarNotificacion(r);
-        }
-      }
-    });
+          if (!mounted) return;
+
+          for (final r in data) {
+            final id = r['id'].toString();
+            final eventType = r['@eventType'] as String?;
+
+            if (eventType == 'INSERT' && !_shownInsertIds.contains(id)) {
+              _shownInsertIds.add(id);
+              _mostrarNotificacion(r);
+            }
+          }
+        });
   }
 
   void _mostrarNotificacion(Map<String, dynamic> reserva) {
     final nombre = reserva['perfiles']?['primer_nombre'] ?? 'Usuario';
     if (!mounted) return;
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Nueva solicitud de $nombre'),
@@ -66,11 +65,13 @@ class _UtilizationChartState extends State<UtilizationChart> {
   Widget build(BuildContext context) {
     // Usar context.watch() para escuchar cambios en el provider
     final dashProvider = context.watch<DashboardProvider>();
-    
+
     return Builder(
       builder: (context) {
-        final dateStr = DateFormat('dd MMM yyyy').format(dashProvider.filterDate);
-        
+        final dateStr = DateFormat(
+          'dd MMM yyyy',
+        ).format(dashProvider.filterDate);
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -92,11 +93,16 @@ class _UtilizationChartState extends State<UtilizationChart> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.surfaceLight,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.border.withValues(alpha: 0.1)),
+                    border: Border.all(
+                      color: AppColors.border.withValues(alpha: 0.1),
+                    ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -137,7 +143,9 @@ class _UtilizationChartState extends State<UtilizationChart> {
               const Center(
                 child: Padding(
                   padding: EdgeInsets.all(40),
-                  child: CircularProgressIndicator(color: AppColors.primaryBlue),
+                  child: CircularProgressIndicator(
+                    color: AppColors.primaryBlue,
+                  ),
                 ),
               )
             else if (dashProvider.myReservations.isEmpty)
@@ -216,7 +224,10 @@ class DashboardRequestCard extends StatelessWidget {
                           : null,
                       backgroundColor: AppColors.surfaceLight,
                       child: request.userAvatarUrl == null
-                          ? const Icon(Icons.person, color: AppColors.textSecondary)
+                          ? const Icon(
+                              Icons.person,
+                              color: AppColors.textSecondary,
+                            )
                           : null,
                     ),
                     const SizedBox(width: 12),
@@ -263,7 +274,8 @@ class DashboardRequestCard extends StatelessWidget {
                       _DetailRow(
                         icon: Icons.access_time_filled_rounded,
                         label: 'Horario',
-                        value: '${DateFormat('dd MMM').format(request.date)}, ${request.startTime} - ${request.endTime}',
+                        value:
+                            '${DateFormat('dd MMM').format(request.date)}, ${request.startTime} - ${request.endTime}',
                       ),
                     ],
                   ),
@@ -372,13 +384,21 @@ class _DetailRow extends StatelessWidget {
   final String label;
   final String value;
 
-  const _DetailRow({required this.icon, required this.label, required this.value});
+  const _DetailRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: AppColors.primaryBlue.withValues(alpha: 0.6)),
+        Icon(
+          icon,
+          size: 16,
+          color: AppColors.primaryBlue.withValues(alpha: 0.6),
+        ),
         const SizedBox(width: 8),
         Text(
           '$label: ',

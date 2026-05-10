@@ -1,6 +1,7 @@
 /// Profile Settings Screen — muestra datos del usuario, opción para solicitar
 /// ser admin, políticas de uso y datos del desarrollador.
 library;
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -64,7 +65,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     String fullName = '';
     if (_userProfile != null) {
-      fullName = '${_userProfile!['primer_nombre'] ?? ''} ${_userProfile!['primer_apellido'] ?? ''}'.trim();
+      fullName =
+          '${_userProfile!['primer_nombre'] ?? ''} ${_userProfile!['primer_apellido'] ?? ''}'
+              .trim();
     }
     if (fullName.isEmpty) {
       fullName = authUser?.fullName ?? 'Usuario';
@@ -75,7 +78,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       appBar: _ProfileAppBar(),
       body: SafeArea(
         child: _isLoading
-            ? const Center(child: CircularProgressIndicator(color: AppColors.primaryBlue))
+            ? const Center(
+                child: CircularProgressIndicator(color: AppColors.primaryBlue),
+              )
             : SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
@@ -86,7 +91,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     FadeInDown(
                       duration: const Duration(milliseconds: 500),
                       child: _ProfileHeader(
-                        avatarUrl: _userProfile?['foto_url'] ?? authUser?.avatarUrl,
+                        avatarUrl:
+                            _userProfile?['foto_url'] ?? authUser?.avatarUrl,
                         fullName: fullName,
                         email: authUser?.email ?? '',
                         role: _userProfile?['rol'] ?? authUser?.role,
@@ -107,7 +113,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     FadeInUp(
                       duration: const Duration(milliseconds: 500),
                       delay: const Duration(milliseconds: 200),
-                      child: _RequestAdminCard(role: _userProfile?['rol'] ?? authUser?.role),
+                      child: _RequestAdminCard(
+                        role: _userProfile?['rol'] ?? authUser?.role,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     // Usage policies
@@ -142,7 +150,11 @@ class _ProfileAppBar extends StatelessWidget implements PreferredSizeWidget {
       backgroundColor: AppColors.background,
       elevation: 0,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: AppColors.textPrimary),
+        icon: const Icon(
+          Icons.arrow_back_ios_new,
+          size: 20,
+          color: AppColors.textPrimary,
+        ),
         onPressed: () {
           if (Navigator.of(context).canPop()) {
             Navigator.of(context).pop();
@@ -161,7 +173,11 @@ class _ProfileAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       title: Text(
         AppStrings.profileSettings,
-        style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+        style: GoogleFonts.poppins(
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+          color: AppColors.textPrimary,
+        ),
       ),
       centerTitle: false,
     );
@@ -169,7 +185,12 @@ class _ProfileAppBar extends StatelessWidget implements PreferredSizeWidget {
 }
 
 class _ProfileHeader extends StatelessWidget {
-  const _ProfileHeader({required this.avatarUrl, required this.fullName, required this.email, required this.role});
+  const _ProfileHeader({
+    required this.avatarUrl,
+    required this.fullName,
+    required this.email,
+    required this.role,
+  });
   final String? avatarUrl;
   final String fullName;
   final String email;
@@ -188,7 +209,10 @@ class _ProfileHeader extends StatelessWidget {
             decoration: BoxDecoration(
               color: AppColors.lightBlue,
               borderRadius: BorderRadius.circular(45),
-              border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.3), width: 3),
+              border: Border.all(
+                color: AppColors.primaryBlue.withValues(alpha: 0.3),
+                width: 3,
+              ),
               boxShadow: [
                 BoxShadow(
                   color: AppColors.primaryBlue.withValues(alpha: 0.15),
@@ -200,7 +224,12 @@ class _ProfileHeader extends StatelessWidget {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(42),
               child: avatarUrl != null
-                  ? Image.network(avatarUrl!, fit: BoxFit.cover, errorBuilder: (context, error, stackTrace) => _AvatarFallback(initial: fullName))
+                  ? Image.network(
+                      avatarUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) =>
+                          _AvatarFallback(initial: fullName),
+                    )
                   : _AvatarFallback(initial: fullName),
             ),
           ),
@@ -208,31 +237,53 @@ class _ProfileHeader extends StatelessWidget {
           // Name
           Text(
             fullName,
-            style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+            style: GoogleFonts.poppins(
+              fontSize: 22,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
           ),
           const SizedBox(height: 4),
           // Email
           Text(
             email,
-            style: GoogleFonts.inter(fontSize: 14, color: AppColors.textSecondary),
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              color: AppColors.textSecondary,
+            ),
           ),
           const SizedBox(height: 12),
           // Role badge
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
             decoration: BoxDecoration(
-              color: (role.toString() == 'UserRole.admin' || role.toString() == 'admin') ? AppColors.successLight : AppColors.lightBlue,
+              color:
+                  (role.toString() == 'UserRole.admin' ||
+                      role.toString() == 'admin')
+                  ? AppColors.successLight
+                  : AppColors.lightBlue,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: (role.toString() == 'UserRole.admin' || role.toString() == 'admin') ? AppColors.success.withValues(alpha: 0.3) : AppColors.primaryBlue.withValues(alpha: 0.2),
+                color:
+                    (role.toString() == 'UserRole.admin' ||
+                        role.toString() == 'admin')
+                    ? AppColors.success.withValues(alpha: 0.3)
+                    : AppColors.primaryBlue.withValues(alpha: 0.2),
               ),
             ),
             child: Text(
-              (role.toString() == 'UserRole.admin' || role.toString() == 'admin') ? 'Administrador' : 'Usuario',
+              (role.toString() == 'UserRole.admin' ||
+                      role.toString() == 'admin')
+                  ? 'Administrador'
+                  : 'Usuario',
               style: GoogleFonts.inter(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: (role.toString() == 'UserRole.admin' || role.toString() == 'admin') ? AppColors.success : AppColors.primaryBlue,
+                color:
+                    (role.toString() == 'UserRole.admin' ||
+                        role.toString() == 'admin')
+                    ? AppColors.success
+                    : AppColors.primaryBlue,
               ),
             ),
           ),
@@ -251,7 +302,11 @@ class _AvatarFallback extends StatelessWidget {
     return Center(
       child: Text(
         initial.isNotEmpty ? initial[0].toUpperCase() : 'U',
-        style: GoogleFonts.poppins(fontSize: 36, fontWeight: FontWeight.w700, color: AppColors.primaryBlue),
+        style: GoogleFonts.poppins(
+          fontSize: 36,
+          fontWeight: FontWeight.w700,
+          color: AppColors.primaryBlue,
+        ),
       ),
     );
   }
@@ -279,26 +334,57 @@ class _PersonalInfoCard extends StatelessWidget {
               Container(
                 width: 36,
                 height: 36,
-                decoration: BoxDecoration(color: AppColors.lightBlue, borderRadius: BorderRadius.circular(10)),
-                child: const Icon(Icons.person_outline, color: AppColors.primaryBlue, size: 20),
+                decoration: BoxDecoration(
+                  color: AppColors.lightBlue,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.person_outline,
+                  color: AppColors.primaryBlue,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
               Text(
                 AppStrings.personalInfo,
-                style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                style: GoogleFonts.poppins(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
               ),
             ],
           ),
           const SizedBox(height: 20),
-          _InfoRow(label: AppStrings.firstName, value: firstName.isNotEmpty ? firstName : 'No especificado', icon: Icons.badge_outlined),
+          _InfoRow(
+            label: AppStrings.firstName,
+            value: firstName.isNotEmpty ? firstName : 'No especificado',
+            icon: Icons.badge_outlined,
+          ),
           const SizedBox(height: 12),
-          _InfoRow(label: AppStrings.lastName, value: lastName.isNotEmpty ? lastName : 'No especificado', icon: Icons.badge_outlined),
+          _InfoRow(
+            label: AppStrings.lastName,
+            value: lastName.isNotEmpty ? lastName : 'No especificado',
+            icon: Icons.badge_outlined,
+          ),
           const SizedBox(height: 12),
-          _InfoRow(label: AppStrings.email, value: email.isNotEmpty ? email : 'No especificado', icon: Icons.email_outlined),
+          _InfoRow(
+            label: AppStrings.email,
+            value: email.isNotEmpty ? email : 'No especificado',
+            icon: Icons.email_outlined,
+          ),
           const SizedBox(height: 12),
-          _InfoRow(label: 'Carrera', value: carrera, icon: Icons.school_outlined),
+          _InfoRow(
+            label: 'Carrera',
+            value: carrera,
+            icon: Icons.school_outlined,
+          ),
           const SizedBox(height: 12),
-          _InfoRow(label: 'Especialidad / Perfil', value: especialidad, icon: Icons.work_outline),
+          _InfoRow(
+            label: 'Especialidad / Perfil',
+            value: especialidad,
+            icon: Icons.work_outline,
+          ),
         ],
       ),
     );
@@ -306,7 +392,11 @@ class _PersonalInfoCard extends StatelessWidget {
 }
 
 class _InfoRow extends StatelessWidget {
-  const _InfoRow({required this.label, required this.value, required this.icon});
+  const _InfoRow({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
   final String label;
   final String value;
   final IconData icon;
@@ -318,7 +408,11 @@ class _InfoRow extends StatelessWidget {
       children: [
         Text(
           label,
-          style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.textTertiary),
+          style: GoogleFonts.inter(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textTertiary,
+          ),
         ),
         const SizedBox(height: 4),
         Row(
@@ -328,7 +422,11 @@ class _InfoRow extends StatelessWidget {
             Expanded(
               child: Text(
                 value,
-                style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w500, color: AppColors.textPrimary),
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textPrimary,
+                ),
               ),
             ),
           ],
@@ -346,7 +444,8 @@ class _RequestAdminCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isAdmin = role.toString() == 'UserRole.admin' || role.toString() == 'admin';
+    final isAdmin =
+        role.toString() == 'UserRole.admin' || role.toString() == 'admin';
 
     return NeonCard(
       padding: const EdgeInsets.all(20),
@@ -358,9 +457,14 @@ class _RequestAdminCard extends StatelessWidget {
               Container(
                 width: 36,
                 height: 36,
-                decoration: BoxDecoration(color: isAdmin ? AppColors.successLight : AppColors.softBlue, borderRadius: BorderRadius.circular(10)),
+                decoration: BoxDecoration(
+                  color: isAdmin ? AppColors.successLight : AppColors.softBlue,
+                  borderRadius: BorderRadius.circular(10),
+                ),
                 child: Icon(
-                  isAdmin ? Icons.verified : Icons.admin_panel_settings_outlined,
+                  isAdmin
+                      ? Icons.verified
+                      : Icons.admin_panel_settings_outlined,
                   color: isAdmin ? AppColors.success : AppColors.primaryBlue,
                   size: 20,
                 ),
@@ -369,7 +473,11 @@ class _RequestAdminCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   isAdmin ? AppStrings.alreadyAdmin : AppStrings.requestAdmin,
-                  style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                  style: GoogleFonts.poppins(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
               ),
             ],
@@ -377,7 +485,10 @@ class _RequestAdminCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             AppStrings.requestAdminDesc,
-            style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary),
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              color: AppColors.textSecondary,
+            ),
           ),
           const SizedBox(height: 16),
           NeonButton(
@@ -387,7 +498,9 @@ class _RequestAdminCard extends StatelessWidget {
             icon: isAdmin ? Icons.check_circle : Icons.send_outlined,
             enabled: !isAdmin,
             gradient: isAdmin
-                ? const LinearGradient(colors: [AppColors.success, Color(0xFF2ECC71)])
+                ? const LinearGradient(
+                    colors: [AppColors.success, Color(0xFF2ECC71)],
+                  )
                 : AppColors.primaryGradient,
             onPressed: isAdmin
                 ? null
@@ -397,7 +510,9 @@ class _RequestAdminCard extends StatelessWidget {
                         content: Text(AppStrings.adminRequestSent),
                         backgroundColor: AppColors.primaryBlue,
                         behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(12)),
+                        ),
                       ),
                     );
                   },
@@ -423,20 +538,35 @@ class _UsagePoliciesCard extends StatelessWidget {
               Container(
                 width: 36,
                 height: 36,
-                decoration: BoxDecoration(color: AppColors.warningLight, borderRadius: BorderRadius.circular(10)),
-                child: const Icon(Icons.policy_outlined, color: AppColors.accentOrange, size: 20),
+                decoration: BoxDecoration(
+                  color: AppColors.warningLight,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.policy_outlined,
+                  color: AppColors.accentOrange,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
               Text(
                 AppStrings.usagePolicies,
-                style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                style: GoogleFonts.poppins(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
               ),
             ],
           ),
           const SizedBox(height: 16),
           Text(
             AppStrings.policiesContent,
-            style: GoogleFonts.inter(fontSize: 13, height: 1.6, color: AppColors.textSecondary),
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              height: 1.6,
+              color: AppColors.textSecondary,
+            ),
           ),
         ],
       ),
@@ -468,17 +598,28 @@ class _DeveloperFooter extends StatelessWidget {
                 ),
               ],
             ),
-            child: const Icon(Icons.code, color: AppColors.primaryBlue, size: 24),
+            child: const Icon(
+              Icons.code,
+              color: AppColors.primaryBlue,
+              size: 24,
+            ),
           ),
           const SizedBox(height: 12),
           Text(
             AppStrings.developedBy,
-            style: GoogleFonts.inter(fontSize: 12, color: AppColors.textTertiary),
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              color: AppColors.textTertiary,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             AppStrings.developer,
-            style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+            style: GoogleFonts.poppins(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
           ),
           const SizedBox(height: 16),
           InkWell(
@@ -494,16 +635,26 @@ class _DeveloperFooter extends StatelessWidget {
               decoration: BoxDecoration(
                 color: AppColors.surfaceLight,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.border.withValues(alpha: 0.3)),
+                border: Border.all(
+                  color: AppColors.border.withValues(alpha: 0.3),
+                ),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.open_in_new, size: 16, color: AppColors.primaryBlue),
+                  const Icon(
+                    Icons.open_in_new,
+                    size: 16,
+                    color: AppColors.primaryBlue,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     AppStrings.githubProfile,
-                    style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.primaryBlue),
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.primaryBlue,
+                    ),
                   ),
                 ],
               ),
@@ -514,7 +665,10 @@ class _DeveloperFooter extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             '© 2026 BeamFlow. Todos los derechos reservados.',
-            style: GoogleFonts.inter(fontSize: 11, color: AppColors.textTertiary),
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              color: AppColors.textTertiary,
+            ),
           ),
         ],
       ),

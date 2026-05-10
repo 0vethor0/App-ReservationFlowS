@@ -1,5 +1,6 @@
 /// Componente de selección de fecha (Calendario).
 library;
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -24,10 +25,7 @@ class CalendarSection extends StatelessWidget {
       children: [
         Text(
           AppStrings.selectDate,
-          style: GoogleFonts.poppins(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-          ),
+          style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 12),
         NeonCard(
@@ -49,12 +47,20 @@ class CalendarSection extends StatelessWidget {
                 color: AppColors.textPrimary,
               ),
               formatButtonVisible: false,
-              leftChevronIcon: const Icon(Icons.chevron_left, color: AppColors.primaryBlue),
-              rightChevronIcon: const Icon(Icons.chevron_right, color: AppColors.primaryBlue),
+              leftChevronIcon: const Icon(
+                Icons.chevron_left,
+                color: AppColors.primaryBlue,
+              ),
+              rightChevronIcon: const Icon(
+                Icons.chevron_right,
+                color: AppColors.primaryBlue,
+              ),
             ),
             calendarStyle: CalendarStyle(
               defaultTextStyle: GoogleFonts.inter(color: AppColors.textPrimary),
-              weekendTextStyle: GoogleFonts.inter(color: AppColors.textSecondary),
+              weekendTextStyle: GoogleFonts.inter(
+                color: AppColors.textSecondary,
+              ),
               todayDecoration: BoxDecoration(
                 color: AppColors.primaryBlue,
                 shape: BoxShape.circle,
@@ -78,7 +84,8 @@ class CalendarSection extends StatelessWidget {
                 ],
               ),
             ),
-            onDaySelected: (selectedDay, focusedDay) => onDateSelected(selectedDay),
+            onDaySelected: (selectedDay, focusedDay) =>
+                onDateSelected(selectedDay),
             selectedDayPredicate: (day) => isSameDay(selectedDate, day),
           ),
         ),

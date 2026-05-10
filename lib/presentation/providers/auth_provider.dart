@@ -60,7 +60,9 @@ class AuthProvider extends ChangeNotifier {
       if (response == null) {
         final session = _supabase.auth.currentSession;
         if (session != null && session.expiresAt != null) {
-          final expiresAt = DateTime.fromMillisecondsSinceEpoch(session.expiresAt! * 1000);
+          final expiresAt = DateTime.fromMillisecondsSinceEpoch(
+            session.expiresAt! * 1000,
+          );
           if (DateTime.now().isAfter(expiresAt)) {
             debugPrint('DEBUG: Token expirado, intentando refresh...');
             try {
@@ -112,7 +114,9 @@ class AuthProvider extends ChangeNotifier {
       }
     } catch (e) {
       final errorStr = e.toString();
-      if (errorStr.contains('JWT expired') || errorStr.contains('401') || errorStr.contains('Unauthorized')) {
+      if (errorStr.contains('JWT expired') ||
+          errorStr.contains('401') ||
+          errorStr.contains('Unauthorized')) {
         debugPrint('DEBUG: Token expirado, intentando refresh de sesión...');
         try {
           await _supabase.auth.refreshSession();
@@ -121,12 +125,15 @@ class AuthProvider extends ChangeNotifier {
               .select()
               .eq('id', userId)
               .maybeSingle();
-          
+
           if (response != null) {
-            final primerNombre = response['primer_nombre']?.toString().trim() ?? '';
-            final primerApellido = response['primer_apellido']?.toString().trim() ?? '';
+            final primerNombre =
+                response['primer_nombre']?.toString().trim() ?? '';
+            final primerApellido =
+                response['primer_apellido']?.toString().trim() ?? '';
             final carrera = response['carrera']?.toString().trim() ?? '';
-            final especialidad = response['especialidad']?.toString().trim() ?? '';
+            final especialidad =
+                response['especialidad']?.toString().trim() ?? '';
 
             _hasAdditionalData =
                 primerNombre.isNotEmpty &&

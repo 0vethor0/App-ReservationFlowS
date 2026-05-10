@@ -2,16 +2,14 @@
 /// El tile muestra la hora de inicio, la ubicación y el nombre del videobeam.
 /// El tile se utiliza en la pantalla de dashboard para mostrar las reservaciones upcoming.
 library;
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/neon_card.dart';
 
 class UpcomingReservationTile extends StatelessWidget {
-  const UpcomingReservationTile({
-    super.key,
-    required this.reservation,
-  });
+  const UpcomingReservationTile({super.key, required this.reservation});
 
   final dynamic reservation;
 

@@ -1,5 +1,6 @@
 /// Botón con efecto neon, gradiente y animación de escala al presionar.
 library;
+
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/neon_decoration.dart';
@@ -47,9 +48,10 @@ class _NeonButtonState extends State<NeonButton>
       duration: const Duration(milliseconds: 150),
       vsync: this,
     );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.96).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.96,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -79,10 +81,7 @@ class _NeonButtonState extends State<NeonButton>
     return AnimatedBuilder(
       animation: _scaleAnimation,
       builder: (context, child) {
-        return Transform.scale(
-          scale: _scaleAnimation.value,
-          child: child,
-        );
+        return Transform.scale(scale: _scaleAnimation.value, child: child);
       },
       child: GestureDetector(
         onTapDown: _onTapDown,
@@ -97,7 +96,8 @@ class _NeonButtonState extends State<NeonButton>
             gradient: widget.enabled
                 ? widget.gradient
                 : const LinearGradient(
-                    colors: [AppColors.disabled, AppColors.disabled]),
+                    colors: [AppColors.disabled, AppColors.disabled],
+                  ),
             borderRadius: BorderRadius.circular(widget.borderRadius),
             boxShadow: _isPressed && widget.enabled
                 ? NeonDecoration.neonButtonGlow()

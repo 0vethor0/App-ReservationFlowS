@@ -68,7 +68,8 @@ abstract final class AppStrings {
   static const String department = 'Departamento';
   static const String role = 'Rol';
   static const String requestAdmin = 'Solicitar ser Administrador';
-  static const String requestAdminDesc = 'Envía una solicitud para obtener permisos de administrador';
+  static const String requestAdminDesc =
+      'Envía una solicitud para obtener permisos de administrador';
   static const String adminRequestSent = 'Solicitud enviada';
   static const String alreadyAdmin = 'Ya eres administrador';
   static const String usagePolicies = 'Políticas de Uso del Sistema';
@@ -115,7 +116,13 @@ abstract final class AppStrings {
 
   // ─── Days of Week ───
   static const List<String> weekDays = [
-    'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom',
+    'Lun',
+    'Mar',
+    'Mié',
+    'Jue',
+    'Vie',
+    'Sáb',
+    'Dom',
   ];
 
   // ─── Validation ───

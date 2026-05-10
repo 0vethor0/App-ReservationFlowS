@@ -1,5 +1,6 @@
 /// TextField con animación de borde y glow neon al recibir foco.
 library;
+
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/neon_decoration.dart';
@@ -81,9 +82,9 @@ class _NeonTextFieldState extends State<NeonTextField> {
           Text(
             widget.label!,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textPrimary,
-                ),
+              fontWeight: FontWeight.w500,
+              color: AppColors.textPrimary,
+            ),
           ),
           const SizedBox(height: 8),
         ],
@@ -93,10 +94,7 @@ class _NeonTextFieldState extends State<NeonTextField> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             boxShadow: _hasFocus
-                ? NeonDecoration.neonFocusGlow(
-                    color: _glowColor,
-                    opacity: 0.20,
-                  )
+                ? NeonDecoration.neonFocusGlow(color: _glowColor, opacity: 0.20)
                 : [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.03),

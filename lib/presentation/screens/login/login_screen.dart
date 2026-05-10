@@ -1,5 +1,6 @@
 /// Login Screen con diseño "Neon White".
 library;
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -50,7 +51,9 @@ class _LoginScreenState extends State<LoginScreen> {
           content: Text(auth.error ?? 'Error'),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
     }
@@ -102,16 +105,21 @@ class _LoginScreenState extends State<LoginScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(AppStrings.password,
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.w500)),
+                            Text(
+                              AppStrings.password,
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.w500),
+                            ),
                             GestureDetector(
                               onTap: () {},
-                              child: Text(AppStrings.forgotPassword,
-                                  style: GoogleFonts.inter(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.primaryBlue)),
+                              child: Text(
+                                AppStrings.forgotPassword,
+                                style: GoogleFonts.inter(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.primaryBlue,
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -127,9 +135,12 @@ class _LoginScreenState extends State<LoginScreen> {
                               _obscurePassword
                                   ? Icons.visibility_off_outlined
                                   : Icons.visibility_outlined,
-                              color: AppColors.textTertiary, size: 22),
-                            onPressed: () =>
-                                setState(() => _obscurePassword = !_obscurePassword),
+                              color: AppColors.textTertiary,
+                              size: 22,
+                            ),
+                            onPressed: () => setState(
+                              () => _obscurePassword = !_obscurePassword,
+                            ),
                           ),
                         ),
                       ],
@@ -152,27 +163,32 @@ class _LoginScreenState extends State<LoginScreen> {
                 FadeInUp(
                   duration: const Duration(milliseconds: 600),
                   delay: const Duration(milliseconds: 500),
-                  child: const _DividerWithText(text: AppStrings.orContinueWith),
+                  child: const _DividerWithText(
+                    text: AppStrings.orContinueWith,
+                  ),
                 ),
                 const SizedBox(height: 20),
                 FadeInUp(
                   duration: const Duration(milliseconds: 600),
                   delay: const Duration(milliseconds: 600),
-                  child: Column(children: [
-                    _SocialButton(
-                      icon: FontAwesomeIcons.google,
-                      text: AppStrings.continueWithGoogle,
-                      iconColor: const Color(0xFF4285F4),
-                      onTap: () => context.read<AuthProvider>().signInWithGoogle(),
-                    ),
-                    const SizedBox(height: 12),
-                    _SocialButton(
-                      icon: FontAwesomeIcons.apple,
-                      text: AppStrings.continueWithApple,
-                      iconColor: AppColors.textPrimary,
-                      onTap: _goToDashboard,
-                    ),
-                  ]),
+                  child: Column(
+                    children: [
+                      _SocialButton(
+                        icon: FontAwesomeIcons.google,
+                        text: AppStrings.continueWithGoogle,
+                        iconColor: const Color(0xFF4285F4),
+                        onTap: () =>
+                            context.read<AuthProvider>().signInWithGoogle(),
+                      ),
+                      const SizedBox(height: 12),
+                      _SocialButton(
+                        icon: FontAwesomeIcons.apple,
+                        text: AppStrings.continueWithApple,
+                        iconColor: AppColors.textPrimary,
+                        onTap: _goToDashboard,
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 36),
                 FadeInUp(
@@ -181,16 +197,24 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(AppStrings.noAccount,
-                          style: GoogleFonts.inter(fontSize: 14, color: AppColors.textSecondary)),
+                      Text(
+                        AppStrings.noAccount,
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
                       const SizedBox(width: 6),
                       GestureDetector(
                         onTap: _goToRegister,
-                        child: Text(AppStrings.register,
-                            style: GoogleFonts.poppins(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.primaryBlue)),
+                        child: Text(
+                          AppStrings.register,
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primaryBlue,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -209,34 +233,45 @@ class _LogoSection extends StatelessWidget {
   const _LogoSection();
   @override
   Widget build(BuildContext context) {
-    return Column(children: [
-      Container(
-        width: 80,
-        height: 80,
-        decoration: BoxDecoration(
-          color: AppColors.surfaceLight,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primaryBlue.withValues(alpha: 0.12),
-              blurRadius: 20,
-              spreadRadius: 2,
-            )
-          ],
-        ),
-        child: Center(
-          child: Image.asset(
-            'assets/icon/icon.png',
-            width: 50,
-            height: 50,
+    return Column(
+      children: [
+        Container(
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+            color: AppColors.surfaceLight,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primaryBlue.withValues(alpha: 0.12),
+                blurRadius: 20,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: Center(
+            child: Image.asset('assets/icon/icon.png', width: 50, height: 50),
           ),
         ),
-      ),
-      const SizedBox(height: 20),
-      Text(AppStrings.appName, style: GoogleFonts.poppins(fontSize: 28, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
-      const SizedBox(height: 4),
-      Text(AppStrings.welcomeBack, style: GoogleFonts.inter(fontSize: 15, color: AppColors.textSecondary)),
-    ]);
+        const SizedBox(height: 20),
+        Text(
+          AppStrings.appName,
+          style: GoogleFonts.poppins(
+            fontSize: 28,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          AppStrings.welcomeBack,
+          style: GoogleFonts.inter(
+            fontSize: 15,
+            color: AppColors.textSecondary,
+          ),
+        ),
+      ],
+    );
   }
 }
 
@@ -245,19 +280,36 @@ class _DividerWithText extends StatelessWidget {
   final String text;
   @override
   Widget build(BuildContext context) {
-    return Row(children: [
-      Expanded(child: Divider(color: AppColors.divider.withValues(alpha: 0.5))),
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Text(text, style: GoogleFonts.inter(fontSize: 13, color: AppColors.textTertiary)),
-      ),
-      Expanded(child: Divider(color: AppColors.divider.withValues(alpha: 0.5))),
-    ]);
+    return Row(
+      children: [
+        Expanded(
+          child: Divider(color: AppColors.divider.withValues(alpha: 0.5)),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Text(
+            text,
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              color: AppColors.textTertiary,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Divider(color: AppColors.divider.withValues(alpha: 0.5)),
+        ),
+      ],
+    );
   }
 }
 
 class _SocialButton extends StatelessWidget {
-  const _SocialButton({required this.icon, required this.text, required this.onTap, this.iconColor});
+  const _SocialButton({
+    required this.icon,
+    required this.text,
+    required this.onTap,
+    this.iconColor,
+  });
   final IconData icon;
   final String text;
   final VoidCallback onTap;
@@ -274,13 +326,22 @@ class _SocialButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppColors.border.withValues(alpha: 0.4)),
         ),
-        child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          FaIcon(icon, size: 20, color: iconColor),
-          const SizedBox(width: 12),
-          Text(text, style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w500, color: AppColors.textPrimary)),
-        ]),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            FaIcon(icon, size: 20, color: iconColor),
+            const SizedBox(width: 12),
+            Text(
+              text,
+              style: GoogleFonts.inter(
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
-

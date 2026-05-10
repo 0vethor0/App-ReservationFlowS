@@ -9,6 +9,7 @@
 /// También se encarga de mostrar el estado de error.
 /// También se encarga de mostrar el estado de éxito.
 library;
+
 import 'package:flutter/material.dart';
 import '../../domain/entities/entities.dart';
 
@@ -52,9 +53,9 @@ class ReservationProvider extends ChangeNotifier {
           .from('productos')
           .select('*, estados_producto(nombre)')
           .eq('id_estado', 1);
-      
+
       debugPrint('Found ${data.length} available videobeams');
-          
+
       _videobeams = data.map((item) {
         return VideobeamEntity(
           id: item['id']?.toString() ?? 'unknown',
@@ -64,7 +65,7 @@ class ReservationProvider extends ChangeNotifier {
           status: VideobeamStatus.available, // Solo mostramos los disponibles
         );
       }).toList();
-      
+
       debugPrint('Successfully loaded ${_videobeams.length} videobeams');
       await fetchReservations();
     } catch (e, stackTrace) {
@@ -116,17 +117,27 @@ class ReservationProvider extends ChangeNotifier {
 
     try {
       final startDateTime = DateTime(
-        _selectedDate.year, _selectedDate.month, _selectedDate.day,
-        _startTime!.hour, _startTime!.minute
+        _selectedDate.year,
+        _selectedDate.month,
+        _selectedDate.day,
+        _startTime!.hour,
+        _startTime!.minute,
       );
-      
+
       final endDateTime = DateTime(
-        _selectedDate.year, _selectedDate.month, _selectedDate.day,
-        _endTime!.hour, _endTime!.minute
+        _selectedDate.year,
+        _selectedDate.month,
+        _selectedDate.day,
+        _endTime!.hour,
+        _endTime!.minute,
       );
 
       // Usar rango de fechas en lugar de LIKE (que no funciona con timestamps)
-      final startOfDay = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
+      final startOfDay = DateTime(
+        _selectedDate.year,
+        _selectedDate.month,
+        _selectedDate.day,
+      );
       final endOfDay = startOfDay.add(const Duration(days: 1));
 
       final existingReservations = await _supabase
@@ -142,15 +153,21 @@ class ReservationProvider extends ChangeNotifier {
         final endMinutes = _endTime!.hour * 60 + _endTime!.minute;
 
         for (final reservation in existingReservations) {
-          final existingStart = DateTime.parse(reservation['hora_inicio'] as String);
+          final existingStart = DateTime.parse(
+            reservation['hora_inicio'] as String,
+          );
           final existingEnd = DateTime.parse(reservation['hora_fin'] as String);
 
-          final existingStartMinutes = existingStart.hour * 60 + existingStart.minute;
+          final existingStartMinutes =
+              existingStart.hour * 60 + existingStart.minute;
           final existingEndMinutes = existingEnd.hour * 60 + existingEnd.minute;
 
-          if ((startMinutes >= existingStartMinutes && startMinutes < existingEndMinutes) ||
-              (endMinutes > existingStartMinutes && endMinutes <= existingEndMinutes) ||
-              (startMinutes <= existingStartMinutes && endMinutes >= existingEndMinutes)) {
+          if ((startMinutes >= existingStartMinutes &&
+                  startMinutes < existingEndMinutes) ||
+              (endMinutes > existingStartMinutes &&
+                  endMinutes <= existingEndMinutes) ||
+              (startMinutes <= existingStartMinutes &&
+                  endMinutes >= existingEndMinutes)) {
             final existingDate = existingStart.day;
             final existingMonth = existingStart.month;
             final existingYear = existingStart.year;
@@ -159,7 +176,8 @@ class ReservationProvider extends ChangeNotifier {
                 existingMonth == _selectedDate.month &&
                 existingYear == _selectedDate.year) {
               _isLoading = false;
-              _error = 'El bloque de horas seleccionado ya está reservado por otro usuario';
+              _error =
+                  'El bloque de horas seleccionado ya está reservado por otro usuario';
               notifyListeners();
               return false;
             }
@@ -175,23 +193,27 @@ class ReservationProvider extends ChangeNotifier {
           .select('id')
           .eq('correo', user.email!)
           .single();
-      
+
       final profileId = profileData['id'];
 
-      debugPrint('Confirmando reserva via RPC: id_producto=${_selectedVideobeam!.id}, id_usuario=$profileId');
+      debugPrint(
+        'Confirmando reserva via RPC: id_producto=${_selectedVideobeam!.id}, id_usuario=$profileId',
+      );
       debugPrint('Horario: $startDateTime - $endDateTime');
 
       // Usar la función RPC con la firma correcta:
       // intentar_reservar(p_fin, p_inicio, p_producto_id, p_usuario_id)
-      await _supabase.rpc('intentar_reservar', params: {
-        'p_usuario_id': profileId,
-        'p_producto_id': _selectedVideobeam!.id,
-        'p_inicio': startDateTime.toIso8601String(),
-        'p_fin': endDateTime.toIso8601String(),
-      });
+      await _supabase.rpc(
+        'intentar_reservar',
+        params: {
+          'p_usuario_id': profileId,
+          'p_producto_id': _selectedVideobeam!.id,
+          'p_inicio': startDateTime.toIso8601String(),
+          'p_fin': endDateTime.toIso8601String(),
+        },
+      );
 
       debugPrint('Reserva insertada con éxito via RPC');
-
 
       _isLoading = false;
       _error = null;
@@ -205,7 +227,6 @@ class ReservationProvider extends ChangeNotifier {
       notifyListeners();
       return false;
     }
-
   }
 
   Future<void> fetchReservations() async {

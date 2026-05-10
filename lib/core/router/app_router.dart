@@ -1,4 +1,5 @@
 library;
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -24,8 +25,10 @@ class AppRouter {
         final isGoingToLogin = state.matchedLocation == '/login';
         final isGoingToRegister = state.matchedLocation == '/register';
         final isGoingToSplash = state.matchedLocation == '/splash';
-        final hasAdditionalData = authProvider.hasAdditionalData; // We need to implement this
-        final isGoingToAdditionalData = state.matchedLocation == '/additional-data';
+        final hasAdditionalData =
+            authProvider.hasAdditionalData; // We need to implement this
+        final isGoingToAdditionalData =
+            state.matchedLocation == '/additional-data';
 
         if (isGoingToSplash) {
           // Splash screen handles its own navigation after animation/initialization
@@ -42,9 +45,9 @@ class AppRouter {
         if (isAuthenticated) {
           // If authenticated but missing additional data, force them to additional data screen
           if (!hasAdditionalData && !isGoingToAdditionalData) {
-             return '/additional-data';
+            return '/additional-data';
           }
-          
+
           if (isGoingToLogin || isGoingToRegister || isGoingToSplash) {
             return hasAdditionalData ? '/' : '/additional-data';
           }

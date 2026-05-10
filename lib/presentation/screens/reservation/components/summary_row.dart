@@ -1,5 +1,6 @@
 /// Componente de fila para el resumen de reservación.
 library;
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -33,10 +34,7 @@ class SummaryRow extends StatelessWidget {
         Expanded(
           child: Text(
             value,
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-            ),
+            style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600),
             overflow: TextOverflow.ellipsis,
           ),
         ),

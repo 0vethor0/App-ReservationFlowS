@@ -1,5 +1,6 @@
 /// Componente de fondo para el swipe de acciones (aprobar/rechazar).
 library;
+
 import 'package:flutter/material.dart';
 
 class SwipeBackground extends StatelessWidget {
@@ -22,10 +23,7 @@ class SwipeBackground extends StatelessWidget {
         color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.25),
-            blurRadius: 12,
-          ),
+          BoxShadow(color: color.withValues(alpha: 0.25), blurRadius: 12),
         ],
       ),
       alignment: alignment,

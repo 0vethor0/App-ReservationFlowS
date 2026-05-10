@@ -10,7 +10,8 @@ class ReservationCalendarView extends StatefulWidget {
   const ReservationCalendarView({super.key});
 
   @override
-  State<ReservationCalendarView> createState() => _ReservationCalendarViewState();
+  State<ReservationCalendarView> createState() =>
+      _ReservationCalendarViewState();
 }
 
 class _ReservationCalendarViewState extends State<ReservationCalendarView> {
@@ -43,31 +44,37 @@ class _ReservationCalendarViewState extends State<ReservationCalendarView> {
         ),
         actions: [
           PopupMenuButton<CalendarView>(
-            icon: const Icon(Icons.calendar_view_month, color: AppColors.primaryBlue),
+            icon: const Icon(
+              Icons.calendar_view_month,
+              color: AppColors.primaryBlue,
+            ),
             onSelected: (CalendarView view) {
               _calendarController.view = view;
             },
-            itemBuilder: (BuildContext context) => <PopupMenuEntry<CalendarView>>[
-              const PopupMenuItem<CalendarView>(
-                value: CalendarView.day,
-                child: Text('Día'),
-              ),
-              const PopupMenuItem<CalendarView>(
-                value: CalendarView.week,
-                child: Text('Semana'),
-              ),
-              const PopupMenuItem<CalendarView>(
-                value: CalendarView.month,
-                child: Text('Mes'),
-              ),
-            ],
+            itemBuilder: (BuildContext context) =>
+                <PopupMenuEntry<CalendarView>>[
+                  const PopupMenuItem<CalendarView>(
+                    value: CalendarView.day,
+                    child: Text('Día'),
+                  ),
+                  const PopupMenuItem<CalendarView>(
+                    value: CalendarView.week,
+                    child: Text('Semana'),
+                  ),
+                  const PopupMenuItem<CalendarView>(
+                    value: CalendarView.month,
+                    child: Text('Mes'),
+                  ),
+                ],
           ),
         ],
       ),
       body: Consumer<ReservationProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading && provider.reservations.isEmpty) {
-            return const Center(child: CircularProgressIndicator(color: AppColors.primaryBlue));
+            return const Center(
+              child: CircularProgressIndicator(color: AppColors.primaryBlue),
+            );
           }
 
           return SfCalendar(
@@ -115,7 +122,10 @@ class _ReservationCalendarViewState extends State<ReservationCalendarView> {
             monthViewSettings: MonthViewSettings(
               appointmentDisplayMode: MonthAppointmentDisplayMode.appointment,
               monthCellStyle: MonthCellStyle(
-                textStyle: GoogleFonts.inter(fontSize: 12, color: AppColors.textPrimary),
+                textStyle: GoogleFonts.inter(
+                  fontSize: 12,
+                  color: AppColors.textPrimary,
+                ),
               ),
             ),
           );
@@ -133,7 +143,7 @@ class _ReservationDataSource extends CalendarDataSource {
   List<Appointment> _getAppointments(List<dynamic> source) {
     final List<Appointment> appointments = <Appointment>[];
     final random = Random();
-    
+
     final List<Color> pastelColors = [
       AppColors.primaryBlue,
       AppColors.success,
@@ -153,38 +163,48 @@ class _ReservationDataSource extends CalendarDataSource {
         continue;
       }
 
-      if (reservation['hora_inicio'] != null && reservation['hora_fin'] != null) {
+      if (reservation['hora_inicio'] != null &&
+          reservation['hora_fin'] != null) {
         try {
           // Parsear la hora de inicio
           final String startTimeStr = reservation['hora_inicio'] as String;
           DateTime startTime = DateTime.parse(startTimeStr);
-          
+
           // Parsear la hora de fin
           final String endTimeStr = reservation['hora_fin'] as String;
           DateTime endTime = DateTime.parse(endTimeStr);
-          
+
           // Ajuste de timezone: Supabase retorna UTC, convertimos a hora local
           // Esto asegura que las horas se muestren correctamente en la zona horaria del usuario
           startTime = startTime.toLocal();
           endTime = endTime.toLocal();
-          
-          final String productName = reservation['productos'] != null && reservation['productos']['nombre'] != null
+
+          final String productName =
+              reservation['productos'] != null &&
+                  reservation['productos']['nombre'] != null
               ? reservation['productos']['nombre']
               : 'Reserva';
-          
-          final String location = reservation['productos'] != null && reservation['productos']['ubicacion'] != null
+
+          final String location =
+              reservation['productos'] != null &&
+                  reservation['productos']['ubicacion'] != null
               ? reservation['productos']['ubicacion']
               : '';
 
-          final Color randomColor = pastelColors[random.nextInt(pastelColors.length)];
+          final Color randomColor =
+              pastelColors[random.nextInt(pastelColors.length)];
 
-          appointments.add(Appointment(
-            startTime: startTime,
-            endTime: endTime,
-            subject: location.isNotEmpty ? '$productName - $location' : productName,
-            color: randomColor,
-            isAllDay: false,
-          ));
+          appointments.add(
+            Appointment(
+              startTime: startTime,
+              endTime: endTime,
+              subject: location.isNotEmpty
+                  ? '$productName - $location'
+                  : productName,
+              color: randomColor,
+              isAllDay: false,
+            ),
+          );
         } catch (e) {
           debugPrint('Error parsing reservation time: $e');
         }

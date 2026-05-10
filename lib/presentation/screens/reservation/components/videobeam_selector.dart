@@ -1,5 +1,6 @@
 /// Componente de selección de videobeam.
 library;
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -68,10 +69,13 @@ class VideobeamSelector extends StatelessWidget {
             decoration: BoxDecoration(
               color: AppColors.surfaceLight,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.border.withValues(alpha: 0.2)),
+              border: Border.all(
+                color: AppColors.border.withValues(alpha: 0.2),
+              ),
             ),
             child: Column(
-              mainAxisSize: MainAxisSize.min, // Importante: que la columna solo ocupe lo necesario
+              mainAxisSize: MainAxisSize
+                  .min, // Importante: que la columna solo ocupe lo necesario
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const CircularProgressIndicator(
@@ -98,7 +102,9 @@ class VideobeamSelector extends StatelessWidget {
             decoration: BoxDecoration(
               color: AppColors.surfaceLight,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.border.withValues(alpha: 0.2)),
+              border: Border.all(
+                color: AppColors.border.withValues(alpha: 0.2),
+              ),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min, // Importante
@@ -124,7 +130,8 @@ class VideobeamSelector extends StatelessWidget {
                   TextButton(
                     onPressed: onRefresh,
                     style: TextButton.styleFrom(
-                      padding: EdgeInsets.zero, // Reduce el padding interno del botón
+                      padding: EdgeInsets
+                          .zero, // Reduce el padding interno del botón
                       minimumSize: const Size(0, 30),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
@@ -173,7 +180,9 @@ class VideobeamSelector extends StatelessWidget {
                       boxShadow: isSelected
                           ? [
                               BoxShadow(
-                                color: AppColors.primaryBlue.withValues(alpha: 0.25),
+                                color: AppColors.primaryBlue.withValues(
+                                  alpha: 0.25,
+                                ),
                                 blurRadius: 15,
                                 spreadRadius: 2,
                               ),
@@ -189,7 +198,9 @@ class VideobeamSelector extends StatelessWidget {
                           children: [
                             Icon(
                               Icons.videocam_outlined,
-                              color: isAvailable ? AppColors.primaryBlue : AppColors.disabled,
+                              color: isAvailable
+                                  ? AppColors.primaryBlue
+                                  : AppColors.disabled,
                               size: 22,
                             ),
                             if (isSelected)
@@ -204,8 +215,12 @@ class VideobeamSelector extends StatelessWidget {
                           v.name,
                           style: GoogleFonts.inter(
                             fontSize: 12,
-                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-                            color: isAvailable ? AppColors.textPrimary : AppColors.disabled,
+                            fontWeight: isSelected
+                                ? FontWeight.w700
+                                : FontWeight.w600,
+                            color: isAvailable
+                                ? AppColors.textPrimary
+                                : AppColors.disabled,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -220,10 +235,12 @@ class VideobeamSelector extends StatelessWidget {
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: AppColors.success.withValues(alpha: 0.4),
+                                    color: AppColors.success.withValues(
+                                      alpha: 0.4,
+                                    ),
                                     blurRadius: 4,
                                     spreadRadius: 1,
-                                  )
+                                  ),
                                 ],
                               ),
                             ),

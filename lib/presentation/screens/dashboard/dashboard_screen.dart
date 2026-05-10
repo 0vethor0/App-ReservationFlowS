@@ -33,7 +33,8 @@ class DashboardScreen extends StatefulWidget {
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingObserver {
+class _DashboardScreenState extends State<DashboardScreen>
+    with WidgetsBindingObserver {
   int _currentIndex = 0;
   RealtimeChannel? _presenceChannel; // Ahora puede ser nula
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -47,27 +48,32 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     });
   }
 
- void _initPresence() {
-  final auth = context.read<AuthProvider>();
-  final isAdmin = auth.currentUser?.role == UserRole.admin ||
-      auth.currentUser?.role == UserRole.superAdmin;
+  void _initPresence() {
+    final auth = context.read<AuthProvider>();
+    final isAdmin =
+        auth.currentUser?.role == UserRole.admin ||
+        auth.currentUser?.role == UserRole.superAdmin;
 
-  if (!isAdmin) return;
+    if (!isAdmin) return;
 
-  _presenceChannel = _supabase.channel('admin_presence');
-  
-  // Usamos el operador ?. para seguridad
-  _presenceChannel?.subscribe((status, [error]) async {
-    if (status == RealtimeSubscribeStatus.subscribed) {
-      await _presenceChannel?.track({'status': 'online', 'viewing': 'dashboard'});
-    }
-  });
-}
+    _presenceChannel = _supabase.channel('admin_presence');
+
+    // Usamos el operador ?. para seguridad
+    _presenceChannel?.subscribe((status, [error]) async {
+      if (status == RealtimeSubscribeStatus.subscribed) {
+        await _presenceChannel?.track({
+          'status': 'online',
+          'viewing': 'dashboard',
+        });
+      }
+    });
+  }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     final auth = context.read<AuthProvider>();
-    final isAdmin = auth.currentUser?.role == UserRole.admin ||
+    final isAdmin =
+        auth.currentUser?.role == UserRole.admin ||
         auth.currentUser?.role == UserRole.superAdmin;
 
     if (!isAdmin) return;
@@ -88,22 +94,24 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     }
   }
 
- @override
-void dispose() {
-  WidgetsBinding.instance.removeObserver(this);
-  
-  // Solo intentamos removerlo si realmente fue inicializado
-  if (_presenceChannel != null) {
-    _supabase.removeChannel(_presenceChannel!);
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+
+    // Solo intentamos removerlo si realmente fue inicializado
+    if (_presenceChannel != null) {
+      _supabase.removeChannel(_presenceChannel!);
+    }
+
+    super.dispose();
   }
-  
-  super.dispose();
-}
+
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final userRole = auth.currentUser?.role;
-    final isAdmin = userRole == UserRole.admin || userRole == UserRole.superAdmin;
+    final isAdmin =
+        userRole == UserRole.admin || userRole == UserRole.superAdmin;
 
     final screens = [
       const _DashboardBody(),
@@ -161,7 +169,8 @@ class _DashboardBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
-    final isAdmin = auth.currentUser?.role == UserRole.admin ||
+    final isAdmin =
+        auth.currentUser?.role == UserRole.admin ||
         auth.currentUser?.role == UserRole.superAdmin;
 
     return Consumer<DashboardProvider>(
@@ -181,7 +190,7 @@ class _DashboardBody extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 20),
-                
+
                 // Header
                 DashboardHeader(
                   user: auth.currentUser,
@@ -315,41 +324,25 @@ class _MaintenanceStatusCard extends StatelessWidget {
           const SizedBox(width: 16),
           Text(
             '$inMaintenance',
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-            ),
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
           ),
           const SizedBox(width: 4),
           const Expanded(
             child: Text(
               AppStrings.inMaintenance,
-              style: TextStyle(
-                fontSize: 13,
-                color: AppColors.textSecondary,
-              ),
+              style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
             ),
           ),
-          Container(
-            width: 1,
-            height: 36,
-            color: AppColors.divider,
-          ),
+          Container(width: 1, height: 36, color: AppColors.divider),
           const SizedBox(width: 16),
           Text(
             '$inUseNow',
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-            ),
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
           ),
           const SizedBox(width: 4),
           const Text(
             AppStrings.inUseNow,
-            style: TextStyle(
-              fontSize: 13,
-              color: AppColors.textSecondary,
-            ),
+            style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
           ),
         ],
       ),
@@ -392,25 +385,19 @@ class _UpcomingReservationsSection extends StatelessWidget {
           builder: (context, resProv, _) {
             if (resProv.isLoading) {
               return const Center(
-                child: CircularProgressIndicator(
-                  color: AppColors.primaryBlue,
-                ),
+                child: CircularProgressIndicator(color: AppColors.primaryBlue),
               );
             }
             if (resProv.reservations.isEmpty) {
               return const Text(
                 'No hay reservaciones',
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                ),
+                style: TextStyle(color: AppColors.textSecondary),
               );
             }
             return Column(
               children: resProv.reservations
                   .take(3)
-                  .map(
-                    (r) => UpcomingReservationTile(reservation: r),
-                  )
+                  .map((r) => UpcomingReservationTile(reservation: r))
                   .toList(),
             );
           },

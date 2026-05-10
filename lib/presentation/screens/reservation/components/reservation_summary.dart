@@ -1,5 +1,6 @@
 /// Componente de resumen y confirmación de reservación.
 library;
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -11,10 +12,7 @@ import '../../../providers/reservation_provider.dart';
 import 'summary_row.dart';
 
 class ReservationSummary extends StatelessWidget {
-  const ReservationSummary({
-    super.key,
-    required this.provider,
-  });
+  const ReservationSummary({super.key, required this.provider});
 
   final ReservationProvider provider;
 
@@ -46,7 +44,9 @@ class ReservationSummary extends StatelessWidget {
           SummaryRow(
             icon: Icons.description_outlined,
             label: 'Notas',
-            value: provider.notes.isEmpty ? 'Sin notas adicionales' : provider.notes,
+            value: provider.notes.isEmpty
+                ? 'Sin notas adicionales'
+                : provider.notes,
           ),
           const SizedBox(height: 8),
           SummaryRow(
@@ -62,7 +62,7 @@ class ReservationSummary extends StatelessWidget {
               debugPrint('>>> BOTÓN CONFIRMAR PRESIONADO <<<');
               final success = await provider.confirmReservation();
               debugPrint('Resultado confirmación: $success');
-              
+
               if (!context.mounted) return;
               if (success) {
                 ScaffoldMessenger.of(context).showSnackBar(

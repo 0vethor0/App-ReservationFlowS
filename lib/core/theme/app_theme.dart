@@ -3,6 +3,7 @@
 /// Utiliza Google Fonts (Poppins para títulos, Inter para body),
 /// bordes redondeados generosos (20–24), y paleta azul/blanco.
 library;
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
@@ -49,9 +50,7 @@ abstract final class AppTheme {
       cardTheme: CardThemeData(
         elevation: 0,
         color: AppColors.background,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         margin: const EdgeInsets.symmetric(vertical: 8),
       ),
 
@@ -65,18 +64,19 @@ abstract final class AppTheme {
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: AppColors.border.withValues(alpha: 0.3)),
+          borderSide: BorderSide(
+            color: AppColors.border.withValues(alpha: 0.3),
+          ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: AppColors.border.withValues(alpha: 0.3)),
+          borderSide: BorderSide(
+            color: AppColors.border.withValues(alpha: 0.3),
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(
-            color: AppColors.primaryBlue,
-            width: 2,
-          ),
+          borderSide: const BorderSide(color: AppColors.primaryBlue, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -94,10 +94,7 @@ abstract final class AppTheme {
           fontSize: 15,
           color: AppColors.textSecondary,
         ),
-        errorStyle: GoogleFonts.inter(
-          fontSize: 12,
-          color: AppColors.error,
-        ),
+        errorStyle: GoogleFonts.inter(fontSize: 12, color: AppColors.error),
       ),
 
       // ─── Elevated Buttons ───
@@ -166,9 +163,7 @@ abstract final class AppTheme {
         backgroundColor: AppColors.primaryBlue,
         foregroundColor: Colors.white,
         elevation: 4,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
 
       // ─── Divider ───
@@ -185,9 +180,7 @@ abstract final class AppTheme {
           }
           return Colors.transparent;
         }),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(4),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
         side: const BorderSide(color: AppColors.border, width: 1.5),
       ),
 
@@ -196,9 +189,7 @@ abstract final class AppTheme {
         backgroundColor: AppColors.surfaceLight,
         selectedColor: AppColors.primaryBlue,
         labelStyle: GoogleFonts.inter(fontSize: 13),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       ),
     );

@@ -237,11 +237,7 @@ class _StepHeader extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          Icon(
-            icon,
-            size: 20,
-            color: AppColors.primaryBlue,
-          ),
+          Icon(icon, size: 20, color: AppColors.primaryBlue),
           const SizedBox(width: 8),
           Text(
             title,

@@ -2,6 +2,7 @@
 ///
 /// Configura flutter_dotenv, Supabase, y los Providers globales.
 library;
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/services.dart';
@@ -78,9 +79,8 @@ class _BeamReserveAppState extends State<BeamReserveApp> {
         ChangeNotifierProvider(create: (_) => ReservationProvider()),
         ChangeNotifierProvider(create: (_) => RequestsProvider()),
         ChangeNotifierProvider(
-          create: (_) => WebSocketManager(
-            url: dotenv.env['WS_SERVER_URL'] ?? '',
-          ),
+          create: (_) =>
+              WebSocketManager(url: dotenv.env['WS_SERVER_URL'] ?? ''),
         ),
       ],
       child: MaterialApp.router(

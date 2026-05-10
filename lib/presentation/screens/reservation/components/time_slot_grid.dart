@@ -1,5 +1,6 @@
 /// Componente de selector de horarios con validación de disponibilidad.
 library;
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -32,8 +33,8 @@ class _TimePickerSectionState extends State<TimePickerSection> {
   String? _availabilityError;
 
   Future<void> _selectTime(BuildContext context, bool isStartTime) async {
-    final initialTime = isStartTime 
-        ? (widget.startTime ?? TimeOfDay.now()) 
+    final initialTime = isStartTime
+        ? (widget.startTime ?? TimeOfDay.now())
         : (widget.endTime ?? TimeOfDay.now());
 
     final TimeOfDay? pickedTime = await showTimePicker(
@@ -77,19 +78,22 @@ class _TimePickerSectionState extends State<TimePickerSection> {
     });
 
     if (widget.startTime != null && widget.endTime != null) {
-      final startMinutes = widget.startTime!.hour * 60 + widget.startTime!.minute;
+      final startMinutes =
+          widget.startTime!.hour * 60 + widget.startTime!.minute;
       final endMinutes = widget.endTime!.hour * 60 + widget.endTime!.minute;
 
       if (startMinutes == endMinutes) {
         setState(() {
-          _availabilityError = 'La hora de inicio no puede ser igual a la hora de fin';
+          _availabilityError =
+              'La hora de inicio no puede ser igual a la hora de fin';
         });
         return;
       }
 
       if (endMinutes < startMinutes) {
         setState(() {
-          _availabilityError = 'La hora de fin no puede ser anterior a la hora de inicio';
+          _availabilityError =
+              'La hora de fin no puede ser anterior a la hora de inicio';
         });
         return;
       }
@@ -113,7 +117,8 @@ class _TimePickerSectionState extends State<TimePickerSection> {
     try {
       final supabase = Supabase.instance.client;
 
-      final dateStr = '${widget.selectedDate.year}-${widget.selectedDate.month.toString().padLeft(2, '0')}-${widget.selectedDate.day.toString().padLeft(2, '0')}';
+      final dateStr =
+          '${widget.selectedDate.year}-${widget.selectedDate.month.toString().padLeft(2, '0')}-${widget.selectedDate.day.toString().padLeft(2, '0')}';
 
       final response = await supabase
           .from('reservas')
@@ -124,15 +129,21 @@ class _TimePickerSectionState extends State<TimePickerSection> {
 
       if (response.isNotEmpty) {
         for (final reservation in response) {
-          final existingStart = DateTime.parse(reservation['hora_inicio'] as String);
+          final existingStart = DateTime.parse(
+            reservation['hora_inicio'] as String,
+          );
           final existingEnd = DateTime.parse(reservation['hora_fin'] as String);
 
-          final existingStartMinutes = existingStart.hour * 60 + existingStart.minute;
+          final existingStartMinutes =
+              existingStart.hour * 60 + existingStart.minute;
           final existingEndMinutes = existingEnd.hour * 60 + existingEnd.minute;
 
-          if ((startMinutes >= existingStartMinutes && startMinutes < existingEndMinutes) ||
-              (endMinutes > existingStartMinutes && endMinutes <= existingEndMinutes) ||
-              (startMinutes <= existingStartMinutes && endMinutes >= existingEndMinutes)) {
+          if ((startMinutes >= existingStartMinutes &&
+                  startMinutes < existingEndMinutes) ||
+              (endMinutes > existingStartMinutes &&
+                  endMinutes <= existingEndMinutes) ||
+              (startMinutes <= existingStartMinutes &&
+                  endMinutes >= existingEndMinutes)) {
             final existingDate = existingStart.day;
             final existingMonth = existingStart.month;
             final existingYear = existingStart.year;
@@ -140,11 +151,14 @@ class _TimePickerSectionState extends State<TimePickerSection> {
             if (existingDate == widget.selectedDate.day &&
                 existingMonth == widget.selectedDate.month &&
                 existingYear == widget.selectedDate.year) {
-              final startFormatted = '${existingStart.hour.toString().padLeft(2, '0')}:${existingStart.minute.toString().padLeft(2, '0')}';
-              final endFormatted = '${existingEnd.hour.toString().padLeft(2, '0')}:${existingEnd.minute.toString().padLeft(2, '0')}';
+              final startFormatted =
+                  '${existingStart.hour.toString().padLeft(2, '0')}:${existingStart.minute.toString().padLeft(2, '0')}';
+              final endFormatted =
+                  '${existingEnd.hour.toString().padLeft(2, '0')}:${existingEnd.minute.toString().padLeft(2, '0')}';
 
               setState(() {
-                _availabilityError = 'No puedes elegir ese bloque de horas ($startFormatted - $endFormatted) en este día, ya que otro usuario ya tiene una reservación';
+                _availabilityError =
+                    'No puedes elegir ese bloque de horas ($startFormatted - $endFormatted) en este día, ya que otro usuario ya tiene una reservación';
               });
               break;
             }
@@ -214,9 +228,7 @@ class _TimePickerSectionState extends State<TimePickerSection> {
             decoration: BoxDecoration(
               color: AppColors.errorLight,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppColors.error.withValues(alpha: 0.3),
-              ),
+              border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
             ),
             child: Row(
               children: [
@@ -288,12 +300,16 @@ class _TimeInputButton extends StatelessWidget {
                   style: GoogleFonts.poppins(
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
-                    color: time != null ? AppColors.textPrimary : AppColors.textTertiary,
+                    color: time != null
+                        ? AppColors.textPrimary
+                        : AppColors.textTertiary,
                   ),
                 ),
                 Icon(
                   Icons.access_time,
-                  color: time != null ? AppColors.primaryBlue : AppColors.textTertiary,
+                  color: time != null
+                      ? AppColors.primaryBlue
+                      : AppColors.textTertiary,
                   size: 20,
                 ),
               ],

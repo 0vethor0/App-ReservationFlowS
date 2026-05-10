@@ -1,5 +1,6 @@
 /// Card con sombra neon y bordes redondeados.
 library;
+
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/neon_decoration.dart';
@@ -48,7 +49,8 @@ class NeonCard extends StatelessWidget {
                   : null,
               gradient: gradient,
               borderRadius: BorderRadius.circular(borderRadius),
-              border: border ??
+              border:
+                  border ??
                   Border.all(
                     color: AppColors.border.withValues(alpha: 0.15),
                     width: 1,

@@ -3,6 +3,7 @@
 /// Define la paleta completa de la app BeamReserve con
 /// acentos azules, gradientes neon y fondo blanco puro.
 library;
+
 import 'package:flutter/material.dart';
 
 abstract final class AppColors {
