@@ -12,42 +12,41 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout del código fuente
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Instalación de Java (Actualizado a v4)
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
-          cache: 'gradle' # Optimiza el build de Android
+          cache: 'gradle'
 
-      # 3. Instalación de Flutter (CORRECCIÓN APLICADA AQUÍ)
-      # Usamos una versión específica para evitar errores de red/resolución
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.41.9' # Cambia a la versión exacta que uses en local
+          flutter-version: '3.41.9'
           cache: true
 
-      # 4. Instalación de dependencias
+      # 🔑 NUEVO: Crear .env desde GitHub Secrets
+      - name: Create .env file from secrets
+        run: |
+          cat > .env << EOF
+          SUPABASE_URL=${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
+          EOF
+
       - name: Install dependencies
         run: flutter pub get
 
-      # 5. Verificación de formato
       - name: Check formatting
         run: dart format --set-exit-if-changed .
 
-      # 6. Análisis estático (Linter)
       - name: Analyze project code
         run: flutter analyze
 
-      # 7. Ejecución de Tests
       - name: Run tests
         run: flutter test
 
-      # 8. Construcción del APK (Modo Debug para verificación)
       - name: Build APK (Verification)
         run: flutter build apk --debug
