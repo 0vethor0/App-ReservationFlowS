@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
@@ -32,9 +33,72 @@ class DashboardScreen extends StatefulWidget {
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingObserver {
   int _currentIndex = 0;
+  RealtimeChannel? _presenceChannel; // Ahora puede ser nula
+  final SupabaseClient _supabase = Supabase.instance.client;
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initPresence();
+    });
+  }
+
+ void _initPresence() {
+  final auth = context.read<AuthProvider>();
+  final isAdmin = auth.currentUser?.role == UserRole.admin ||
+      auth.currentUser?.role == UserRole.superAdmin;
+
+  if (!isAdmin) return;
+
+  _presenceChannel = _supabase.channel('admin_presence');
+  
+  // Usamos el operador ?. para seguridad
+  _presenceChannel?.subscribe((status, [error]) async {
+    if (status == RealtimeSubscribeStatus.subscribed) {
+      await _presenceChannel?.track({'status': 'online', 'viewing': 'dashboard'});
+    }
+  });
+}
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final auth = context.read<AuthProvider>();
+    final isAdmin = auth.currentUser?.role == UserRole.admin ||
+        auth.currentUser?.role == UserRole.superAdmin;
+
+    if (!isAdmin) return;
+
+    if (state == AppLifecycleState.resumed) {
+      _marcarComoLeido();
+    }
+  }
+
+  Future<void> _marcarComoLeido() async {
+    try {
+      await _supabase
+          .from('reservas')
+          .update({'leido_por_admin': true})
+          .eq('leido_por_admin', false);
+    } catch (e) {
+      debugPrint('Error marking as read: $e');
+    }
+  }
+
+ @override
+void dispose() {
+  WidgetsBinding.instance.removeObserver(this);
+  
+  // Solo intentamos removerlo si realmente fue inicializado
+  if (_presenceChannel != null) {
+    _supabase.removeChannel(_presenceChannel!);
+  }
+  
+  super.dispose();
+}
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();

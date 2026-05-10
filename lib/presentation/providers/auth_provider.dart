@@ -8,11 +8,11 @@ import '../../domain/entities/entities.dart';
 import 'package:flutter/foundation.dart';
 
 class AuthProvider extends ChangeNotifier {
-  AuthProvider() {
+  AuthProvider() : _supabase = Supabase.instance.client {
     _init();
   }
 
-  final SupabaseClient _supabase = Supabase.instance.client;
+  final SupabaseClient _supabase;
 
   UserEntity? _currentUser;
   bool _isLoading = false;

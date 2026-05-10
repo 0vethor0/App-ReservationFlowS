@@ -67,7 +67,14 @@ class DashboardProvider extends ChangeNotifier {
 
     try {
       // 1. Get all products to calculate equipment metrics
+      debugPrint('=== DASHBOARD: Querying productos table ===');
       final products = await _supabase.from('productos').select();
+      debugPrint('DASHBOARD: Retrieved ${products.length} products');
+      
+      if (products.isNotEmpty) {
+        debugPrint('DASHBOARD: First product: ${products[0]}');
+      }
+      
       final totalEquipment = products.length;
       final availableEquipment = products
           .where((p) => p['id_estado'] == 1)
@@ -76,6 +83,8 @@ class DashboardProvider extends ChangeNotifier {
           .where((p) => p['id_estado'] == 3 || p['id_estado'] == 4)
           .length;
       final inUseNow = products.where((p) => p['id_estado'] == 2).length;
+      
+      debugPrint('DASHBOARD: total=$totalEquipment, available=$availableEquipment, maintenance=$inMaintenance, inUse=$inUseNow');
 
       // 2. Get reservations for today and tomorrow (upcoming)
       final now = DateTime.now();
@@ -125,7 +134,18 @@ class DashboardProvider extends ChangeNotifier {
       );
 
       // Map to entities for upcoming reservations
-      _upcomingReservations = reservationsData.map((r) => _mapToEntity(r)).toList();
+      debugPrint('Dashboard: Loading ${reservationsData.length} reservations');
+      _upcomingReservations = reservationsData.map((r) {
+        try {
+          return _mapToEntity(r);
+        } catch (e, stackTrace) {
+          debugPrint('Error mapping reservation: $e');
+          debugPrint('Stack trace: $stackTrace');
+          debugPrint('Reservation data: $r');
+          rethrow;
+        }
+      }).toList();
+      debugPrint('Dashboard: Successfully loaded ${_upcomingReservations.length} reservations');
       
       // 4. Load My Reservations filtered by _filterDate (on creado_en)
       await loadMyReservations();
@@ -166,7 +186,18 @@ class DashboardProvider extends ChangeNotifier {
           .lt('hora_inicio', endOfDay.toUtc().toIso8601String())
           .order('hora_inicio', ascending: true);
 
-      _myReservations = data.map((r) => _mapToEntity(r)).toList();
+      debugPrint('Dashboard: Loading ${data.length} my reservations for $_filterDate');
+      _myReservations = data.map((r) {
+        try {
+          return _mapToEntity(r);
+        } catch (e, stackTrace) {
+          debugPrint('Error mapping my reservation: $e');
+          debugPrint('Stack trace: $stackTrace');
+          debugPrint('Reservation data: $r');
+          rethrow;
+        }
+      }).toList();
+      debugPrint('Dashboard: Successfully loaded ${_myReservations.length} my reservations');
     } catch (e) {
       debugPrint('Error loading my reservations: $e');
     }
@@ -185,22 +216,34 @@ class DashboardProvider extends ChangeNotifier {
   }
 
   ReservationEntity _mapToEntity(Map<String, dynamic> r) {
-    final p = r['productos'] as Map<String, dynamic>;
-    final u = r['perfiles'] as Map<String, dynamic>;
+    // Safe extraction with null checks for related tables
+    final productosData = r['productos'];
+    final perfilesData = r['perfiles'];
+    
+    // Provide fallback values if related data is null
+    final p = productosData is Map<String, dynamic> ? productosData : <String, dynamic>{};
+    final u = perfilesData is Map<String, dynamic> ? perfilesData : <String, dynamic>{};
+    
     return ReservationEntity(
-      id: r['id'].toString(),
-      userId: u['id'].toString(),
-      userName: '${u['primer_nombre']} ${u['primer_apellido'] ?? ''}',
-      videobeamId: p['id'].toString(),
-      videobeamName: p['nombre'] as String,
-      date: DateTime.parse(r['hora_inicio']),
-      startTime: r['hora_inicio'].substring(11, 16),
-      endTime: r['hora_fin'].substring(11, 16),
+      id: r['id']?.toString() ?? 'unknown',
+      userId: u['id']?.toString() ?? 'unknown',
+      userName: '${u['primer_nombre'] ?? 'Usuario'} ${u['primer_apellido'] ?? ''}',
+      videobeamId: p['id']?.toString() ?? 'unknown',
+      videobeamName: p['nombre'] as String? ?? 'Videobeam',
+      date: r['hora_inicio'] != null ? DateTime.parse(r['hora_inicio']) : DateTime.now(),
+      startTime: r['hora_inicio'] != null && r['hora_inicio'].length > 16 
+          ? r['hora_inicio'].substring(11, 16) 
+          : '00:00',
+      endTime: r['hora_fin'] != null && r['hora_fin'].length > 16 
+          ? r['hora_fin'].substring(11, 16) 
+          : '00:00',
       status: _mapStatus(r['estado_reserva']),
       department: u['especialidad'] as String? ?? u['carrera'] as String? ?? '',
       priority: RequestPriority.normal,
-      userAvatarUrl: u['foto_url'],
-      notes: r['notas'],
+      userAvatarUrl: u['foto_url'] as String?,
+      notes: r['notas'] as String?,
+      isRead: r['leido_por_admin'] as bool? ?? false,
+      createdAt: r['creado_en'] != null ? DateTime.parse(r['creado_en']) : null,
     );
   }
 

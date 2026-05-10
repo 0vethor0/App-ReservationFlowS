@@ -111,7 +111,7 @@ class _ProductsManagementModalState extends State<ProductsManagementModal> {
               const SizedBox(height: 16),
               DropdownButtonFormField<int>(
                 dropdownColor: AppColors.surfaceLight,
-                value: selectedEstado,
+                initialValue: selectedEstado,
                 items: _estados
                     .map(
                       (e) => DropdownMenuItem<int>(

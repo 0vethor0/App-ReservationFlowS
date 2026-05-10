@@ -47,22 +47,29 @@ class ReservationProvider extends ChangeNotifier {
 
     try {
       // Filtramos para obtener solo los productos con id_estado = 1 (disponible)
+      debugPrint('Loading available videobeams (id_estado = 1)...');
       final data = await _supabase
           .from('productos')
           .select('*, estados_producto(nombre)')
           .eq('id_estado', 1);
+      
+      debugPrint('Found ${data.length} available videobeams');
           
       _videobeams = data.map((item) {
         return VideobeamEntity(
-          id: item['id'].toString(),
+          id: item['id']?.toString() ?? 'unknown',
           name: item['nombre'] as String? ?? 'Videobeam',
           brand: item['marca'] as String? ?? '',
           model: item['modelo'] as String? ?? '',
           status: VideobeamStatus.available, // Solo mostramos los disponibles
         );
       }).toList();
+      
+      debugPrint('Successfully loaded ${_videobeams.length} videobeams');
       await fetchReservations();
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('Error loading videobeams: $e');
+      debugPrint('Stack trace: $stackTrace');
       _error = 'Error loading videobeams: $e';
     }
 
@@ -118,14 +125,17 @@ class ReservationProvider extends ChangeNotifier {
         _endTime!.hour, _endTime!.minute
       );
 
-      final dateStr = '${_selectedDate.year}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.day.toString().padLeft(2, '0')}';
+      // Usar rango de fechas en lugar de LIKE (que no funciona con timestamps)
+      final startOfDay = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
+      final endOfDay = startOfDay.add(const Duration(days: 1));
 
       final existingReservations = await _supabase
           .from('reservas')
           .select('*')
           .eq('id_producto', _selectedVideobeam!.id)
           .eq('estado_reserva', 'aprobada')
-          .like('hora_inicio', '$dateStr%');
+          .gte('hora_inicio', startOfDay.toIso8601String())
+          .lt('hora_inicio', endOfDay.toIso8601String());
 
       if (existingReservations.isNotEmpty) {
         final startMinutes = _startTime!.hour * 60 + _startTime!.minute;
@@ -168,18 +178,19 @@ class ReservationProvider extends ChangeNotifier {
       
       final profileId = profileData['id'];
 
-      debugPrint('Confirmando reserva: id_producto=${_selectedVideobeam!.id}, id_usuario=$profileId');
+      debugPrint('Confirmando reserva via RPC: id_producto=${_selectedVideobeam!.id}, id_usuario=$profileId');
+      debugPrint('Horario: $startDateTime - $endDateTime');
 
-      await _supabase.from('reservas').insert({
-        'id_usuario': profileId,
-        'id_producto': _selectedVideobeam!.id,
-        'hora_inicio': startDateTime.toIso8601String(),
-        'hora_fin': endDateTime.toIso8601String(),
-        'estado_reserva': 'pendiente',
-        'notas': _notes,
+      // Usar la función RPC con la firma correcta:
+      // intentar_reservar(p_fin, p_inicio, p_producto_id, p_usuario_id)
+      await _supabase.rpc('intentar_reservar', params: {
+        'p_usuario_id': profileId,
+        'p_producto_id': _selectedVideobeam!.id,
+        'p_inicio': startDateTime.toIso8601String(),
+        'p_fin': endDateTime.toIso8601String(),
       });
 
-      debugPrint('Reserva insertada con éxito');
+      debugPrint('Reserva insertada con éxito via RPC');
 
 
       _isLoading = false;

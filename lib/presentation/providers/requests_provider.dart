@@ -74,26 +74,39 @@ class RequestsProvider extends ChangeNotifier {
           .lt('hora_inicio', end.toIso8601String())
           .order('hora_inicio', ascending: true);
 
+      debugPrint('Requests: Loading ${data.length} reservations for the week');
+
       _allRequests = data.map((r) {
-        final p = r['productos'] as Map<String, dynamic>;
-        final u = r['perfiles'] as Map<String, dynamic>;
+        // Safe extraction with null checks
+        final productosData = r['productos'];
+        final perfilesData = r['perfiles'];
+        
+        final p = productosData is Map<String, dynamic> ? productosData : <String, dynamic>{};
+        final u = perfilesData is Map<String, dynamic> ? perfilesData : <String, dynamic>{};
+        
         return ReservationEntity(
-          id: r['id'].toString(),
-          userId: u['id'].toString(),
-          userName: '${u['primer_nombre']} ${u['primer_apellido'] ?? ''}',
-          videobeamId: p['id'].toString(),
-          videobeamName: p['nombre'] as String,
-          date: DateTime.parse(r['hora_inicio']),
-          startTime: r['hora_inicio'].substring(11, 16),
-          endTime: r['hora_fin'].substring(11, 16),
+          id: r['id']?.toString() ?? 'unknown',
+          userId: u['id']?.toString() ?? 'unknown',
+          userName: '${u['primer_nombre'] ?? 'Usuario'} ${u['primer_apellido'] ?? ''}',
+          videobeamId: p['id']?.toString() ?? 'unknown',
+          videobeamName: p['nombre'] as String? ?? 'Videobeam',
+          date: r['hora_inicio'] != null ? DateTime.parse(r['hora_inicio']) : DateTime.now(),
+          startTime: r['hora_inicio'] != null && r['hora_inicio'].length > 16 
+              ? r['hora_inicio'].substring(11, 16) 
+              : '00:00',
+          endTime: r['hora_fin'] != null && r['hora_fin'].length > 16 
+              ? r['hora_fin'].substring(11, 16) 
+              : '00:00',
           status: _mapStatus(r['estado_reserva']),
           department:
               u['especialidad'] as String? ?? u['carrera'] as String? ?? '',
           priority: RequestPriority.normal,
-          userAvatarUrl: u['foto_url'],
-          notes: r['notas'],
+          userAvatarUrl: u['foto_url'] as String?,
+          notes: r['notas'] as String?,
         );
       }).toList();
+      
+      debugPrint('Requests: Successfully loaded ${_allRequests.length} reservations');
     } catch (e, stack) {
       debugPrint('Error loading requests: $e');
       debugPrint('Stack trace: $stack');

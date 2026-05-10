@@ -11,7 +11,6 @@ import '../../../core/constants/app_strings.dart';
 
 import '../../providers/requests_provider.dart';
 
-import 'components/filter_chip.dart' show StatusFilterChip;
 import 'components/request_card.dart';
 
 class RequestsScreen extends StatelessWidget {

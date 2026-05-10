@@ -60,6 +60,8 @@ class ReservationEntity {
     this.priority = RequestPriority.normal,
     this.userAvatarUrl,
     this.notes,
+    this.isRead = false,
+    this.createdAt,
   });
 
   final String id;
@@ -75,6 +77,8 @@ class ReservationEntity {
   final RequestPriority priority;
   final String? userAvatarUrl;
   final String? notes;
+  final bool isRead;
+  final DateTime? createdAt;
 }
 
 enum ReservationStatus { pending, approved, rejected, completed, cancelled }
