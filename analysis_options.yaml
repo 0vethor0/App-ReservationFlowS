@@ -1,28 +1,34 @@
-# This file configures the analyzer, which statically analyzes Dart code to
-# check for errors, warnings, and lints.
-#
-# The issues identified by the analyzer are surfaced in the UI of Dart-enabled
-# IDEs (https://dart.dev/tools#ides-and-editors). The analyzer can also be
-# invoked from the command line by running `flutter analyze`.
+# Este archivo configura el analizador estático de Dart.
 
-# The following line activates a set of recommended lints for Flutter apps,
-# packages, and plugins designed to encourage good coding practices.
+# 1. Importa las reglas estándar recomendadas por el equipo de Flutter
 include: package:flutter_lints/flutter.yaml
 
-linter:
-  # The lint rules applied to this project can be customized in the
-  # section below to disable rules from the `package:flutter_lints/flutter.yaml`
-  # included above or to enable additional rules. A list of all available lints
-  # and their documentation is published at https://dart.dev/lints.
-  #
-  # Instead of disabling a lint rule for the entire project in the
-  # section below, it can also be suppressed for a single line of code
-  # or a specific dart file by using the `// ignore: name_of_lint` and
-  # `// ignore_for_file: name_of_lint` syntax on the line or in the file
-  # producing the lint.
-  rules:
-    # avoid_print: false  # Uncomment to disable the `avoid_print` rule
-    # prefer_single_quotes: true  # Uncomment to enable the `prefer_single_quotes` rule
+analyzer:
+  # 2. Excluye archivos generados automáticamente para que no den errores falsos
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - "build/**"
 
-# Additional information about this file can be found at
-# https://dart.dev/guides/language/analysis-options
+  # 3. Configura la severidad de ciertos problemas
+  errors:
+    todo: ignore
+    missing_required_param: error    # Un parámetro requerido que falta será un error de compilación
+    missing_return: error            # Olvidar un return en una función será un error
+    unused_local_variable: warning   # Variables sin usar se marcan como aviso
+    dead_code: error                # El código que nunca se ejecutará es un error
+
+# 4. Reglas personalizadas del Linter (Estilo y bugs comunes)
+linter:
+  rules:
+    # --- BUENAS PRÁCTICAS Y PREVENCIÓN DE ERRORES ---
+    - always_declare_return_types       # Te obliga a decir qué devuelve una función (ej: void, int)
+    - cancel_subscriptions              # Evita fugas de memoria cerrando Streams
+    - close_sinks                       # Evita fugas de memoria cerrando Sinks
+    - prefer_final_locals               # Si una variable no cambia, oblígala a ser final (optimiza memoria)
+    - avoid_print                       # Evita dejar prints en el código que subes a producción
+    - avoid_empty_else                  # Evita bloques else vacíos que ensucian el código
+    - no_duplicate_case_values          # Evita duplicados en los bloques switch (error lógico común)
+    - prefer_const_constructors         # Mejora el rendimiento usando const donde sea posible
+    - prefer_is_not_empty               # Obliga a usar !isEmpty en lugar de length > 0
+    - annotate_overrides                # Obliga a usar @override para no sobrescribir métodos por error

@@ -193,9 +193,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       child: RichText(
                         text: TextSpan(style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary), children: [
                           const TextSpan(text: 'He leído y acepto los '),
-                          TextSpan(text: AppStrings.termsLink, style: const TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.w600)),
+                          const TextSpan(text: AppStrings.termsLink, style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.w600)),
                           const TextSpan(text: ' y la '),
-                          TextSpan(text: AppStrings.privacyLink, style: const TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.w600)),
+                          const TextSpan(text: AppStrings.privacyLink, style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.w600)),
                           const TextSpan(text: '.'),
                         ]),
                       ),

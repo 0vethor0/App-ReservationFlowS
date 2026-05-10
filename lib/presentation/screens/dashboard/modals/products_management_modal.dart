@@ -193,7 +193,7 @@ class _ProductsManagementModalState extends State<ProductsManagementModal> {
                 }
               }
               if (mounted) {
-                Navigator.pop(ctx);
+                Navigator.of(context).pop();
                 _loadData();
               }
             },

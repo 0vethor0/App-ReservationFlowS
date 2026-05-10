@@ -393,11 +393,11 @@ class _RequestAdminCard extends StatelessWidget {
                 ? null
                 : () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
+                      const SnackBar(
                         content: Text(AppStrings.adminRequestSent),
                         backgroundColor: AppColors.primaryBlue,
                         behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
                       ),
                     );
                   },

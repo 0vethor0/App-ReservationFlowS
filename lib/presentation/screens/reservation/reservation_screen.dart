@@ -90,7 +90,7 @@ class ReservationScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _StepHeader(
+                      const _StepHeader(
                         step: 1,
                         title: 'Seleccionar VideoBeam',
                         icon: Icons.videocam_outlined,
@@ -114,7 +114,7 @@ class ReservationScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _StepHeader(
+                      const _StepHeader(
                         step: 2,
                         title: 'Seleccionar la fecha',
                         icon: Icons.calendar_today_outlined,
@@ -137,7 +137,7 @@ class ReservationScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _StepHeader(
+                      const _StepHeader(
                         step: 3,
                         title: 'Seleccionar el horario',
                         icon: Icons.access_time_filled,

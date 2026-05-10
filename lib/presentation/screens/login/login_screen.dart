@@ -152,7 +152,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 FadeInUp(
                   duration: const Duration(milliseconds: 600),
                   delay: const Duration(milliseconds: 500),
-                  child: _DividerWithText(text: AppStrings.orContinueWith),
+                  child: const _DividerWithText(text: AppStrings.orContinueWith),
                 ),
                 const SizedBox(height: 20),
                 FadeInUp(

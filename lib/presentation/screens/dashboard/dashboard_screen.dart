@@ -193,7 +193,7 @@ class _DashboardBody extends StatelessWidget {
                 ),
 
                 // Title Section
-                _SectionTitle(title: AppStrings.todaySummary),
+                const _SectionTitle(title: AppStrings.todaySummary),
 
                 const SizedBox(height: 16),
 
@@ -253,7 +253,7 @@ class _DashboardBody extends StatelessWidget {
                 const SizedBox(height: 28),
 
                 // Upcoming Reservations
-                _UpcomingReservationsSection(),
+                const _UpcomingReservationsSection(),
 
                 const SizedBox(height: 24),
               ],
@@ -274,7 +274,7 @@ class _SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       title,
-      style: TextStyle(
+      style: const TextStyle(
         fontSize: 13,
         fontWeight: FontWeight.w700,
         color: AppColors.textSecondary,
@@ -315,13 +315,13 @@ class _MaintenanceStatusCard extends StatelessWidget {
           const SizedBox(width: 16),
           Text(
             '$inMaintenance',
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(width: 4),
-          Expanded(
+          const Expanded(
             child: Text(
               AppStrings.inMaintenance,
               style: TextStyle(
@@ -338,13 +338,13 @@ class _MaintenanceStatusCard extends StatelessWidget {
           const SizedBox(width: 16),
           Text(
             '$inUseNow',
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(width: 4),
-          Text(
+          const Text(
             AppStrings.inUseNow,
             style: TextStyle(
               fontSize: 13,
@@ -365,7 +365,7 @@ class _UpcomingReservationsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
+        const Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
@@ -398,7 +398,7 @@ class _UpcomingReservationsSection extends StatelessWidget {
               );
             }
             if (resProv.reservations.isEmpty) {
-              return Text(
+              return const Text(
                 'No hay reservaciones',
                 style: TextStyle(
                   color: AppColors.textSecondary,

@@ -188,7 +188,7 @@ class _TimePickerSectionState extends State<TimePickerSection> {
           const SizedBox(height: 12),
           Row(
             children: [
-              SizedBox(
+              const SizedBox(
                 width: 16,
                 height: 16,
                 child: CircularProgressIndicator(
@@ -220,7 +220,7 @@ class _TimePickerSectionState extends State<TimePickerSection> {
             ),
             child: Row(
               children: [
-                Icon(
+                const Icon(
                   Icons.warning_amber_rounded,
                   color: AppColors.error,
                   size: 20,
