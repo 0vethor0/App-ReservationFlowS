@@ -119,17 +119,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const SizedBox(height: 16),
                     // Usage policies
-                    FadeInUp(
-                      duration: const Duration(milliseconds: 500),
-                      delay: const Duration(milliseconds: 300),
-                      child: const _UsagePoliciesCard(),
+                    const FadeInUp(
+                      duration: Duration(milliseconds: 500),
+                      delay: Duration(milliseconds: 300),
+                      child: _UsagePoliciesCard(),
                     ),
                     const SizedBox(height: 32),
                     // Developer footer
-                    FadeInUp(
-                      duration: const Duration(milliseconds: 500),
-                      delay: const Duration(milliseconds: 400),
-                      child: const _DeveloperFooter(),
+                    const FadeInUp(
+                      duration: Duration(milliseconds: 500),
+                      delay: Duration(milliseconds: 400),
+                      child: _DeveloperFooter(),
                     ),
                     const SizedBox(height: 24),
                   ],

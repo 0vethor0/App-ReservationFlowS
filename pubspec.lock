@@ -5,10 +5,10 @@ packages:
     dependency: "direct main"
     description:
       name: animate_do
-      sha256: b6ff08dc6cf3cb5586a86d7f32a3b5f45502d2e08e3fb4f5a484c8421c9b3fc0
+      sha256: ddc9bde27df897088e02553f0aec44c614595de01fe357ffb257ecaf7d40c8fa
       url: "https://pub.dev"
     source: hosted
-    version: "3.3.9"
+    version: "5.1.0"
   app_links:
     dependency: transitive
     description:
@@ -266,10 +266,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_dotenv
-      sha256: b7c7be5cd9f6ef7a78429cabd2774d3c4af50e79cb2b7593e3d5d763ef95c61b
+      sha256: d41da11fb497314fbf89811ec30af02d1d898b47980a129f0a8c0a1720460ba2
       url: "https://pub.dev"
     source: hosted
-    version: "5.2.1"
+    version: "6.0.1"
   flutter_image_compress:
     dependency: "direct main"
     description:
@@ -393,10 +393,10 @@ packages:
     dependency: "direct main"
     description:
       name: google_fonts
-      sha256: ba03d03bcaa2f6cb7bd920e3b5027181db75ab524f8891c8bc3aa603885b8055
+      sha256: "4e9391085e524954a51e3625b7c9c7e9851dc3f376603208bb45c24b9a66255d"
       url: "https://pub.dev"
     source: hosted
-    version: "6.3.3"
+    version: "8.1.0"
   google_identity_services_web:
     dependency: transitive
     description:
@@ -457,10 +457,10 @@ packages:
     dependency: transitive
     description:
       name: gtk
-      sha256: e8ce9ca4b1df106e4d72dad201d345ea1a036cc12c360f1a7d5a758f78ffa42c
+      sha256: "4ff85b2a16724029dd9e5bbb5a94b6918f9973f74ba571c949d2002801879cf5"
       url: "https://pub.dev"
     source: hosted
-    version: "2.1.0"
+    version: "2.2.0"
   hooks:
     dependency: transitive
     description:
@@ -974,10 +974,10 @@ packages:
     dependency: transitive
     description:
       name: sqflite_common
-      sha256: "5e8377564d95166761a968ed96104e0569b6b6cc611faac92a36ab8a169112c3"
+      sha256: f8a08a13fb8f0f8c590df89d745000bed44a673ed94bac846739e1a016875c21
       url: "https://pub.dev"
     source: hosted
-    version: "2.5.6+1"
+    version: "2.5.7"
   sqflite_darwin:
     dependency: transitive
     description:
@@ -1046,34 +1046,34 @@ packages:
     dependency: "direct main"
     description:
       name: syncfusion_flutter_calendar
-      sha256: a5cb5623605c56a9c4bca9a43fd3dee39ce62cd51a09dc17231c95c8010c58af
+      sha256: "11f237d08d17bbda8ed6b0702a44bbd897d3fd4ce313f8ffab757ed20cf6ade6"
       url: "https://pub.dev"
     source: hosted
-    version: "33.2.4"
+    version: "33.2.5"
   syncfusion_flutter_core:
     dependency: transitive
     description:
       name: syncfusion_flutter_core
-      sha256: b377be3df580e9fdc4e5cc5e47fc09a513c8b08dc4ed05eb45c43f5fd34add2d
+      sha256: "25f2e349bc14a1a4f9da95f24484ea1751de2ab13dc11a2d4d96f54c4c7a030a"
       url: "https://pub.dev"
     source: hosted
-    version: "33.2.4"
+    version: "33.2.5"
   syncfusion_flutter_datepicker:
     dependency: transitive
     description:
       name: syncfusion_flutter_datepicker
-      sha256: d1e73e1032aa796e01b14ef2e534d881ebbe92b920a3c68bacbdc165fbe9deae
+      sha256: "4b31c4643a3388d30ab5b005ac643c69d06ab682ab617422839c894cc88c1b0c"
       url: "https://pub.dev"
     source: hosted
-    version: "33.2.4"
+    version: "33.2.5"
   syncfusion_localizations:
     dependency: transitive
     description:
       name: syncfusion_localizations
-      sha256: "2acd5a2e43c6688e7e8e22836db818f859ed0e458c027dcf522741889e715607"
+      sha256: "3b9fce43cbd979c72e688052472b0e63eb2584af7ad2c4f7bd5f1e5728c08f60"
       url: "https://pub.dev"
     source: hosted
-    version: "33.2.4"
+    version: "33.2.5"
   synchronized:
     dependency: transitive
     description:
@@ -1174,10 +1174,10 @@ packages:
     dependency: transitive
     description:
       name: url_launcher_web
-      sha256: d0412fcf4c6b31ecfdb7762359b7206ffba3bbffd396c6d9f9c4616ece476c1f
+      sha256: "85c81589622fbc87c1c683aaea164d3604a7777495a79d91e39ffcdec39ddb34"
       url: "https://pub.dev"
     source: hosted
-    version: "2.4.2"
+    version: "2.4.3"
   url_launcher_windows:
     dependency: transitive
     description:

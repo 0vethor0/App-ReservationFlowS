@@ -79,9 +79,9 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               children: [
                 const SizedBox(height: 60),
-                FadeInDown(
-                  duration: const Duration(milliseconds: 600),
-                  child: const _LogoSection(),
+                const FadeInDown(
+                  duration: Duration(milliseconds: 600),
+                  child: _LogoSection(),
                 ),
                 const SizedBox(height: 48),
                 FadeInUp(
@@ -160,12 +160,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 28),
-                FadeInUp(
-                  duration: const Duration(milliseconds: 600),
-                  delay: const Duration(milliseconds: 500),
-                  child: const _DividerWithText(
-                    text: AppStrings.orContinueWith,
-                  ),
+                const FadeInUp(
+                  duration: Duration(milliseconds: 600),
+                  delay: Duration(milliseconds: 500),
+                  child: _DividerWithText(text: AppStrings.orContinueWith),
                 ),
                 const SizedBox(height: 20),
                 FadeInUp(

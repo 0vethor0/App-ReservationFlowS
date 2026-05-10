@@ -22,8 +22,13 @@ import 'core/router/app_router.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load environment variables
-  await dotenv.load(fileName: '.env');
+  // Load environment variables (gracefully handle errors in test environments)
+  try {
+    await dotenv.load(fileName: '.env');
+  } catch (e) {
+    // In test environments or when .env is not available, continue with empty env
+    debugPrint('Warning: Could not load .env file: $e');
+  }
 
   // Initialize date formatting for Spanish locale
   await initializeDateFormatting('es', null);
