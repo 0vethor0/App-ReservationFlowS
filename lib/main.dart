@@ -33,10 +33,18 @@ Future<void> main() async {
   // Initialize date formatting for Spanish locale
   await initializeDateFormatting('es', null);
 
+  // Get environment variables safely (works even if dotenv failed to load)
+  final supabaseUrl = dotenv.isInitialized
+      ? (dotenv.maybeGet('SUPABASE_URL') ?? '')
+      : '';
+  final supabaseAnonKey = dotenv.isInitialized
+      ? (dotenv.maybeGet('SUPABASE_ANON_KEY') ?? '')
+      : '';
+
   // Initialize Supabase
   await Supabase.initialize(
-    url: dotenv.env['SUPABASE_URL'] ?? '',
-    anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
+    url: supabaseUrl,
+    anonKey: supabaseAnonKey,
     authOptions: const FlutterAuthClientOptions(
       authFlowType: AuthFlowType.pkce,
     ),
@@ -84,8 +92,12 @@ class _BeamReserveAppState extends State<BeamReserveApp> {
         ChangeNotifierProvider(create: (_) => ReservationProvider()),
         ChangeNotifierProvider(create: (_) => RequestsProvider()),
         ChangeNotifierProvider(
-          create: (_) =>
-              WebSocketManager(url: dotenv.env['WS_SERVER_URL'] ?? ''),
+          create: (_) {
+            final wsUrl = dotenv.isInitialized
+                ? (dotenv.maybeGet('WS_SERVER_URL') ?? '')
+                : '';
+            return WebSocketManager(url: wsUrl);
+          },
         ),
       ],
       child: MaterialApp.router(
