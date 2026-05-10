@@ -1,6 +1,5 @@
 name: Flutter CI - Build & Analysis
 
-# El workflow se dispara en pushes y pull requests a las ramas principales
 on:
   push:
     branches: [ main, master, dev ]
@@ -17,49 +16,38 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Instalación de Java (necesario para builds de Android)
+      # 2. Instalación de Java (Actualizado a v4)
       - name: Set up Java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
+          cache: 'gradle' # Optimiza el build de Android
 
-      # 3. Instalación de Flutter y dependencias de la VM
+      # 3. Instalación de Flutter (CORRECCIÓN APLICADA AQUÍ)
+      # Usamos una versión específica para evitar errores de red/resolución
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: 'stable' # Utiliza la última versión estable
-          cache: true               # Activa el cache para acelerar futuras ejecuciones
+          flutter-version: '3.41.9' # Cambia a la versión exacta que uses en local
+          cache: true
 
-      # 4. Instalación de dependencias del proyecto (pub get)
+      # 4. Instalación de dependencias
       - name: Install dependencies
         run: flutter pub get
 
-      # --- PASOS DE VERIFICACIÓN DE ERRORES ---
-
-      # 5. Verificación de formato (Buenas prácticas de Dart)
-      # Esto fallará si el código no sigue el estilo estándar de Dart
+      # 5. Verificación de formato
       - name: Check formatting
         run: dart format --set-exit-if-changed .
 
       # 6. Análisis estático (Linter)
-      # Busca errores potenciales, código muerto o violaciones de reglas de Dart
       - name: Analyze project code
         run: flutter analyze
 
-      # 7. Ejecución de Tests Unitarios y de Widget
-      # Verifica que la lógica del negocio no tenga errores funcionales
+      # 7. Ejecución de Tests
       - name: Run tests
         run: flutter test
 
-      # --- PASO DE CONSTRUCCIÓN (BUILD) ---
-
-      # 8. Construcción del APK (Modo Debug para verificación rápida)
-      # Se usa --debug para validar que el proceso de ensamble es correcto 
-      # sin necesidad de configurar firmas digitales (keystores)
+      # 8. Construcción del APK (Modo Debug para verificación)
       - name: Build APK (Verification)
         run: flutter build apk --debug
-
-      # Opcional: Build para Web si tu proyecto lo soporta
-      # - name: Build Web
-      #   run: flutter build web
