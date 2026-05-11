@@ -6,7 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:animate_do/animate_do.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
-import '../../../../domain/entities/entities.dart';
+import '../../../../features/auth/domain/entities/user_entity.dart';
 
 class DashboardHeader extends StatelessWidget {
   const DashboardHeader({

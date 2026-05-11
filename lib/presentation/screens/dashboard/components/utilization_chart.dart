@@ -6,7 +6,7 @@ import 'package:animate_do/animate_do.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../providers/dashboard_provider.dart';
-import '../../../../domain/entities/entities.dart';
+import '../../../../features/reservations/domain/entities/reservation_entity.dart';
 
 class UtilizationChart extends StatefulWidget {
   const UtilizationChart({super.key});

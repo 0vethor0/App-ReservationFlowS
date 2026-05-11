@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
-import '../../../../domain/entities/entities.dart';
+import '../../../../features/reservations/domain/entities/videobeam_entity.dart';
 
 class VideobeamSelector extends StatelessWidget {
   const VideobeamSelector({
@@ -231,13 +231,17 @@ class VideobeamSelector extends StatelessWidget {
                               width: 6,
                               height: 6,
                               decoration: BoxDecoration(
-                                color: AppColors.success,
+                                color: isAvailable
+                                    ? AppColors.success
+                                    : AppColors.error,
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: AppColors.success.withValues(
-                                      alpha: 0.4,
-                                    ),
+                                    color:
+                                        (isAvailable
+                                                ? AppColors.success
+                                                : AppColors.error)
+                                            .withValues(alpha: 0.4),
                                     blurRadius: 4,
                                     spreadRadius: 1,
                                   ),
@@ -246,11 +250,13 @@ class VideobeamSelector extends StatelessWidget {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              'Disponible',
+                              isAvailable ? 'Disponible' : 'No disponible',
                               style: GoogleFonts.inter(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w500,
-                                color: AppColors.success,
+                                color: isAvailable
+                                    ? AppColors.success
+                                    : AppColors.error,
                               ),
                             ),
                           ],

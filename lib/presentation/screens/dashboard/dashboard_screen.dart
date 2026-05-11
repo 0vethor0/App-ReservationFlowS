@@ -10,7 +10,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/neon_card.dart';
-import '../../../domain/entities/entities.dart';
+import '../../../features/auth/domain/entities/user_entity.dart';
 
 import '../../providers/dashboard_provider.dart';
 import '../../providers/auth_provider.dart';
