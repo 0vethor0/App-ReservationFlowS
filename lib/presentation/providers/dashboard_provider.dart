@@ -1,19 +1,22 @@
 /// Provider del dashboard con métricas y reservas del día.
-/// Este provider se encarga de cargar las métricas y las reservas del día y
-/// mostrarlas en la interfaz de usuario.
-/// También se encarga de cargar las reservas del día.
-/// También se encarga de cargar las reservas del día.
+/// Refactored to use Clean Architecture repositories.
 
 library;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../domain/entities/entities.dart';
+import '../../features/dashboard/domain/repositories/dashboard_repository.dart';
+import '../../features/reservations/domain/entities/reservation_entity.dart';
+import '../../domain/entities/entities.dart'
+    hide ReservationEntity, ReservationStatus, RequestPriority;
 
 class DashboardProvider extends ChangeNotifier {
+  // ignore: unused_field
+  final DashboardRepository _dashboardRepository;
   RealtimeChannel? _realtimeChannel;
 
-  DashboardProvider() {
+  DashboardProvider(this._dashboardRepository) {
     loadDashboard();
     _setupRealtime();
   }

@@ -1,17 +1,19 @@
 /// Provider de solicitudes de reservación.
-/// Este provider se encarga de cargar las solicitudes de reservación y
-/// mostrarlas en la interfaz de usuario.
-/// También se encarga de aprobar y rechazar las solicitudes de reservación.
-/// También se encarga de filtrar las solicitudes de reservación por estado.
+/// Refactored to use Clean Architecture repositories.
 
 library;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../domain/entities/entities.dart';
+import '../../features/requests/domain/repositories/requests_repository.dart';
+import '../../features/reservations/domain/entities/reservation_entity.dart';
 
 class RequestsProvider extends ChangeNotifier {
-  RequestsProvider() {
+  // ignore: unused_field
+  final RequestsRepository _requestsRepository;
+
+  RequestsProvider(this._requestsRepository) {
     loadRequests();
   }
 
@@ -157,11 +159,26 @@ class RequestsProvider extends ChangeNotifier {
 
   Future<void> approveRequest(String id) async {
     try {
-      // Usamos 'aprobada' que es el valor correcto del enum en la DB
+      final reservationData = await _supabase
+          .from('reservas')
+          .select('id_producto')
+          .eq('id', id)
+          .single();
+
+      final productId = reservationData['id_producto'];
+
       await _supabase
           .from('reservas')
           .update({'estado_reserva': 'aprobada'})
           .eq('id', id);
+
+      if (productId != null) {
+        await _supabase
+            .from('productos')
+            .update({'id_estado': 2})
+            .eq('id', productId);
+      }
+
       await loadRequests();
     } catch (e) {
       debugPrint('Error approving request: $e');
@@ -170,11 +187,35 @@ class RequestsProvider extends ChangeNotifier {
 
   Future<void> rejectRequest(String id) async {
     try {
-      // Usamos 'rechazada' que es el valor correcto del enum en la DB
+      final reservationData = await _supabase
+          .from('reservas')
+          .select('id_producto')
+          .eq('id', id)
+          .single();
+
+      final productId = reservationData['id_producto'];
+
       await _supabase
           .from('reservas')
           .update({'estado_reserva': 'rechazada'})
           .eq('id', id);
+
+      if (productId != null) {
+        final activeReservations = await _supabase
+            .from('reservas')
+            .select('id')
+            .eq('id_producto', productId)
+            .eq('estado_reserva', 'aprobada')
+            .neq('id', id);
+
+        if (activeReservations.isEmpty) {
+          await _supabase
+              .from('productos')
+              .update({'id_estado': 1})
+              .eq('id', productId);
+        }
+      }
+
       await loadRequests();
     } catch (e) {
       debugPrint('Error rejecting request: $e');

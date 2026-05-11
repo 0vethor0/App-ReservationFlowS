@@ -1,6 +1,7 @@
 /// Punto de entrada principal de BeamReserve.
 ///
 /// Configura flutter_dotenv, Supabase, y los Providers globales.
+/// Arquitectura Clean Architecture con patrón Feature-First.
 library;
 
 import 'package:flutter/material.dart';
@@ -18,6 +19,20 @@ import 'presentation/providers/dashboard_provider.dart';
 import 'presentation/providers/reservation_provider.dart';
 import 'presentation/providers/requests_provider.dart';
 import 'core/router/app_router.dart';
+
+// Clean Architecture imports - Feature-First
+import 'features/auth/data/datasources/auth_remote_datasource.dart';
+import 'features/auth/data/repositories/auth_repository_impl.dart';
+import 'features/auth/domain/repositories/auth_repository.dart';
+import 'features/reservations/data/datasources/reservation_remote_datasource.dart';
+import 'features/reservations/data/repositories/reservation_repository_impl.dart';
+import 'features/reservations/domain/repositories/reservation_repository.dart';
+import 'features/dashboard/data/datasources/dashboard_remote_datasource.dart';
+import 'features/dashboard/data/repositories/dashboard_repository_impl.dart';
+import 'features/dashboard/domain/repositories/dashboard_repository.dart';
+import 'features/requests/data/datasources/requests_remote_datasource.dart';
+import 'features/requests/data/repositories/requests_repository_impl.dart';
+import 'features/requests/domain/repositories/requests_repository.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -71,26 +86,65 @@ class BeamReserveApp extends StatefulWidget {
 }
 
 class _BeamReserveAppState extends State<BeamReserveApp> {
-  late final AuthProvider _authProvider;
   late final GoRouter _router;
+
+  // Clean Architecture: Repositories
+  late final AuthRepository _authRepository;
+  late final ReservationRepository _reservationRepository;
+  late final DashboardRepository _dashboardRepository;
+  late final RequestsRepository _requestsRepository;
 
   @override
   void initState() {
     super.initState();
-    // Create the provider instance once
-    _authProvider = AuthProvider();
-    // Create the router instance once, passing the provider
-    _router = AppRouter.router(_authProvider);
+
+    // Initialize Supabase client
+    final supabaseClient = Supabase.instance.client;
+
+    // Clean Architecture: Initialize Data Sources
+    final authRemoteDataSource = AuthRemoteDataSource(supabaseClient);
+    final reservationRemoteDataSource = ReservationRemoteDataSource(
+      supabaseClient,
+    );
+    final dashboardRemoteDataSource = DashboardRemoteDataSource(supabaseClient);
+    final requestsRemoteDataSource = RequestsRemoteDataSource(supabaseClient);
+
+    // Clean Architecture: Initialize Repositories
+    _authRepository = AuthRepositoryImpl(authRemoteDataSource);
+    _reservationRepository = ReservationRepositoryImpl(
+      reservationRemoteDataSource,
+    );
+    _dashboardRepository = DashboardRepositoryImpl(
+      dashboardRemoteDataSource,
+      supabaseClient,
+    );
+    _requestsRepository = RequestsRepositoryImpl(requestsRemoteDataSource);
+
+    // Create the router instance once, passing the auth provider
+    _router = AppRouter.router(AuthProvider(_authRepository));
   }
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider.value(value: _authProvider),
-        ChangeNotifierProvider(create: (_) => DashboardProvider()),
-        ChangeNotifierProvider(create: (_) => ReservationProvider()),
-        ChangeNotifierProvider(create: (_) => RequestsProvider()),
+        // Clean Architecture: Provide repositories to the widget tree
+        Provider<AuthRepository>.value(value: _authRepository),
+        Provider<ReservationRepository>.value(value: _reservationRepository),
+        Provider<DashboardRepository>.value(value: _dashboardRepository),
+        Provider<RequestsRepository>.value(value: _requestsRepository),
+
+        // Existing providers (refactored to use repositories)
+        ChangeNotifierProvider(create: (_) => AuthProvider(_authRepository)),
+        ChangeNotifierProvider(
+          create: (_) => DashboardProvider(_dashboardRepository),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => ReservationProvider(_reservationRepository),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => RequestsProvider(_requestsRepository),
+        ),
         ChangeNotifierProvider(
           create: (_) {
             final wsUrl = dotenv.isInitialized

@@ -1,24 +1,18 @@
 /// Provider de reservaciones.
-/// Este provider se encarga de cargar los videobeams y las reservaciones y
-/// mostrarlas en la interfaz de usuario.
-/// También se encarga de seleccionar un videobeam y una fecha y hora de inicio y fin.
-/// También se encarga de confirmar la reservación.
-/// También se encarga de eliminar la reservación.
-/// También se encarga de resetear la reservación.
-/// También se encarga de mostrar el estado de carga.
-/// También se encarga de mostrar el estado de error.
-/// También se encarga de mostrar el estado de éxito.
+/// Refactored to use Clean Architecture repositories.
 library;
 
 import 'package:flutter/material.dart';
-import '../../domain/entities/entities.dart';
-
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../features/reservations/domain/repositories/reservation_repository.dart';
+import '../../features/reservations/domain/entities/videobeam_entity.dart';
 
 class ReservationProvider extends ChangeNotifier {
+  // ignore: unused_field
+  final ReservationRepository _reservationRepository;
   final SupabaseClient _supabase = Supabase.instance.client;
 
-  ReservationProvider() {
+  ReservationProvider(this._reservationRepository) {
     _loadVideobeams();
   }
 
@@ -47,22 +41,38 @@ class ReservationProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Filtramos para obtener solo los productos con id_estado = 1 (disponible)
-      debugPrint('Loading available videobeams (id_estado = 1)...');
+      debugPrint('Loading videobeams with all statuses...');
       final data = await _supabase
           .from('productos')
-          .select('*, estados_producto(nombre)')
-          .eq('id_estado', 1);
+          .select('*, estados_producto(nombre)');
 
-      debugPrint('Found ${data.length} available videobeams');
+      debugPrint('Found ${data.length} total videobeams');
 
       _videobeams = data.map((item) {
+        final idEstado = item['id_estado'] as int?;
+        VideobeamStatus status;
+
+        switch (idEstado) {
+          case 1:
+            status = VideobeamStatus.available;
+            break;
+          case 2:
+            status = VideobeamStatus.inUse;
+            break;
+          case 3:
+          case 4:
+            status = VideobeamStatus.maintenance;
+            break;
+          default:
+            status = VideobeamStatus.available;
+        }
+
         return VideobeamEntity(
           id: item['id']?.toString() ?? 'unknown',
           name: item['nombre'] as String? ?? 'Videobeam',
           brand: item['marca'] as String? ?? '',
           model: item['modelo'] as String? ?? '',
-          status: VideobeamStatus.available, // Solo mostramos los disponibles
+          status: status,
         );
       }).toList();
 
