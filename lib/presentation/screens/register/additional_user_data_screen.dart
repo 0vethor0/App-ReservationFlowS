@@ -9,12 +9,13 @@ import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/neon_button.dart';
 import '../../../core/widgets/neon_card.dart';
 import '../../../core/widgets/neon_text_field.dart';
+import '../../../core/services/local_storage_service.dart';
 import '../../providers/auth_provider.dart';
 
 class AdditionalUserDataScreen extends StatefulWidget {
@@ -33,7 +34,9 @@ class _AdditionalUserDataScreenState extends State<AdditionalUserDataScreen> {
 
   String? _selectedCareer;
   File? _imageFile;
+  String? _localImagePath; // Track persistent local path
   final ImagePicker _picker = ImagePicker();
+  final LocalStorageService _storageService = LocalStorageService();
   
   // State for dynamic career dropdown and neon indicator
   bool _isCareerDropdownEnabled = false;
@@ -56,6 +59,9 @@ class _AdditionalUserDataScreenState extends State<AdditionalUserDataScreen> {
     super.initState();
     // Listen to changes in the profile/role field
     _profileController.addListener(_onProfileRoleChanged);
+    
+    // Restore saved image if exists (persistence)
+    _restoreLocalImage();
   }
 
   @override
@@ -64,6 +70,20 @@ class _AdditionalUserDataScreenState extends State<AdditionalUserDataScreen> {
     _lastNameController.dispose();
     _profileController.dispose();
     super.dispose();
+  }
+
+  /// Restore locally saved image if it exists
+  Future<void> _restoreLocalImage() async {
+    // In future, you could save the path to SharedPreferences and restore here
+    // For now, we just check if _localImagePath is still valid
+    if (_localImagePath != null) {
+      final file = _storageService.getFile(_localImagePath!);
+      if (file != null) {
+        setState(() {
+          _imageFile = file;
+        });
+      }
+    }
   }
 
   /// Detects changes in the profile/role input in real-time
@@ -86,6 +106,23 @@ class _AdditionalUserDataScreenState extends State<AdditionalUserDataScreen> {
 
   Future<void> _pickImage(ImageSource source) async {
     try {
+      // Request permissions before picking image
+      final hasPermission = await _requestPermissions(source);
+      if (!hasPermission) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Se necesitan permisos para acceder a la cámara/galería'),
+              action: SnackBarAction(
+                label: 'Configuración',
+                onPressed: () => _storageService.openAppSettings(),
+              ),
+            ),
+          );
+        }
+        return;
+      }
+
       final XFile? pickedFile = await _picker.pickImage(
         source: source,
         maxWidth: 1024,
@@ -137,9 +174,23 @@ class _AdditionalUserDataScreenState extends State<AdditionalUserDataScreen> {
             return;
           }
 
+          // Save to persistent local storage
+          final fileName = _storageService.generateTempFileName();
+          final localFile = await _storageService.saveImageLocally(
+            sourceFile: File(compressedFile.path),
+            fileName: fileName,
+          );
+
           setState(() {
-            _imageFile = File(compressedFile.path);
+            _imageFile = localFile;
+            _localImagePath = localFile.path;
           });
+
+          // Clean up temp file from image picker
+          final tempFile = File(compressedFile.path);
+          if (await tempFile.exists()) {
+            await tempFile.delete();
+          }
         }
       }
     } catch (e) {
@@ -148,6 +199,17 @@ class _AdditionalUserDataScreenState extends State<AdditionalUserDataScreen> {
           SnackBar(content: Text('Error al procesar la imagen: $e')),
         );
       }
+    }
+  }
+
+  /// Request camera or storage permissions
+  Future<bool> _requestPermissions(ImageSource source) async {
+    if (source == ImageSource.camera) {
+      final status = await Permission.camera.request();
+      return status.isGranted;
+    } else {
+      // For gallery, we need storage/photos permission
+      return await _storageService.requestStoragePermissions();
     }
   }
 
@@ -203,7 +265,7 @@ class _AdditionalUserDataScreenState extends State<AdditionalUserDataScreen> {
       return;
     }
 
-    if (_selectedCareer == null && _profileController.text.trim() == 'estudiante') {
+    if (_selectedCareer == null && _profileController.text.trim().toLowerCase() == 'estudiante') {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Por favor, selecciona una carrera')),
       );
@@ -212,42 +274,14 @@ class _AdditionalUserDataScreenState extends State<AdditionalUserDataScreen> {
 
     final auth = context.read<AuthProvider>();
 
-    String uploadedPhotoUrl = '';
-
-    // Subir la imagen a Supabase Storage
-    try {
-      final user = Supabase.instance.client.auth.currentUser;
-      if (user != null && _imageFile != null) {
-        // 1. Definimos el nombre del archivo
-        final fileName = "avatar_${DateTime.now().millisecondsSinceEpoch}.jpg";
-
-        // 2. CONCATENAMOS: El RLS exige que el primer nivel sea el UID
-        final path = "${user.id}/$fileName";
-
-        await Supabase.instance.client.storage
-            .from('profile-photos')
-            .upload(path, _imageFile!);
-
-        uploadedPhotoUrl = Supabase.instance.client.storage
-            .from('profile-photos')
-            .getPublicUrl(path);
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error al subir la imagen: $e')));
-      }
-      return; // Stop if upload fails
-    }
-
+    // Delegate all logic to AuthProvider (storage + database)
     final success = await auth.saveAdditionalData(
       firstName: _firstNameController.text.trim(),
       lastName: _lastNameController.text.trim(),
       role: 'usuario',
       career: _selectedCareer ?? '',
       profile: _profileController.text.trim(),
-      photoUrl: uploadedPhotoUrl,
+      photoFile: _imageFile,
     );
 
     if (!mounted) return;
@@ -260,14 +294,21 @@ class _AdditionalUserDataScreenState extends State<AdditionalUserDataScreen> {
         ),
       );
       
+      // Clean up local storage after successful upload
+      await _storageService.clearTempDirectory();
+      
       // Disable the save button to prevent multiple submissions
       setState(() {
         _isSaveButtonDisabled = true;
       });
       
-      // Navigate to waiting approval screen
+      // Navigate to waiting approval screen using GoRouter
       if (mounted) {
-        context.go('/waiting');
+        // Use a small delay to ensure SnackBar is shown
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (mounted) {
+          context.go('/waiting');
+        }
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(

@@ -30,6 +30,7 @@ dependencies:
   syncfusion_flutter_calendar: ^33.2.4
   flutter_launcher_icons: ^0.14.4
   fluttertoast: ^9.0.0
+  permission_handler: ^12.0.1
 
 dev_dependencies:
   flutter_test:

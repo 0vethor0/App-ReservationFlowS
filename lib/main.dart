@@ -21,8 +21,12 @@ import 'core/router/app_router.dart';
 
 // Clean Architecture imports - Feature-First
 import 'features/auth/data/datasources/auth_remote_datasource.dart';
+import 'features/auth/data/datasources/storage_remote_datasource.dart';
 import 'features/auth/data/repositories/auth_repository_impl.dart';
+import 'features/auth/data/repositories/storage_repository_impl.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';
+import 'features/auth/domain/repositories/storage_repository.dart';
+import 'features/auth/domain/use_cases/upload_profile_photo_use_case.dart';
 import 'features/reservations/data/datasources/reservation_remote_datasource.dart';
 import 'features/reservations/data/repositories/reservation_repository_impl.dart';
 import 'features/reservations/domain/repositories/reservation_repository.dart';
@@ -93,10 +97,14 @@ class _BeamReserveAppState extends State<BeamReserveApp> {
 
   // Clean Architecture: Repositories
   late final AuthRepository _authRepository;
+  late final StorageRepository _storageRepository;
   late final ReservationRepository _reservationRepository;
   late final DashboardRepository _dashboardRepository;
   late final RequestsRepository _requestsRepository;
   late final IUserManagementRepository _usersManagementRepository;
+
+  // Use Cases
+  late final UploadProfilePhotoUseCase _uploadProfilePhotoUseCase;
 
   @override
   void initState() {
@@ -107,6 +115,7 @@ class _BeamReserveAppState extends State<BeamReserveApp> {
 
     // Clean Architecture: Initialize Data Sources
     final authRemoteDataSource = AuthRemoteDataSource(supabaseClient);
+    final storageRemoteDataSource = StorageRemoteDataSource(supabaseClient);
     final reservationRemoteDataSource = ReservationRemoteDataSource(
       supabaseClient,
     );
@@ -116,6 +125,7 @@ class _BeamReserveAppState extends State<BeamReserveApp> {
 
     // Clean Architecture: Initialize Repositories
     _authRepository = AuthRepositoryImpl(authRemoteDataSource);
+    _storageRepository = StorageRepositoryImpl(storageRemoteDataSource);
     _reservationRepository = ReservationRepositoryImpl(
       reservationRemoteDataSource,
     );
@@ -128,8 +138,11 @@ class _BeamReserveAppState extends State<BeamReserveApp> {
       usersRemoteDataSource,
     );
 
+    // Initialize Use Cases
+    _uploadProfilePhotoUseCase = UploadProfilePhotoUseCase(_storageRepository);
+
     // Create the router instance once, passing the auth provider
-    _router = AppRouter.router(AuthProvider(_authRepository));
+    _router = AppRouter.router(AuthProvider(_authRepository, _storageRepository));
   }
 
   @override
@@ -138,6 +151,7 @@ class _BeamReserveAppState extends State<BeamReserveApp> {
       providers: [
         // Clean Architecture: Provide repositories to the widget tree
         Provider<AuthRepository>.value(value: _authRepository),
+        Provider<StorageRepository>.value(value: _storageRepository),
         Provider<ReservationRepository>.value(value: _reservationRepository),
         Provider<DashboardRepository>.value(value: _dashboardRepository),
         Provider<RequestsRepository>.value(value: _requestsRepository),
@@ -146,7 +160,7 @@ class _BeamReserveAppState extends State<BeamReserveApp> {
         ),
 
         // Existing providers (refactored to use repositories)
-        ChangeNotifierProvider(create: (_) => AuthProvider(_authRepository)),
+        ChangeNotifierProvider(create: (_) => AuthProvider(_authRepository, _storageRepository)),
         ChangeNotifierProvider(
           create: (_) => DashboardProvider(_dashboardRepository),
         ),

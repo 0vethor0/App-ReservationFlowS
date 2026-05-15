@@ -3,16 +3,19 @@
 library;
 
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
+import '../../features/auth/domain/repositories/storage_repository.dart';
 import '../../features/auth/domain/entities/user_entity.dart';
 
 class AuthProvider extends ChangeNotifier {
   final AuthRepository _authRepository;
+  final StorageRepository? _storageRepository;
 
-  AuthProvider(this._authRepository) {
+  AuthProvider(this._authRepository, [this._storageRepository]) {
     _init();
   }
 
@@ -157,6 +160,7 @@ Future<void> _checkAdditionalData(String userId) async {
     required String role,
     required String career,
     required String profile,
+    File? photoFile,
     String? photoUrl,
   }) async {
     _isLoading = true;
@@ -166,6 +170,16 @@ Future<void> _checkAdditionalData(String userId) async {
     try {
       if (_currentUser == null) throw Exception('No hay ningún usuario conectado');
 
+      String? finalPhotoUrl = photoUrl;
+
+      // Upload photo if file is provided
+      if (photoFile != null && _storageRepository != null) {
+        finalPhotoUrl = await _storageRepository.uploadProfilePhoto(
+          userId: _currentUser!.id,
+          photoFile: photoFile,
+        );
+      }
+
       final success = await _authRepository.saveAdditionalData(
         userId: _currentUser!.id,
         firstName: firstName,
@@ -173,11 +187,13 @@ Future<void> _checkAdditionalData(String userId) async {
         role: role,
         career: career,
         profile: profile,
-        photoUrl: photoUrl,
+        photoUrl: finalPhotoUrl,
       );
 
       if (success) {
         _hasAdditionalData = true;
+        // Refresh user data after saving
+        await _checkAdditionalData(_currentUser!.id);
       }
 
       _isLoading = false;
