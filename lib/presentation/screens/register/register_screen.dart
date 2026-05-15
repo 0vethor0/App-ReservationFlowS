@@ -14,6 +14,7 @@ import '../../../core/widgets/neon_card.dart';
 import '../../../core/utils/validators.dart';
 import '../../providers/auth_provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -23,32 +24,22 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
-  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
   bool _acceptedTerms = false;
-  String _countryCode = '+34';
 
   // Real-time validation states
-  bool? _nameValid;
   bool? _emailValid;
-  bool? _phoneValid;
   bool? _passwordValid;
 
   @override
   void dispose() {
-    _nameController.dispose();
     _emailController.dispose();
-    _phoneController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  void _validateName(String v) => setState(
-    () => _nameValid = v.trim().length >= 2 ? true : (v.isEmpty ? null : false),
-  );
   void _validateEmail(String v) => setState(() {
     if (v.isEmpty) {
       _emailValid = null;
@@ -57,15 +48,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _emailValid = RegExp(
       r'^[\w\-\.]+@([\w\-]+\.)+[\w\-]{2,4}$',
     ).hasMatch(v.trim());
-  });
-  void _validatePhone(String v) => setState(() {
-    if (v.isEmpty) {
-      _phoneValid = null;
-      return;
-    }
-    _phoneValid = RegExp(
-      r'^\d{6,15}$',
-    ).hasMatch(v.replaceAll(RegExp(r'\s'), ''));
   });
   void _validatePassword(String v) => setState(() {
     if (v.isEmpty) {
@@ -94,24 +76,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final success = await auth.signUpWithEmail(
       email: _emailController.text.trim(),
       password: _passwordController.text,
-      fullName: _nameController.text.trim(),
-      phone: '$_countryCode${_phoneController.text.trim()}',
     );
     if (!mounted) return;
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Cuenta creada exitosamente'),
-          backgroundColor: AppColors.success,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
+// No navegues manualmente; deja que el router maneje la redirección según el estado de autenticación
+// El router redirigirá automáticamente a /additional-data
+
+      Fluttertoast.showToast(
+          msg: "Operación realizada con éxito. Revisa tu correo y confirma tu cuenta",
+          toastLength: Toast.LENGTH_LONG, // Duración (SHORT o LONG)
+          gravity: ToastGravity.TOP,    // Posición: BOTTOM, CENTER, TOP
+          timeInSecForIosWeb: 2,           // Duración específica en iOS/Web
+          backgroundColor: Colors.green,   // Color de fondo
+          textColor: Colors.white,         // Color del texto
+          fontSize: 16.0
       );
-      // GoRouter will automatically redirect based on auth state, but we can explicitly go
-      context.go('/');
+      
     }
+    context.go('/login');
   }
 
   @override
@@ -159,15 +141,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        NeonTextField(
-                          controller: _nameController,
-                          label: AppStrings.fullName,
-                          hint: AppStrings.fullNameHint,
-                          textInputAction: TextInputAction.next,
-                          validator: Validators.required,
-                          onChanged: _validateName,
-                          isValid: _nameValid,
-                        ),
                         const SizedBox(height: 18),
                         NeonTextField(
                           controller: _emailController,
@@ -178,84 +151,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           validator: Validators.email,
                           onChanged: _validateEmail,
                           isValid: _emailValid,
-                        ),
-                        const SizedBox(height: 18),
-                        // Phone with country code
-                        Text(
-                          AppStrings.phone,
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w500),
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Container(
-                              height: 56,
-                              width: 90,
-                              decoration: BoxDecoration(
-                                color: AppColors.surfaceLight,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                  color: AppColors.border.withValues(
-                                    alpha: 0.3,
-                                  ),
-                                ),
-                              ),
-                              child: DropdownButtonHideUnderline(
-                                child: DropdownButton<String>(
-                                  value: _countryCode,
-                                  isExpanded: true,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                  ),
-                                  icon: const Icon(
-                                    Icons.arrow_drop_down,
-                                    size: 20,
-                                    color: AppColors.textTertiary,
-                                  ),
-                                  style: GoogleFonts.inter(
-                                    fontSize: 14,
-                                    color: AppColors.textPrimary,
-                                  ),
-                                  items: const [
-                                    DropdownMenuItem(
-                                      value: '+34',
-                                      child: Text('ES +34'),
-                                    ),
-                                    DropdownMenuItem(
-                                      value: '+1',
-                                      child: Text('US +1'),
-                                    ),
-                                    DropdownMenuItem(
-                                      value: '+52',
-                                      child: Text('MX +52'),
-                                    ),
-                                    DropdownMenuItem(
-                                      value: '+57',
-                                      child: Text('CO +57'),
-                                    ),
-                                  ],
-                                  onChanged: (v) {
-                                    if (v != null) {
-                                      setState(() => _countryCode = v);
-                                    }
-                                  },
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: NeonTextField(
-                                controller: _phoneController,
-                                hint: AppStrings.phoneHint,
-                                keyboardType: TextInputType.phone,
-                                textInputAction: TextInputAction.next,
-                                validator: Validators.phone,
-                                onChanged: _validatePhone,
-                                isValid: _phoneValid,
-                              ),
-                            ),
-                          ],
                         ),
                         const SizedBox(height: 18),
                         NeonTextField(
@@ -349,6 +244,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       text: AppStrings.createAccount,
                       onPressed: _handleRegister,
                       isLoading: auth.isLoading,
+                      
                     ),
                   ),
                 ),

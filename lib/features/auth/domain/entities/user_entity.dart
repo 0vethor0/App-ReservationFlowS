@@ -8,19 +8,21 @@ class UserEntity {
     required this.id,
     required this.fullName,
     required this.email,
-    this.phone,
     this.avatarUrl,
     this.department,
     this.role = UserRole.user,
+    this.status = UserStatus.pending,
   });
 
   final String id;
   final String fullName;
   final String email;
-  final String? phone;
   final String? avatarUrl;
   final String? department;
   final UserRole role;
+  final UserStatus status;
 }
 
 enum UserRole { user, admin, superAdmin }
+
+enum UserStatus { pending, approved, rejected }

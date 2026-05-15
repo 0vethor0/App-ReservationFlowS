@@ -34,17 +34,29 @@ class _AdditionalUserDataScreenState extends State<AdditionalUserDataScreen> {
   String? _selectedCareer;
   File? _imageFile;
   final ImagePicker _picker = ImagePicker();
+  
+  // State for dynamic career dropdown and neon indicator
+  bool _isCareerDropdownEnabled = false;
+  bool _isStudentRole = false;
+  bool _isSaveButtonDisabled = false;
 
   final List<String> _careers = [
     'Ingeniería de Sistemas',
     'Ingeniería Civil',
     'Ingeniería Agroindustrial',
+    'ADS',
     'Enfermería',
     'Ingeniería Mecánica',
-    'Administración de Sistemas',
     'Ingeniería Agronómica',
-    'Postgrado',
+    'Otros',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    // Listen to changes in the profile/role field
+    _profileController.addListener(_onProfileRoleChanged);
+  }
 
   @override
   void dispose() {
@@ -52,6 +64,24 @@ class _AdditionalUserDataScreenState extends State<AdditionalUserDataScreen> {
     _lastNameController.dispose();
     _profileController.dispose();
     super.dispose();
+  }
+
+  /// Detects changes in the profile/role input in real-time
+  void _onProfileRoleChanged() {
+    final currentText = _profileController.text.trim().toLowerCase();
+    final isStudent = currentText == 'estudiante';
+
+    if (isStudent != _isStudentRole) {
+      setState(() {
+        _isStudentRole = isStudent;
+        _isCareerDropdownEnabled = isStudent;
+        
+        // If not a student, clear the career selection
+        if (!isStudent) {
+          _selectedCareer = null;
+        }
+      });
+    }
   }
 
   Future<void> _pickImage(ImageSource source) async {
@@ -173,7 +203,7 @@ class _AdditionalUserDataScreenState extends State<AdditionalUserDataScreen> {
       return;
     }
 
-    if (_selectedCareer == null) {
+    if (_selectedCareer == null && _profileController.text.trim() == 'estudiante') {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Por favor, selecciona una carrera')),
       );
@@ -215,7 +245,7 @@ class _AdditionalUserDataScreenState extends State<AdditionalUserDataScreen> {
       firstName: _firstNameController.text.trim(),
       lastName: _lastNameController.text.trim(),
       role: 'usuario',
-      career: _selectedCareer!,
+      career: _selectedCareer ?? '',
       profile: _profileController.text.trim(),
       photoUrl: uploadedPhotoUrl,
     );
@@ -225,11 +255,20 @@ class _AdditionalUserDataScreenState extends State<AdditionalUserDataScreen> {
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Datos guardados exitosamente'),
+          content: Text('Datos guardados exitosamente. Tu cuenta está pendiente de aprobación.'),
           backgroundColor: AppColors.success,
         ),
       );
-      context.go('/');
+      
+      // Disable the save button to prevent multiple submissions
+      setState(() {
+        _isSaveButtonDisabled = true;
+      });
+      
+      // Navigate to waiting approval screen
+      if (mounted) {
+        context.go('/waiting');
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -362,51 +401,92 @@ class _AdditionalUserDataScreenState extends State<AdditionalUserDataScreen> {
                               ?.copyWith(fontWeight: FontWeight.w500),
                         ),
                         const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          decoration: BoxDecoration(
-                            color: AppColors.surfaceLight,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: AppColors.border.withValues(alpha: 0.3),
-                            ),
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<String>(
-                              isExpanded: true,
-                              value: _selectedCareer,
-                              hint: Text(
-                                'Selecciona una carrera',
-                                style: GoogleFonts.inter(
-                                  color: AppColors.textTertiary,
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              decoration: BoxDecoration(
+                                color: _isCareerDropdownEnabled 
+                                    ? AppColors.surfaceLight 
+                                    : AppColors.surfaceLight.withValues(alpha: 0.5),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: _isCareerDropdownEnabled
+                                      ? AppColors.primaryBlue.withValues(alpha: 0.5)
+                                      : AppColors.border.withValues(alpha: 0.3),
                                 ),
                               ),
-                              items: _careers.map((String value) {
-                                return DropdownMenuItem<String>(
-                                  value: value,
-                                  child: Text(
-                                    value,
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  isExpanded: true,
+                                  value: _selectedCareer,
+                                  hint: Text(
+                                    'Selecciona una carrera',
                                     style: GoogleFonts.inter(
-                                      color: AppColors.textPrimary,
+                                      color: _isCareerDropdownEnabled
+                                          ? AppColors.textTertiary
+                                          : AppColors.textTertiary.withValues(alpha: 0.5),
                                     ),
                                   ),
-                                );
-                              }).toList(),
-                              onChanged: (newValue) {
-                                setState(() {
-                                  _selectedCareer = newValue;
-                                });
-                              },
+                                  items: _isCareerDropdownEnabled
+                                      ? _careers.map((String value) {
+                                          return DropdownMenuItem<String>(
+                                            value: value,
+                                            child: Text(
+                                              value,
+                                              style: GoogleFonts.inter(
+                                                color: AppColors.textPrimary,
+                                              ),
+                                            ),
+                                          );
+                                        }).toList()
+                                      : [],
+                                  onChanged: _isCareerDropdownEnabled
+                                      ? (newValue) {
+                                          setState(() {
+                                            _selectedCareer = newValue;
+                                          });
+                                        }
+                                      : null,
+                                ),
+                              ),
                             ),
-                          ),
+                            if (!_isCareerDropdownEnabled) ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                'Opción solo para estudiantes',
+                                style: GoogleFonts.inter(
+                                  color: AppColors.textTertiary,
+                                  fontSize: 12,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                         const SizedBox(height: 16),
-                        NeonTextField(
-                          controller: _profileController,
-                          label: 'Perfil / Rol',
-                          hint: 'Ej: estudiante, docente, coordinador-docente',
-                          validator: (v) =>
-                              v == null || v.isEmpty ? 'Requerido' : null,
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: _isStudentRole
+                                ? [
+                                    BoxShadow(
+                                      color: AppColors.success.withValues(alpha: 0.6),
+                                      blurRadius: 20,
+                                      spreadRadius: 3,
+                                    ),
+                                  ]
+                                : [],
+                          ),
+                          child: NeonTextField(
+                            controller: _profileController,
+                            label: 'Perfil / Rol',
+                            hint: 'Ej: estudiante, docente, coordinador-docente',
+                            validator: (v) =>
+                                v == null || v.isEmpty ? 'Requerido' : null,
+                          ),
                         ),
                       ],
                     ),
@@ -419,7 +499,7 @@ class _AdditionalUserDataScreenState extends State<AdditionalUserDataScreen> {
                   child: Consumer<AuthProvider>(
                     builder: (context, auth, _) => NeonButton(
                       text: 'Guardar Datos',
-                      onPressed: _handleSave,
+                      onPressed: _isSaveButtonDisabled ? null : _handleSave,
                       isLoading: auth.isLoading,
                     ),
                   ),

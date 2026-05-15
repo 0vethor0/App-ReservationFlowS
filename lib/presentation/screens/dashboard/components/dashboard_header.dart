@@ -2,11 +2,14 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../features/auth/domain/entities/user_entity.dart';
+import '../../../providers/auth_provider.dart';
 
 class DashboardHeader extends StatelessWidget {
   const DashboardHeader({
@@ -53,6 +56,8 @@ class DashboardHeader extends StatelessWidget {
             ),
             Row(
               children: [
+                const _AdminAccessButton(),
+                const SizedBox(width: 8),
                 _HeaderIconButton(
                   icon: Icons.settings_outlined,
                   onTap: onSettingsTap,
@@ -148,6 +153,43 @@ class _HeaderIconButtonState extends State<_HeaderIconButton>
             ),
           ),
           child: Icon(widget.icon, color: iconColor, size: 22),
+        ),
+      ),
+    );
+  }
+}
+
+/// Button to access admin user approvals panel (only visible for admins)
+class _AdminAccessButton extends StatelessWidget {
+  const _AdminAccessButton();
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final user = auth.currentUser;
+
+    // Only show for admin or superAdmin
+    if (user == null ||
+        (user.role != UserRole.admin && user.role != UserRole.superAdmin)) {
+      return const SizedBox.shrink();
+    }
+
+    return GestureDetector(
+      onTap: () => context.go('/admin/user-approvals'),
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: AppColors.accentYellow.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: AppColors.accentYellow.withValues(alpha: 0.3),
+          ),
+        ),
+        child: const Icon(
+          Icons.admin_panel_settings_outlined,
+          color: AppColors.accentYellow,
+          size: 22,
         ),
       ),
     );

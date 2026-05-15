@@ -29,6 +29,7 @@ dependencies:
   modal_bottom_sheet: ^3.0.0
   syncfusion_flutter_calendar: ^33.2.4
   flutter_launcher_icons: ^0.14.4
+  fluttertoast: ^9.0.0
 
 dev_dependencies:
   flutter_test:

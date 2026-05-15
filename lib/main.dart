@@ -13,7 +13,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import 'core/theme/app_theme.dart';
-import 'data/datasources/websocket_manager.dart';
 import 'presentation/providers/auth_provider.dart';
 import 'presentation/providers/dashboard_provider.dart';
 import 'presentation/providers/reservation_provider.dart';
@@ -33,6 +32,10 @@ import 'features/dashboard/domain/repositories/dashboard_repository.dart';
 import 'features/requests/data/datasources/requests_remote_datasource.dart';
 import 'features/requests/data/repositories/requests_repository_impl.dart';
 import 'features/requests/domain/repositories/requests_repository.dart';
+import 'features/users_management/data/datasources/users_remote_datasource.dart';
+import 'features/users_management/data/repositories/user_management_repository_impl.dart';
+import 'features/users_management/domain/repositories/i_user_management_repository.dart';
+import 'features/users_management/presentation/providers/user_management_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -93,6 +96,7 @@ class _BeamReserveAppState extends State<BeamReserveApp> {
   late final ReservationRepository _reservationRepository;
   late final DashboardRepository _dashboardRepository;
   late final RequestsRepository _requestsRepository;
+  late final IUserManagementRepository _usersManagementRepository;
 
   @override
   void initState() {
@@ -108,6 +112,7 @@ class _BeamReserveAppState extends State<BeamReserveApp> {
     );
     final dashboardRemoteDataSource = DashboardRemoteDataSource(supabaseClient);
     final requestsRemoteDataSource = RequestsRemoteDataSource(supabaseClient);
+    final usersRemoteDataSource = UsersRemoteDataSource(supabaseClient);
 
     // Clean Architecture: Initialize Repositories
     _authRepository = AuthRepositoryImpl(authRemoteDataSource);
@@ -119,6 +124,9 @@ class _BeamReserveAppState extends State<BeamReserveApp> {
       supabaseClient,
     );
     _requestsRepository = RequestsRepositoryImpl(requestsRemoteDataSource);
+    _usersManagementRepository = UserManagementRepositoryImpl(
+      usersRemoteDataSource,
+    );
 
     // Create the router instance once, passing the auth provider
     _router = AppRouter.router(AuthProvider(_authRepository));
@@ -133,6 +141,9 @@ class _BeamReserveAppState extends State<BeamReserveApp> {
         Provider<ReservationRepository>.value(value: _reservationRepository),
         Provider<DashboardRepository>.value(value: _dashboardRepository),
         Provider<RequestsRepository>.value(value: _requestsRepository),
+        Provider<IUserManagementRepository>.value(
+          value: _usersManagementRepository,
+        ),
 
         // Existing providers (refactored to use repositories)
         ChangeNotifierProvider(create: (_) => AuthProvider(_authRepository)),
@@ -146,12 +157,7 @@ class _BeamReserveAppState extends State<BeamReserveApp> {
           create: (_) => RequestsProvider(_requestsRepository),
         ),
         ChangeNotifierProvider(
-          create: (_) {
-            final wsUrl = dotenv.isInitialized
-                ? (dotenv.maybeGet('WS_SERVER_URL') ?? '')
-                : '';
-            return WebSocketManager(url: wsUrl);
-          },
+          create: (_) => UserManagementProvider(_usersManagementRepository),
         ),
       ],
       child: MaterialApp.router(

@@ -12,13 +12,10 @@ class SignUpUseCase {
     required String email,
     required String password,
     required String fullName,
-    String? phone,
   }) {
     return repository.signUpWithEmail(
       email: email,
       password: password,
-      fullName: fullName,
-      phone: phone,
     );
   }
 }

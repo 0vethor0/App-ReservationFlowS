@@ -29,15 +29,11 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<bool> signUpWithEmail({
     required String email,
     required String password,
-    required String fullName,
-    String? phone,
   }) async {
     try {
       await remoteDataSource.signUpWithEmail(
         email: email,
         password: password,
-        fullName: fullName,
-        phone: phone,
       );
       return true;
     } on AuthException catch (e) {
@@ -70,7 +66,6 @@ class AuthRepositoryImpl implements AuthRepository {
       id: session.user.id,
       fullName: session.user.userMetadata?['full_name'] as String? ?? 'Usuario',
       email: session.user.email ?? '',
-      phone: session.user.phone,
       avatarUrl: session.user.userMetadata?['avatar_url'] as String?,
     );
   }
@@ -133,5 +128,10 @@ class AuthRepositoryImpl implements AuthRepository {
     remoteDataSource.listenToAuthState().listen((_) {
       // Auth state changes are handled by the provider layer
     });
+  }
+
+  @override
+  Stream<UserStatus> watchCurrentUserStatus(String uid) {
+    return remoteDataSource.watchCurrentUserStatus(uid);
   }
 }

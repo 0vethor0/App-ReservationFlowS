@@ -2,6 +2,8 @@
 /// Refactored to use Clean Architecture repositories.
 library;
 
+import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
@@ -19,70 +21,134 @@ class AuthProvider extends ChangeNotifier {
   String? _error;
   bool _isAuthenticated = false;
   bool _hasAdditionalData = false;
+  UserStatus? _currentUserStatus;
+  StreamSubscription? _statusSubscription;
 
   UserEntity? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
   String? get error => _error;
   bool get isAuthenticated => _isAuthenticated;
   bool get hasAdditionalData => _hasAdditionalData;
+  UserStatus? get currentUserStatus => _currentUserStatus;
 
   void _init() {
     _authRepository.listenToAuthStateChanges();
     // Listen to auth state changes from Supabase directly for immediate updates
     Supabase.instance.client.auth.onAuthStateChange.listen((data) async {
-      final session = data.session;
-      if (session != null) {
-        _isAuthenticated = true;
-        _currentUser = _authRepository.getCurrentUser();
-        if (_currentUser != null) {
-          await _checkAdditionalData(_currentUser!.id);
-        }
-      } else {
-        _isAuthenticated = false;
-        _currentUser = null;
-        _hasAdditionalData = false;
+      final AuthChangeEvent event = data.event;
+      final Session? session = data.session;
+
+      switch (event) {
+        case AuthChangeEvent.signedIn:
+        case AuthChangeEvent.tokenRefreshed:
+          if (session != null) {
+            _isAuthenticated = true;
+            _currentUser = _authRepository.getCurrentUser();
+            if (_currentUser != null) {
+              await _checkAdditionalData(_currentUser!.id);
+            }
+            notifyListeners();
+          }
+          break;
+        case AuthChangeEvent.signedOut:
+          _isAuthenticated = false;
+          _currentUser = null;
+          _hasAdditionalData = false;
+          _currentUserStatus = null;
+          notifyListeners();
+          break;
+        default:
+          break;
       }
-      notifyListeners();
+
     });
   }
 
-  Future<void> _checkAdditionalData(String userId) async {
+Future<void> _checkAdditionalData(String userId) async {
     try {
+      // 1. Verificamos si existen datos básicos en el repositorio
       _hasAdditionalData = await _authRepository.checkAdditionalData(userId);
+      
+      if (_currentUser == null) return;
 
-      // Update user with role information
-      if (_currentUser != null) {
-        final session = Supabase.instance.client.auth.currentSession;
-        if (session != null) {
-          final profile = await Supabase.instance.client
-              .from('perfiles')
-              .select()
-              .eq('id', userId)
-              .maybeSingle();
+      // 2. Intentamos obtener el perfil detallado desde la base de datos
+      // Nota: Idealmente, esta consulta debería estar en el AuthRepository
+      final profile = await Supabase.instance.client
+          .from('perfiles')
+          .select()
+          .eq('id', userId)
+          .maybeSingle();
 
-          if (profile != null) {
-            final roleStr = profile['rol'] as String? ?? 'usuario';
-            final preciseRole = roleStr == 'super-admin'
-                ? UserRole.superAdmin
-                : (roleStr == 'admin' ? UserRole.admin : UserRole.user);
+      if (profile != null) {
+        // Mapeamos los Strings de la DB a nuestros Enums (UserRole y UserStatus)
+        final preciseRole = _mapRole(profile['rol'] as String?);
+        final status = _mapStatus(profile['status'] as String?);
 
-            _currentUser = UserEntity(
-              id: _currentUser!.id,
-              fullName: _currentUser!.fullName,
-              email: _currentUser!.email,
-              phone: _currentUser!.phone,
-              avatarUrl: _currentUser!.avatarUrl,
-              department: _currentUser!.department,
-              role: preciseRole,
-            );
-          }
-        }
+        // Actualizamos la entidad con la información completa
+        _currentUser = UserEntity(
+          id: _currentUser!.id,
+          fullName: _currentUser!.fullName,
+          email: _currentUser!.email,
+          avatarUrl: _currentUser!.avatarUrl,
+          department: _currentUser!.department,
+          role: preciseRole,
+          status: status,
+        );
+
+        _currentUserStatus = status;
       }
+
+      // 3. Gestionamos la suscripción en tiempo real para cambios de estado
+      await _setupStatusSubscription(userId);
+
+      // 4. Notificamos a los listeners (como el Router) que los datos están listos
+      notifyListeners();
+
     } catch (e) {
-      debugPrint('DEBUG: Error cargando perfil: $e');
-      _error = 'Error cargando perfil: $e';
+      debugPrint('DEBUG: Error en _checkAdditionalData: $e');
+      _error = 'Error al cargar información de perfil';
       _hasAdditionalData = false;
+      notifyListeners();
     }
+  }
+
+  // --- Funciones auxiliares para limpiar el código principal ---
+
+  UserRole _mapRole(String? roleStr) {
+    switch (roleStr) {
+      case 'super-admin': return UserRole.superAdmin;
+      case 'admin':       return UserRole.admin;
+      default:            return UserRole.user;
+    }
+  }
+
+  UserStatus _mapStatus(String? statusStr) {
+    switch (statusStr) {
+      case 'approved': return UserStatus.approved;
+      case 'rejected': return UserStatus.rejected;
+      default:         return UserStatus.pending;
+    }
+  }
+
+  Future<void> _setupStatusSubscription(String userId) async {
+    await _statusSubscription?.cancel();
+    _statusSubscription = _authRepository
+        .watchCurrentUserStatus(userId)
+        .listen((newStatus) {
+      if (_currentUser != null && _currentUserStatus != newStatus) {
+        _currentUserStatus = newStatus;
+        _currentUser = UserEntity(
+          id: _currentUser!.id,
+          fullName: _currentUser!.fullName,
+          email: _currentUser!.email,
+          avatarUrl: _currentUser!.avatarUrl,
+          department: _currentUser!.department,
+          role: _currentUser!.role,
+          status: newStatus,
+        );
+        notifyListeners();
+      }
+    });
   }
 
   Future<bool> saveAdditionalData({
@@ -98,7 +164,7 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      if (_currentUser == null) throw Exception('No user logged in');
+      if (_currentUser == null) throw Exception('No hay ningún usuario conectado');
 
       final success = await _authRepository.saveAdditionalData(
         userId: _currentUser!.id,
@@ -146,8 +212,6 @@ class AuthProvider extends ChangeNotifier {
   Future<bool> signUpWithEmail({
     required String email,
     required String password,
-    required String fullName,
-    String? phone,
   }) async {
     _isLoading = true;
     _error = null;
@@ -157,8 +221,6 @@ class AuthProvider extends ChangeNotifier {
       final success = await _authRepository.signUpWithEmail(
         email: email,
         password: password,
-        fullName: fullName,
-        phone: phone,
       );
       _isLoading = false;
       notifyListeners();
@@ -197,5 +259,11 @@ class AuthProvider extends ChangeNotifier {
   void clearError() {
     _error = null;
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _statusSubscription?.cancel();
+    super.dispose();
   }
 }

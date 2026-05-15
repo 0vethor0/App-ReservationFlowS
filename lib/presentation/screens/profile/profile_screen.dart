@@ -13,7 +13,7 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/neon_card.dart';
 import '../../../core/widgets/neon_button.dart';
 import '../../providers/auth_provider.dart';
-import '../dashboard/dashboard_screen.dart';
+import '../../components/global_back_button.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -149,28 +149,7 @@ class _ProfileAppBar extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       backgroundColor: AppColors.background,
       elevation: 0,
-      leading: IconButton(
-        icon: const Icon(
-          Icons.arrow_back_ios_new,
-          size: 20,
-          color: AppColors.textPrimary,
-        ),
-        onPressed: () {
-          if (Navigator.of(context).canPop()) {
-            Navigator.of(context).pop();
-          } else {
-            Navigator.of(context).pushAndRemoveUntil(
-              PageRouteBuilder<void>(
-                pageBuilder: (_, _, _) => const DashboardScreen(),
-                transitionsBuilder: (_, a, _, child) =>
-                    FadeTransition(opacity: a, child: child),
-                transitionDuration: const Duration(milliseconds: 350),
-              ),
-              (route) => false,
-            );
-          }
-        },
-      ),
+      leading: const GlobalBackButton(),
       title: Text(
         AppStrings.profileSettings,
         style: GoogleFonts.poppins(

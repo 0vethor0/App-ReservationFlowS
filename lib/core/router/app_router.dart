@@ -11,49 +11,74 @@ import '../../presentation/screens/register/additional_user_data_screen.dart';
 import '../../presentation/screens/reservation/reservation_screen.dart';
 import '../../presentation/screens/splash/splash_screen.dart';
 import '../../presentation/screens/profile/profile_screen.dart';
+import '../../presentation/screens/auth/waiting_approval_screen.dart';
+import '../../presentation/screens/admin/user_approvals_screen.dart';
+import '../../features/auth/domain/entities/user_entity.dart';
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 
 class AppRouter {
   static GoRouter router(AuthProvider authProvider) {
     return GoRouter(
-      navigatorKey: rootNavigatorKey,
-      initialLocation: '/splash',
-      refreshListenable: authProvider,
-      redirect: (context, state) {
-        final isAuthenticated = authProvider.isAuthenticated;
-        final isGoingToLogin = state.matchedLocation == '/login';
-        final isGoingToRegister = state.matchedLocation == '/register';
-        final isGoingToSplash = state.matchedLocation == '/splash';
-        final hasAdditionalData =
-            authProvider.hasAdditionalData; // We need to implement this
-        final isGoingToAdditionalData =
-            state.matchedLocation == '/additional-data';
+    navigatorKey: rootNavigatorKey,
+    initialLocation: '/splash',
+    refreshListenable: authProvider,
+    redirect: (context, state) {
+      final isAuthenticated = authProvider.isAuthenticated;
+      final matchedLocation = state.matchedLocation; // Simplificamos acceso
+      
+      // 1. PRIORIDAD: Si es un callback de OAuth, NO INTERVENIR.
+      // Esto permite que el AuthProvider procese el token internamente.
+      if (matchedLocation.contains('callback')) {
+        return null; 
+      }
 
-        if (isGoingToSplash) {
-          // Splash screen handles its own navigation after animation/initialization
-          return null;
+      final isGoingToLogin = matchedLocation == '/login';
+      final isGoingToRegister = matchedLocation == '/register';
+      final isGoingToSplash = matchedLocation == '/splash';
+      
+      // Pantalla de carga inicial
+      if (isGoingToSplash) return null;
+
+      // 2. MANEJO DE NO AUTENTICADOS
+      if (!isAuthenticated) {
+        // CORRECCIÓN: Si no está autenticado, solo permitir login o registro.
+        // Agregamos seguridad para no redirigir si ya estamos en una de esas rutas.
+        if (!isGoingToLogin && !isGoingToRegister) {
+          return '/login';
         }
-
-        if (!isAuthenticated) {
-          if (!isGoingToLogin && !isGoingToRegister) {
-            return '/login';
-          }
-          return null;
-        }
-
-        if (isAuthenticated) {
-          // If authenticated but missing additional data, force them to additional data screen
-          if (!hasAdditionalData && !isGoingToAdditionalData) {
-            return '/additional-data';
-          }
-
-          if (isGoingToLogin || isGoingToRegister || isGoingToSplash) {
-            return hasAdditionalData ? '/' : '/additional-data';
-          }
-        }
-
         return null;
+      }
+
+      // 3. MANEJO DE AUTENTICADOS
+      if (isAuthenticated) {
+        final hasAdditionalData = authProvider.hasAdditionalData;
+        final userStatus = authProvider.currentUserStatus;
+        final isGoingToAdditionalData = matchedLocation == '/additional-data';
+        final isGoingToWaiting = matchedLocation == '/waiting';
+
+        // Si falta información de perfil (como en registros nuevos de Google)
+        if (!hasAdditionalData && !isGoingToAdditionalData) {
+          return '/additional-data';
+        }
+
+        // Verificación de aprobación (Waiting Approval)
+        if (hasAdditionalData && userStatus != null) {
+          if ((userStatus == UserStatus.pending || userStatus == UserStatus.rejected) && !isGoingToWaiting) {
+            return '/waiting';
+          }
+          if (userStatus == UserStatus.approved && isGoingToWaiting) {
+            return '/';
+          }
+        }
+
+        // Si ya está todo en orden y trata de entrar a login/register/splash -> al Dashboard
+        if (isGoingToLogin || isGoingToRegister || isGoingToSplash) {
+          return hasAdditionalData ? '/' : '/additional-data';
+        }
+      }
+
+      return null;
       },
       routes: [
         GoRoute(
@@ -83,6 +108,14 @@ class AppRouter {
         GoRoute(
           path: '/profile',
           builder: (context, state) => const ProfileScreen(),
+        ),
+        GoRoute(
+          path: '/waiting',
+          builder: (context, state) => const WaitingApprovalScreen(),
+        ),
+        GoRoute(
+          path: '/admin/user-approvals',
+          builder: (context, state) => const UserApprovalsScreen(),
         ),
       ],
     );
