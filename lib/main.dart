@@ -26,7 +26,6 @@ import 'features/auth/data/repositories/auth_repository_impl.dart';
 import 'features/auth/data/repositories/storage_repository_impl.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';
 import 'features/auth/domain/repositories/storage_repository.dart';
-import 'features/auth/domain/use_cases/upload_profile_photo_use_case.dart';
 import 'features/reservations/data/datasources/reservation_remote_datasource.dart';
 import 'features/reservations/data/repositories/reservation_repository_impl.dart';
 import 'features/reservations/domain/repositories/reservation_repository.dart';
@@ -103,8 +102,7 @@ class _BeamReserveAppState extends State<BeamReserveApp> {
   late final RequestsRepository _requestsRepository;
   late final IUserManagementRepository _usersManagementRepository;
 
-  // Use Cases
-  late final UploadProfilePhotoUseCase _uploadProfilePhotoUseCase;
+  
 
   @override
   void initState() {
@@ -138,8 +136,7 @@ class _BeamReserveAppState extends State<BeamReserveApp> {
       usersRemoteDataSource,
     );
 
-    // Initialize Use Cases
-    _uploadProfilePhotoUseCase = UploadProfilePhotoUseCase(_storageRepository);
+    
 
     // Create the router instance once, passing the auth provider
     _router = AppRouter.router(AuthProvider(_authRepository, _storageRepository));

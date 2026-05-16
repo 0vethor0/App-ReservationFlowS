@@ -177,7 +177,7 @@ class LocalStorageService {
 
   /// Generate unique filename for profile photo
   String generateProfilePhotoFileName(String userId) {
-    return 'profile_${userId}.jpg';
+    return 'profile_$userId.jpg';
   }
 
   /// Generate unique filename for temporary image

@@ -102,10 +102,10 @@ class _UserApprovalCardState extends State<UserApprovalCard> {
                           children: [
                             Text(
                               widget.user.fullName,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
-                                color: const Color.fromARGB(255, 0, 0, 0),
+                                color: Color.fromARGB(255, 0, 0, 0),
                               ),
                             ),
                             const SizedBox(height: 4),
