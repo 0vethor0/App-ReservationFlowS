@@ -304,11 +304,7 @@ class _AdditionalUserDataScreenState extends State<AdditionalUserDataScreen> {
       
       // Navigate to waiting approval screen using GoRouter
       if (mounted) {
-        // Use a small delay to ensure SnackBar is shown
-        await Future.delayed(const Duration(milliseconds: 500));
-        if (mounted) {
-          context.go('/waiting');
-        }
+        GoRouter.of(context).refresh();
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(

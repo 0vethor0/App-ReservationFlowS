@@ -5,6 +5,7 @@ library;
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../domain/entities/user_entity.dart';
+import '../../domain/repositories/auth_repository.dart';
 
 class AuthRemoteDataSource {
   final SupabaseClient client;
@@ -62,6 +63,27 @@ class AuthRemoteDataSource {
         .maybeSingle();
 
     return response;
+  }
+
+  /// Obtener perfil completo del usuario con todos los campos
+  /// Get complete user profile including role and status
+  Future<UserProfileComplete?> getUserProfileComplete(String userId) async {
+    final response = await client
+        .from('perfiles')
+        .select()
+        .eq('id', userId)
+        .maybeSingle();
+
+    if (response == null) return null;
+
+    return UserProfileComplete(
+      primerNombre: response['primer_nombre'] as String? ?? '',
+      primerApellido: response['primer_apellido'] as String? ?? '',
+      carrera: response['carrera'] as String? ?? '',
+      especialidad: response['especialidad'] as String? ?? '',
+      rol: response['rol'] as String? ?? '',
+      status: response['status'] as String? ?? 'pending',
+    );
   }
 
   /// guardar perfil de usuario en la tabla perfiles

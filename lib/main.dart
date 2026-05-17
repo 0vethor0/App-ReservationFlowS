@@ -93,6 +93,7 @@ class BeamReserveApp extends StatefulWidget {
 
 class _BeamReserveAppState extends State<BeamReserveApp> {
   late final GoRouter _router;
+  late final AuthProvider _authProvider;
 
   // Clean Architecture: Repositories
   late final AuthRepository _authRepository;
@@ -138,8 +139,11 @@ class _BeamReserveAppState extends State<BeamReserveApp> {
 
     
 
-    // Create the router instance once, passing the auth provider
-    _router = AppRouter.router(AuthProvider(_authRepository, _storageRepository));
+    // Create SINGLE AuthProvider instance (shared by router AND UI)
+    _authProvider = AuthProvider(_authRepository, _storageRepository);
+
+    // Create the router instance once, passing the SAME auth provider
+    _router = AppRouter.router(_authProvider);
   }
 
   @override
@@ -157,7 +161,7 @@ class _BeamReserveAppState extends State<BeamReserveApp> {
         ),
 
         // Existing providers (refactored to use repositories)
-        ChangeNotifierProvider(create: (_) => AuthProvider(_authRepository, _storageRepository)),
+        ChangeNotifierProvider<AuthProvider>.value(value: _authProvider),
         ChangeNotifierProvider(
           create: (_) => DashboardProvider(_dashboardRepository),
         ),

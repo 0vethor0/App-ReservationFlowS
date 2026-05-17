@@ -52,4 +52,26 @@ abstract class AuthRepository {
   /// Observar cambios de estado de usuario en tiempo real  
   /// Watch current user approval status changes in real-time
   Stream<UserStatus> watchCurrentUserStatus(String uid);
+
+  /// Obtener perfil completo del usuario
+  /// Get complete user profile with all fields
+  Future<UserProfileComplete?> getUserProfileComplete(String userId);
+}
+
+class UserProfileComplete {
+  final String primerNombre;
+  final String primerApellido;
+  final String carrera;
+  final String especialidad;
+  final String rol;
+  final String status;
+
+  UserProfileComplete({
+    required this.primerNombre,
+    required this.primerApellido,
+    required this.carrera,
+    required this.especialidad,
+    required this.rol,
+    required this.status,
+  });
 }

@@ -78,14 +78,13 @@ class AuthRepositoryImpl implements AuthRepository {
       if (profile == null) return false;
 
       final primerNombre = profile['primer_nombre']?.toString().trim() ?? '';
-      final primerApellido =
-          profile['primer_apellido']?.toString().trim() ?? '';
-      final carrera = profile['carrera']?.toString().trim() ?? '';
+      final primerApellido = profile['primer_apellido']?.toString().trim() ?? '';
+      final fotoUrl = profile['foto_url']?.toString().trim() ?? '';
       final especialidad = profile['especialidad']?.toString().trim() ?? '';
 
       return primerNombre.isNotEmpty &&
           primerApellido.isNotEmpty &&
-          carrera.isNotEmpty &&
+          fotoUrl.isNotEmpty &&
           especialidad.isNotEmpty;
     } catch (e) {
       return false;
@@ -133,5 +132,14 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Stream<UserStatus> watchCurrentUserStatus(String uid) {
     return remoteDataSource.watchCurrentUserStatus(uid);
+  }
+
+  @override
+  Future<UserProfileComplete?> getUserProfileComplete(String userId) async {
+    try {
+      return await remoteDataSource.getUserProfileComplete(userId);
+    } catch (e) {
+      return null;
+    }
   }
 }

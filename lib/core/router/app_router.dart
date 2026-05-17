@@ -25,25 +25,29 @@ class AppRouter {
     refreshListenable: authProvider,
     redirect: (context, state) {
       final isAuthenticated = authProvider.isAuthenticated;
-      final matchedLocation = state.matchedLocation; // Simplificamos acceso
-      
-      // 1. PRIORIDAD: Si es un callback de OAuth, NO INTERVENIR.
-      // Esto permite que el AuthProvider procese el token internamente.
+      final isLoadingAdditionalData = authProvider.isLoadingAdditionalData;
+      final hasAdditionalData = authProvider.hasAdditionalData;
+      final userStatus = authProvider.currentUserStatus;
+      final matchedLocation = state.matchedLocation;
+
+      debugPrint('[${DateTime.now()}] [ROUTER] Evaluando redirect, pagina actual: → $matchedLocation | auth: $isAuthenticated | loadingData: $isLoadingAdditionalData | hasData: $hasAdditionalData');
+
+      // 1. OAuth Callback - No intervenir
       if (matchedLocation.contains('callback')) {
-        return null; 
+        return null;
       }
 
       final isGoingToLogin = matchedLocation == '/login';
       final isGoingToRegister = matchedLocation == '/register';
       final isGoingToSplash = matchedLocation == '/splash';
+      final isGoingToAdditionalData = matchedLocation == '/additional-data';
+      final isGoingToWaiting = matchedLocation == '/waiting';
       
       // Pantalla de carga inicial
       if (isGoingToSplash) return null;
 
       // 2. MANEJO DE NO AUTENTICADOS
       if (!isAuthenticated) {
-        // CORRECCIÓN: Si no está autenticado, solo permitir login o registro.
-        // Agregamos seguridad para no redirigir si ya estamos en una de esas rutas.
         if (!isGoingToLogin && !isGoingToRegister) {
           return '/login';
         }
@@ -52,13 +56,20 @@ class AppRouter {
 
       // 3. MANEJO DE AUTENTICADOS
       if (isAuthenticated) {
-        final hasAdditionalData = authProvider.hasAdditionalData;
-        final userStatus = authProvider.currentUserStatus;
-        final isGoingToAdditionalData = matchedLocation == '/additional-data';
-        final isGoingToWaiting = matchedLocation == '/waiting';
+        // === RACE CONDITION FIX: Esperar a que termine la verificación ===
+        if (isLoadingAdditionalData) {
+          debugPrint('[${DateTime.now()}] [ROUTER] Aún cargando datos adicionales → esperando');
+          return null; // No redirigir hasta tener resultado
+        }
 
-        // Si falta información de perfil (como en registros nuevos de Google)
+        if (hasAdditionalData && isGoingToAdditionalData) {
+          debugPrint('[ROUTER] Ya tiene datos adicionales → redirigiendo a dashboard');
+          return '/waiting';
+        }
+
+        // Redirección a datos adicionales
         if (!hasAdditionalData && !isGoingToAdditionalData) {
+          debugPrint('[${DateTime.now()}] [ROUTER] Redirigiendo a additional-data');
           return '/additional-data';
         }
 

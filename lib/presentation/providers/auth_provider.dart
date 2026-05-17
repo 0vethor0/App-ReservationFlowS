@@ -22,7 +22,11 @@ class AuthProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _error;
   bool _isAuthenticated = false;
+
+  // === RACE CONDITION FIX: explicit loading state for additional data check ===
+  bool _isLoadingAdditionalData = true;
   bool _hasAdditionalData = false;
+
   UserStatus? _currentUserStatus;
   StreamSubscription? _statusSubscription;
 
@@ -31,14 +35,31 @@ class AuthProvider extends ChangeNotifier {
   String? get error => _error;
   bool get isAuthenticated => _isAuthenticated;
   bool get hasAdditionalData => _hasAdditionalData;
+  bool get isLoadingAdditionalData => _isLoadingAdditionalData;
   UserStatus? get currentUserStatus => _currentUserStatus;
 
   void _init() {
     _authRepository.listenToAuthStateChanges();
-    // Listen to auth state changes from Supabase directly for immediate updates
+
+    // Check if session already exists at startup (avoids race on hot restart)
+    final existingSession = Supabase.instance.client.auth.currentSession;
+    if (existingSession != null) {
+      _isAuthenticated = true;
+      _currentUser = _authRepository.getCurrentUser();
+      if (_currentUser != null) {
+        debugPrint('[${DateTime.now()}] AuthProvider._init - Sesión existente detectada: ${_currentUser!.id}');
+        _checkAdditionalData(_currentUser!.id);
+      }
+    } else {
+      // No session: no need to wait for data
+      _isLoadingAdditionalData = false;
+    }
+
     Supabase.instance.client.auth.onAuthStateChange.listen((data) async {
       final AuthChangeEvent event = data.event;
       final Session? session = data.session;
+
+      debugPrint('[${DateTime.now()}] AuthProvider - Evento: $event');
 
       switch (event) {
         case AuthChangeEvent.signedIn:
@@ -47,6 +68,7 @@ class AuthProvider extends ChangeNotifier {
             _isAuthenticated = true;
             _currentUser = _authRepository.getCurrentUser();
             if (_currentUser != null) {
+              debugPrint('[${DateTime.now()}] AuthProvider - Usuario: ${_currentUser!.id}. Verificando datos...');
               await _checkAdditionalData(_currentUser!.id);
             }
             notifyListeners();
@@ -56,37 +78,32 @@ class AuthProvider extends ChangeNotifier {
           _isAuthenticated = false;
           _currentUser = null;
           _hasAdditionalData = false;
+          _isLoadingAdditionalData = false;
           _currentUserStatus = null;
           notifyListeners();
           break;
         default:
           break;
       }
-
     });
   }
 
 Future<void> _checkAdditionalData(String userId) async {
+    debugPrint('[${DateTime.now()}] _checkAdditionalData - Iniciando para: $userId');
+    _isLoadingAdditionalData = true;
+    notifyListeners();
+
     try {
-      // 1. Verificamos si existen datos básicos en el repositorio
       _hasAdditionalData = await _authRepository.checkAdditionalData(userId);
-      
+
       if (_currentUser == null) return;
 
-      // 2. Intentamos obtener el perfil detallado desde la base de datos
-      // Nota: Idealmente, esta consulta debería estar en el AuthRepository
-      final profile = await Supabase.instance.client
-          .from('perfiles')
-          .select()
-          .eq('id', userId)
-          .maybeSingle();
+      final profile = await _authRepository.getUserProfileComplete(userId);
 
       if (profile != null) {
-        // Mapeamos los Strings de la DB a nuestros Enums (UserRole y UserStatus)
-        final preciseRole = _mapRole(profile['rol'] as String?);
-        final status = _mapStatus(profile['status'] as String?);
+        final preciseRole = _mapRole(profile.rol);
+        final status = _mapStatus(profile.status);
 
-        // Actualizamos la entidad con la información completa
         _currentUser = UserEntity(
           id: _currentUser!.id,
           fullName: _currentUser!.fullName,
@@ -100,16 +117,15 @@ Future<void> _checkAdditionalData(String userId) async {
         _currentUserStatus = status;
       }
 
-      // 3. Gestionamos la suscripción en tiempo real para cambios de estado
       await _setupStatusSubscription(userId);
 
-      // 4. Notificamos a los listeners (como el Router) que los datos están listos
-      notifyListeners();
-
+      debugPrint('[${DateTime.now()}] _checkAdditionalData - hasAdditionalData: $_hasAdditionalData | status: $_currentUserStatus');
     } catch (e) {
-      debugPrint('DEBUG: Error en _checkAdditionalData: $e');
+      debugPrint('[${DateTime.now()}] _checkAdditionalData - ERROR: $e');
       _error = 'Error al cargar información de perfil';
       _hasAdditionalData = false;
+    } finally {
+      _isLoadingAdditionalData = false;
       notifyListeners();
     }
   }
@@ -190,9 +206,15 @@ Future<void> _checkAdditionalData(String userId) async {
       );
 
       if (success) {
+        // UPDATE LOCAL STATE IMMEDIATELY to avoid race condition with router
         _hasAdditionalData = true;
-        // Refresh user data after saving
-        await _checkAdditionalData(_currentUser!.id);
+        _currentUserStatus = UserStatus.pending;
+        _isLoadingAdditionalData = false;
+        notifyListeners();
+
+        // Then refresh from database in background (non-blocking for UI)
+       await _checkAdditionalData(_currentUser!.id);
+       debugPrint('[${DateTime.now()}] [AUTH] Datos guardados con éxito. _hasAdditionalData: $_hasAdditionalData');
       }
 
       _isLoading = false;
