@@ -70,15 +70,13 @@ class RequestsProvider extends ChangeNotifier {
           final isInCurrentWeek = r.date.isAtSameMomentAs(start) ||
               (r.date.isAfter(start) && r.date.isBefore(end));
 
-          final isFuturePending = r.status == ReservationStatus.pending &&
-              (r.date.isAtSameMomentAs(now) || r.date.isAfter(now));
+          final isFutureRequest = r.date.isAtSameMomentAs(now) || r.date.isAfter(now) ;
 
-          return isInCurrentWeek || isFuturePending;
+          return isInCurrentWeek || isFutureRequest;
         }).toList();
 
         _allRequests = filteredRequests;
-        debugPrint('[RequestsProvider] Filtered to ${_allRequests.length} requests (current week + future pending)');
-
+        
         _isLoading = false;
         notifyListeners();
       },

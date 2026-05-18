@@ -45,17 +45,16 @@ class RequestsRemoteDataSource {
         .lt('hora_inicio', endOfWeek.toIso8601String())
         .order('hora_inicio', ascending: true);
 
-    final futurePendingRequests = await client
+    final futureRequests = await client
         .from('reservas')
         .select('*, productos(*), perfiles(*)')
-        .eq('estado_reserva', 'pendiente')
         .gte('hora_inicio', startOfToday.toIso8601String())
         .order('hora_inicio', ascending: true);
 
     final allRequests = <Map<String, dynamic>>[];
     final seenIds = <String>{};
 
-    for (final request in [...currentWeekRequests, ...futurePendingRequests]) {
+    for (final request in [...currentWeekRequests, ...futureRequests]) {
       final id = request['id']?.toString();
       if (id != null && !seenIds.contains(id)) {
         allRequests.add(request);
@@ -69,7 +68,7 @@ class RequestsRemoteDataSource {
       return dateA.compareTo(dateB);
     });
 
-    debugPrint('[RequestsDataSource] Found ${allRequests.length} requests (current week + future pending)');
+    debugPrint('[RequestsDataSource] Found ${allRequests.length} requests (current week + future)');
     return allRequests;
   }
 
