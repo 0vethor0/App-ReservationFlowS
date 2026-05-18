@@ -1,7 +1,6 @@
-/// Provider de reservaciones.
-/// Refactored to use Clean Architecture repositories.
 library;
 
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../features/reservations/domain/repositories/reservation_repository.dart';
@@ -11,9 +10,11 @@ class ReservationProvider extends ChangeNotifier {
   // ignore: unused_field
   final ReservationRepository _reservationRepository;
   final SupabaseClient _supabase = Supabase.instance.client;
+  RealtimeChannel? _productosChannel;
 
   ReservationProvider(this._reservationRepository) {
     _loadVideobeams();
+    _setupRealtimeSubscription();
   }
 
   List<VideobeamEntity> _videobeams = [];
@@ -36,17 +37,33 @@ class ReservationProvider extends ChangeNotifier {
   String? get error => _error;
   String get notes => _notes;
 
+  void _setupRealtimeSubscription() {
+    debugPrint('[ReservationProvider] Setting up real-time subscription for productos');
+
+    _productosChannel = _supabase.channel('reservation_videobeams')
+      ..onPostgresChanges(
+        event: PostgresChangeEvent.all,
+        schema: 'public',
+        table: 'productos',
+        callback: (payload) {
+          debugPrint('[ReservationProvider] Producto changed: ${payload.eventType} - Reloading videobeams');
+          _loadVideobeams();
+        },
+      )
+      ..subscribe();
+  }
+
   Future<void> _loadVideobeams() async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      debugPrint('Loading videobeams with all statuses...');
+      debugPrint('[ReservationProvider] Loading videobeams with all statuses...');
       final data = await _supabase
           .from('productos')
           .select('*, estados_producto(nombre)');
 
-      debugPrint('Found ${data.length} total videobeams');
+      debugPrint('[ReservationProvider] Found ${data.length} total videobeams');
 
       _videobeams = data.map((item) {
         final idEstado = item['id_estado'] as int?;
@@ -76,11 +93,11 @@ class ReservationProvider extends ChangeNotifier {
         );
       }).toList();
 
-      debugPrint('Successfully loaded ${_videobeams.length} videobeams');
+      debugPrint('[ReservationProvider] Successfully loaded ${_videobeams.length} videobeams');
       await fetchReservations();
     } catch (e, stackTrace) {
-      debugPrint('Error loading videobeams: $e');
-      debugPrint('Stack trace: $stackTrace');
+      debugPrint('[ReservationProvider] Error loading videobeams: $e');
+      debugPrint('[ReservationProvider] Stack trace: $stackTrace');
       _error = 'Error loading videobeams: $e';
     }
 
@@ -142,7 +159,6 @@ class ReservationProvider extends ChangeNotifier {
         _endTime!.minute,
       );
 
-      // Usar rango de fechas en lugar de LIKE (que no funciona con timestamps)
       final startOfDay = DateTime(
         _selectedDate.year,
         _selectedDate.month,
@@ -211,8 +227,6 @@ class ReservationProvider extends ChangeNotifier {
       );
       debugPrint('Horario: $startDateTime - $endDateTime');
 
-      // Usar la función RPC con la firma correcta:
-      // intentar_reservar(p_fin, p_inicio, p_producto_id, p_usuario_id)
       await _supabase.rpc(
         'intentar_reservar',
         params: {
@@ -241,7 +255,6 @@ class ReservationProvider extends ChangeNotifier {
 
   Future<void> fetchReservations() async {
     try {
-      // Filtramos solo las reservaciones con estado 'aprobada'
       final data = await _supabase
           .from('reservas')
           .select('*, productos(*)')
@@ -279,5 +292,14 @@ class ReservationProvider extends ChangeNotifier {
     _notes = '';
     _error = null;
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    if (_productosChannel != null) {
+      debugPrint('[ReservationProvider] Disposing realtime channel');
+      _supabase.removeChannel(_productosChannel!);
+    }
+    super.dispose();
   }
 }

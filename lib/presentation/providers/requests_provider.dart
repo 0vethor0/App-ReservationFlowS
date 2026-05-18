@@ -1,28 +1,24 @@
-/// Provider de solicitudes de reservación.
-/// Refactored to use Clean Architecture repositories.
-
 library;
 
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../features/requests/domain/repositories/requests_repository.dart';
 import '../../features/reservations/domain/entities/reservation_entity.dart';
 
 class RequestsProvider extends ChangeNotifier {
-  // ignore: unused_field
   final RequestsRepository _requestsRepository;
 
   RequestsProvider(this._requestsRepository) {
     loadRequests();
+    _setupRealtimeSubscription();
   }
-
-  final SupabaseClient _supabase = Supabase.instance.client;
 
   List<ReservationEntity> _allRequests = [];
   String _activeFilter = 'Pendientes';
   String _searchQuery = '';
   bool _isLoading = true;
+  StreamSubscription? _realtimeSubscription;
 
   List<ReservationEntity> get filteredRequests {
     var filtered = _allRequests.where((r) {
@@ -54,97 +50,59 @@ class RequestsProvider extends ChangeNotifier {
   String get activeFilter => _activeFilter;
   bool get isLoading => _isLoading;
 
+  void _setupRealtimeSubscription() {
+    debugPrint('[RequestsProvider] Setting up real-time subscription');
+
+    _realtimeSubscription = _requestsRepository.streamAllRequests().listen(
+      (updatedRequests) {
+        debugPrint('[RequestsProvider] Received real-time update with ${updatedRequests.length} requests');
+
+        final now = DateTime.now();
+        final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+        final start = DateTime(
+          startOfWeek.year,
+          startOfWeek.month,
+          startOfWeek.day,
+        );
+        final end = start.add(const Duration(days: 7));
+
+        final filteredRequests = updatedRequests.where((r) {
+          final isInCurrentWeek = r.date.isAtSameMomentAs(start) ||
+              (r.date.isAfter(start) && r.date.isBefore(end));
+
+          final isFuturePending = r.status == ReservationStatus.pending &&
+              (r.date.isAtSameMomentAs(now) || r.date.isAfter(now));
+
+          return isInCurrentWeek || isFuturePending;
+        }).toList();
+
+        _allRequests = filteredRequests;
+        debugPrint('[RequestsProvider] Filtered to ${_allRequests.length} requests (current week + future pending)');
+
+        _isLoading = false;
+        notifyListeners();
+      },
+      onError: (error) {
+        debugPrint('[RequestsProvider] Real-time subscription error: $error');
+      },
+    );
+  }
+
   Future<void> loadRequests() async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      // Cálculo de la semana actual (Lunes a Domingo)
-      final now = DateTime.now();
-      final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
-      final start = DateTime(
-        startOfWeek.year,
-        startOfWeek.month,
-        startOfWeek.day,
-      );
-      final end = start.add(const Duration(days: 7));
-
-      final data = await _supabase
-          .from('reservas')
-          .select('*, productos(*), perfiles(*)')
-          .gte('hora_inicio', start.toIso8601String())
-          .lt('hora_inicio', end.toIso8601String())
-          .order('hora_inicio', ascending: true);
-
-      debugPrint('Requests: Loading ${data.length} reservations for the week');
-
-      _allRequests = data.map((r) {
-        // Safe extraction with null checks
-        final productosData = r['productos'];
-        final perfilesData = r['perfiles'];
-
-        final p = productosData is Map<String, dynamic>
-            ? productosData
-            : <String, dynamic>{};
-        final u = perfilesData is Map<String, dynamic>
-            ? perfilesData
-            : <String, dynamic>{};
-
-        return ReservationEntity(
-          id: r['id']?.toString() ?? 'unknown',
-          userId: u['id']?.toString() ?? 'unknown',
-          userName:
-              '${u['primer_nombre'] ?? 'Usuario'} ${u['primer_apellido'] ?? ''}',
-          videobeamId: p['id']?.toString() ?? 'unknown',
-          videobeamName: p['nombre'] as String? ?? 'Videobeam',
-          date: r['hora_inicio'] != null
-              ? DateTime.parse(r['hora_inicio'])
-              : DateTime.now(),
-          startTime: r['hora_inicio'] != null && r['hora_inicio'].length > 16
-              ? r['hora_inicio'].substring(11, 16)
-              : '00:00',
-          endTime: r['hora_fin'] != null && r['hora_fin'].length > 16
-              ? r['hora_fin'].substring(11, 16)
-              : '00:00',
-          status: _mapStatus(r['estado_reserva']),
-          department:
-              u['especialidad'] as String? ?? u['carrera'] as String? ?? '',
-          priority: RequestPriority.normal,
-          userAvatarUrl: u['foto_url'] as String?,
-          notes: r['notas'] as String?,
-        );
-      }).toList();
-
-      debugPrint(
-        'Requests: Successfully loaded ${_allRequests.length} reservations',
-      );
+      debugPrint('[RequestsProvider] Loading requests from repository...');
+      _allRequests = await _requestsRepository.loadAllRequests();
+      debugPrint('[RequestsProvider] Successfully loaded ${_allRequests.length} requests');
     } catch (e, stack) {
-      debugPrint('Error loading requests: $e');
-      debugPrint('Stack trace: $stack');
+      debugPrint('[RequestsProvider] Error loading requests: $e');
+      debugPrint('[RequestsProvider] Stack trace: $stack');
     }
 
     _isLoading = false;
     notifyListeners();
-  }
-
-  ReservationStatus _mapStatus(String? status) {
-    if (status == null) return ReservationStatus.pending;
-    switch (status.toLowerCase()) {
-      case 'aprobada':
-      case 'aprobado':
-        return ReservationStatus.approved;
-      case 'rechazada':
-      case 'rechazado':
-      case 'desaprobado':
-        return ReservationStatus.rejected;
-      case 'finalizada':
-      case 'completado':
-        return ReservationStatus.completed;
-      case 'cancelado':
-        return ReservationStatus.cancelled;
-      default:
-        return ReservationStatus.pending;
-    }
   }
 
   void setFilter(String filter) {
@@ -159,66 +117,40 @@ class RequestsProvider extends ChangeNotifier {
 
   Future<void> approveRequest(String id) async {
     try {
-      final reservationData = await _supabase
-          .from('reservas')
-          .select('id_producto')
-          .eq('id', id)
-          .single();
+      debugPrint('[RequestsProvider] Approving request: $id');
+      final success = await _requestsRepository.updateRequestStatus(
+        requestId: id,
+        status: ReservationStatus.approved,
+      );
 
-      final productId = reservationData['id_producto'];
-
-      await _supabase
-          .from('reservas')
-          .update({'estado_reserva': 'aprobada'})
-          .eq('id', id);
-
-      if (productId != null) {
-        await _supabase
-            .from('productos')
-            .update({'id_estado': 2})
-            .eq('id', productId);
+      if (success) {
+        debugPrint('[RequestsProvider] Request approved successfully');
       }
-
-      await loadRequests();
     } catch (e) {
-      debugPrint('Error approving request: $e');
+      debugPrint('[RequestsProvider] Error approving request: $e');
     }
   }
 
   Future<void> rejectRequest(String id) async {
     try {
-      final reservationData = await _supabase
-          .from('reservas')
-          .select('id_producto')
-          .eq('id', id)
-          .single();
+      debugPrint('[RequestsProvider] Rejecting request: $id');
+      final success = await _requestsRepository.updateRequestStatus(
+        requestId: id,
+        status: ReservationStatus.rejected,
+      );
 
-      final productId = reservationData['id_producto'];
-
-      await _supabase
-          .from('reservas')
-          .update({'estado_reserva': 'rechazada'})
-          .eq('id', id);
-
-      if (productId != null) {
-        final activeReservations = await _supabase
-            .from('reservas')
-            .select('id')
-            .eq('id_producto', productId)
-            .eq('estado_reserva', 'aprobada')
-            .neq('id', id);
-
-        if (activeReservations.isEmpty) {
-          await _supabase
-              .from('productos')
-              .update({'id_estado': 1})
-              .eq('id', productId);
-        }
+      if (success) {
+        debugPrint('[RequestsProvider] Request rejected successfully');
       }
-
-      await loadRequests();
     } catch (e) {
-      debugPrint('Error rejecting request: $e');
+      debugPrint('[RequestsProvider] Error rejecting request: $e');
     }
+  }
+
+  @override
+  void dispose() {
+    _realtimeSubscription?.cancel();
+    debugPrint('[RequestsProvider] Disposed and cancelled real-time subscription');
+    super.dispose();
   }
 }
