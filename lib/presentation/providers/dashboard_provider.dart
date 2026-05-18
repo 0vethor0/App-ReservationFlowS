@@ -3,6 +3,7 @@
 
 library;
 
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -12,9 +13,12 @@ import '../../domain/entities/entities.dart'
     hide ReservationEntity, ReservationStatus, RequestPriority;
 
 class DashboardProvider extends ChangeNotifier {
-  // ignore: unused_field
   final DashboardRepository _dashboardRepository;
-  RealtimeChannel? _realtimeChannel;
+  StreamSubscription? _realtimeSubscription;
+  final Set<String> _shownInsertIds = {};
+  
+  // Callback for new reservation notifications
+  Function(Map<String, dynamic> newReservation)? onNewReservation;
 
   DashboardProvider(this._dashboardRepository) {
     loadDashboard();
@@ -22,31 +26,30 @@ class DashboardProvider extends ChangeNotifier {
   }
 
   void _setupRealtime() {
-    _realtimeChannel = _supabase.channel('dashboard_metrics')
-      ..onPostgresChanges(
-        event: PostgresChangeEvent.all,
-        schema: 'public',
-        table: 'productos',
-        callback: (payload) {
+    // Subscribe to realtime updates via repository
+    _realtimeSubscription = _dashboardRepository
+        .subscribeToReservationsRealtime()
+        .listen((data) {
+          // Check for new INSERT events
+          for (final r in data) {
+            final id = r['id'].toString();
+            final eventType = r['@eventType'] as String?;
+
+            if (eventType == 'INSERT' && !_shownInsertIds.contains(id)) {
+              _shownInsertIds.add(id);
+              // Trigger notification callback
+              onNewReservation?.call(r);
+            }
+          }
+          
+          // Reload dashboard when realtime data changes
           loadDashboard();
-        },
-      )
-      ..onPostgresChanges(
-        event: PostgresChangeEvent.all,
-        schema: 'public',
-        table: 'reservas',
-        callback: (payload) {
-          loadDashboard();
-        },
-      )
-      ..subscribe();
+        });
   }
 
   @override
   void dispose() {
-    if (_realtimeChannel != null) {
-      _supabase.removeChannel(_realtimeChannel!);
-    }
+    _realtimeSubscription?.cancel();
     super.dispose();
   }
 

@@ -6,6 +6,7 @@ library;
 import '../entities/dashboard_metrics_entity.dart';
 import '../../../reservations/domain/entities/reservation_entity.dart';
 
+// ignore: avoid_using_map_from
 abstract class DashboardRepository {
   /// Load dashboard metrics
   Future<DashboardMetrics> loadDashboardMetrics();
@@ -15,6 +16,9 @@ abstract class DashboardRepository {
 
   /// Load user's reservations
   Future<List<ReservationEntity>> loadMyReservations(String userId);
+
+  /// Subscribe to realtime updates for reservations
+  Stream<List<Map<String, dynamic>>> subscribeToReservationsRealtime();
 
   /// Subscribe to realtime updates
   void subscribeToRealtimeUpdates();

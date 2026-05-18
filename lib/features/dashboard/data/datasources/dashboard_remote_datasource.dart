@@ -42,4 +42,12 @@ class DashboardRemoteDataSource {
 
     return data.length;
   }
+
+  /// Subscribe to realtime changes on reservas table
+  Stream<List<Map<String, dynamic>>> subscribeToReservasRealtime() {
+    return client
+        .from('reservas')
+        .stream(primaryKey: ['id'])
+        .order('hora_inicio', ascending: true);
+  }
 }

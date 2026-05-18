@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../providers/dashboard_provider.dart';
 import '../../../../features/reservations/domain/entities/reservation_entity.dart';
@@ -16,33 +15,14 @@ class UtilizationChart extends StatefulWidget {
 }
 
 class _UtilizationChartState extends State<UtilizationChart> {
-  final SupabaseClient _supabase = Supabase.instance.client;
-  final Set<String> _shownInsertIds = {};
-
   @override
   void initState() {
     super.initState();
-    _initStream();
-  }
-
-  void _initStream() {
-    _supabase
-        .from('reservas')
-        .stream(primaryKey: ['id'])
-        .order('hora_inicio', ascending: true)
-        .listen((data) {
-          if (!mounted) return;
-
-          for (final r in data) {
-            final id = r['id'].toString();
-            final eventType = r['@eventType'] as String?;
-
-            if (eventType == 'INSERT' && !_shownInsertIds.contains(id)) {
-              _shownInsertIds.add(id);
-              _mostrarNotificacion(r);
-            }
-          }
-        });
+    // Setup notification callback via provider
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final dashProvider = context.read<DashboardProvider>();
+      dashProvider.onNewReservation = _mostrarNotificacion;
+    });
   }
 
   void _mostrarNotificacion(Map<String, dynamic> reserva) {

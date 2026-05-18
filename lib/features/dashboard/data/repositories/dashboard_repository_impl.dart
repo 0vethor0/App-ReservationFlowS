@@ -61,6 +61,11 @@ class DashboardRepositoryImpl implements DashboardRepository {
   }
 
   @override
+  Stream<List<Map<String, dynamic>>> subscribeToReservationsRealtime() {
+    return remoteDataSource.subscribeToReservasRealtime();
+  }
+
+  @override
   void subscribeToRealtimeUpdates() {
     _realtimeChannel = client.channel('dashboard_metrics')
       ..onPostgresChanges(
