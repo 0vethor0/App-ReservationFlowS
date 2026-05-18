@@ -19,6 +19,9 @@ class DashboardProvider extends ChangeNotifier {
   
   // Callback for new reservation notifications
   Function(Map<String, dynamic> newReservation)? onNewReservation;
+  
+  // Separate loading state for my reservations
+  bool _isLoadingMyReservations = false;
 
   DashboardProvider(this._dashboardRepository) {
     loadDashboard();
@@ -42,8 +45,8 @@ class DashboardProvider extends ChangeNotifier {
             }
           }
           
-          // Reload dashboard when realtime data changes
-          loadDashboard();
+          // Only reload myReservations for the current filter date, not full dashboard
+          loadMyReservations();
         });
   }
 
@@ -66,6 +69,7 @@ class DashboardProvider extends ChangeNotifier {
   List<ReservationEntity> get myReservations => _myReservations;
   DateTime get filterDate => _filterDate;
   bool get isLoading => _isLoading;
+  bool get isLoadingMyReservations => _isLoadingMyReservations;
 
   Future<void> loadDashboard() async {
     _isLoading = true;
@@ -168,6 +172,7 @@ class DashboardProvider extends ChangeNotifier {
   }
 
   Future<void> loadMyReservations() async {
+    _isLoadingMyReservations = true;
     _myReservations = []; // Limpiar antes de cargar
     notifyListeners();
 
@@ -189,6 +194,16 @@ class DashboardProvider extends ChangeNotifier {
         _filterDate.day,
       );
       final endOfDay = startOfDay.add(const Duration(days: 1));
+
+      debugPrint(
+        '=== Loading My Reservations for $_filterDate ===',
+      );
+      debugPrint(
+        'Start: ${startOfDay.toUtc().toIso8601String()}',
+      );
+      debugPrint(
+        'End: ${endOfDay.toUtc().toIso8601String()}',
+      );
 
       // Filtramos por 'hora_inicio' (la fecha de la reserva) para que coincida con el uso esperado
       final data = await _supabase
@@ -217,19 +232,26 @@ class DashboardProvider extends ChangeNotifier {
       );
     } catch (e) {
       debugPrint('Error loading my reservations: $e');
+    } finally {
+      _isLoadingMyReservations = false;
+      notifyListeners();
     }
   }
 
   void nextDate() {
     _filterDate = _filterDate.add(const Duration(days: 1));
-    loadMyReservations();
+    // Don't call loadMyReservations here - let the UI trigger it via the loading state
     notifyListeners();
+    // Load reservations for the new date
+    loadMyReservations();
   }
 
   void previousDate() {
     _filterDate = _filterDate.subtract(const Duration(days: 1));
-    loadMyReservations();
+    // Don't call loadMyReservations here - let the UI trigger it via the loading state
     notifyListeners();
+    // Load reservations for the new date
+    loadMyReservations();
   }
 
   ReservationEntity _mapToEntity(Map<String, dynamic> r) {

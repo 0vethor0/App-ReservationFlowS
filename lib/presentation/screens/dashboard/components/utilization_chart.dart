@@ -119,7 +119,7 @@ class _UtilizationChartState extends State<UtilizationChart> {
             ),
             const SizedBox(height: 16),
 
-            if (dashProvider.isLoading)
+            if (dashProvider.isLoadingMyReservations)
               const Center(
                 child: Padding(
                   padding: EdgeInsets.all(40),
