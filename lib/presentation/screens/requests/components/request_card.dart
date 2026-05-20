@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/constants/app_strings.dart';
 import '../../../../features/reservations/domain/entities/reservation_entity.dart';
 import '../../../providers/requests_provider.dart';
 
@@ -14,6 +15,7 @@ class RequestCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isPending = request.status == ReservationStatus.pending;
+    final isApproved = request.status == ReservationStatus.approved;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -166,9 +168,47 @@ class RequestCard extends StatelessWidget {
                     ),
                   ),
                 ],
+              )
+            else if (isApproved)
+              Row(
+                children: [
+                  Expanded(
+                    child: _ActionButton(
+                      text: 'Cancelar',
+                      onPressed: () => _confirmCancel(context),
+                      isPrimary: false,
+                    ),
+                  ),
+                ],
               ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _confirmCancel(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text(AppStrings.cancelConfirmTitle),
+        content: const Text(AppStrings.cancelConfirmMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text(AppStrings.cancel),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              provider.cancelRequest(request.id);
+            },
+            child: const Text(
+              AppStrings.confirm,
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -218,10 +258,21 @@ class _StatusBadge extends StatelessWidget {
         textColor = const Color(0xFFC81E1E);
         text = 'RECHAZADA';
         break;
-      default:
-        bgColor = Colors.grey[100]!;
-        textColor = Colors.grey[600]!;
-        text = 'OTRO';
+      case ReservationStatus.inProgress:
+        bgColor = const Color(0xFFE3F2FD);
+        textColor = const Color(0xFF1976D2);
+        text = 'EN CURSO';
+        break;
+      case ReservationStatus.completed:
+        bgColor = const Color(0xFFF3E5F5);
+        textColor = const Color(0xFF7B1FA2);
+        text = 'FINALIZADA';
+        break;
+      case ReservationStatus.cancelled:
+        bgColor = const Color(0xFFFFF3E0);
+        textColor = const Color(0xFFE65100);
+        text = 'CANCELADA';
+        break;
     }
 
     return Container(

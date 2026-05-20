@@ -110,6 +110,8 @@ class RequestsRepositoryImpl implements RequestsRepository {
       case 'rechazado':
       case 'desaprobado':
         return ReservationStatus.rejected;
+      case 'en_curso':
+        return ReservationStatus.inProgress;
       case 'finalizada':
       case 'completado':
         return ReservationStatus.completed;
@@ -127,6 +129,8 @@ class RequestsRepositoryImpl implements RequestsRepository {
         return 'aprobada';
       case ReservationStatus.rejected:
         return 'rechazada';
+      case ReservationStatus.inProgress:
+        return 'en_curso';
       case ReservationStatus.completed:
         return 'finalizada';
       case ReservationStatus.cancelled:

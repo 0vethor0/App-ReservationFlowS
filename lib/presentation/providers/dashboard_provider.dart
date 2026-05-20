@@ -69,12 +69,33 @@ class DashboardProvider extends ChangeNotifier {
   DashboardMetrics _metrics = const DashboardMetrics();
   List<ReservationEntity> _upcomingReservations = [];
   List<ReservationEntity> _myReservations = [];
+  String _myReservationsFilter = 'Aprobadas';
   DateTime _filterDate = DateTime.now();
   bool _isLoading = true;
 
   DashboardMetrics get metrics => _metrics;
   List<ReservationEntity> get upcomingReservations => _upcomingReservations;
   List<ReservationEntity> get myReservations => _myReservations;
+  
+  String get myReservationsFilter => _myReservationsFilter;
+  
+  List<ReservationEntity> get filteredMyReservations {
+    return _myReservations.where((r) {
+      switch (_myReservationsFilter) {
+        case 'Aprobadas':
+          return r.status == ReservationStatus.approved;
+        case 'En curso':
+          return r.status == ReservationStatus.inProgress;
+        case 'Canceladas':
+          return r.status == ReservationStatus.cancelled;
+        case 'Finalizadas':
+          return r.status == ReservationStatus.completed;
+        default:
+          return true;
+      }
+    }).toList();
+  }
+  
   DateTime get filterDate => _filterDate;
   bool get isLoading => _isLoading;
   bool get isLoadingMyReservations => _isLoadingMyReservations;
@@ -262,6 +283,31 @@ class DashboardProvider extends ChangeNotifier {
     loadMyReservations();
   }
 
+  void setMyReservationsFilter(String filter) {
+    _myReservationsFilter = filter;
+    notifyListeners();
+  }
+
+  Future<void> cancelMyReservation(String id) async {
+    try {
+      debugPrint('[DashboardProvider] Cancelling my reservation: $id');
+      await _dashboardRepository.updateReservationStatus(id, 'cancelada');
+      debugPrint('[DashboardProvider] Reservation cancelled successfully');
+    } catch (e) {
+      debugPrint('[DashboardProvider] Error cancelling my reservation: $e');
+    }
+  }
+
+  Future<void> completeMyReservation(String id) async {
+    try {
+      debugPrint('[DashboardProvider] Completing my reservation: $id');
+      await _dashboardRepository.updateReservationStatus(id, 'finalizada');
+      debugPrint('[DashboardProvider] Reservation completed successfully');
+    } catch (e) {
+      debugPrint('[DashboardProvider] Error completing my reservation: $e');
+    }
+  }
+
   ReservationEntity _mapToEntity(Map<String, dynamic> r) {
     // Safe extraction with null checks for related tables
     final productosData = r['productos'];
@@ -311,10 +357,13 @@ class DashboardProvider extends ChangeNotifier {
       case 'rechazada':
       case 'desaprobado':
         return ReservationStatus.rejected;
+      case 'en_curso':
+        return ReservationStatus.inProgress;
       case 'completado':
       case 'finalizada':
         return ReservationStatus.completed;
       case 'cancelado':
+      case 'cancelada':
         return ReservationStatus.cancelled;
       default:
         return ReservationStatus.pending;

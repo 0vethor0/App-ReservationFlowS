@@ -65,6 +65,11 @@ class DashboardRepositoryImpl implements DashboardRepository {
   }
 
   @override
+  Future<void> updateReservationStatus(String id, String status) async {
+    await remoteDataSource.updateReservationStatus(id, status);
+  }
+
+  @override
   Stream<void> watchProductAvailability() {
     return remoteDataSource.watchProductAvailability();
   }

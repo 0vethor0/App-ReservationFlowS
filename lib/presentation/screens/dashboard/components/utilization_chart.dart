@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/constants/app_strings.dart';
 import '../../../providers/dashboard_provider.dart';
 import '../../../../features/reservations/domain/entities/reservation_entity.dart';
 
@@ -118,6 +119,38 @@ class _UtilizationChartState extends State<UtilizationChart> {
               ],
             ),
             const SizedBox(height: 16),
+            
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _StatusFilterChip(
+                    label: AppStrings.approved,
+                    isActive: dashProvider.myReservationsFilter == 'Aprobadas',
+                    onTap: () => dashProvider.setMyReservationsFilter('Aprobadas'),
+                  ),
+                  const SizedBox(width: 8),
+                  _StatusFilterChip(
+                    label: AppStrings.inProgress,
+                    isActive: dashProvider.myReservationsFilter == 'En curso',
+                    onTap: () => dashProvider.setMyReservationsFilter('En curso'),
+                  ),
+                  const SizedBox(width: 8),
+                  _StatusFilterChip(
+                    label: AppStrings.cancelled,
+                    isActive: dashProvider.myReservationsFilter == 'Canceladas',
+                    onTap: () => dashProvider.setMyReservationsFilter('Canceladas'),
+                  ),
+                  const SizedBox(width: 8),
+                  _StatusFilterChip(
+                    label: AppStrings.completed,
+                    isActive: dashProvider.myReservationsFilter == 'Finalizadas',
+                    onTap: () => dashProvider.setMyReservationsFilter('Finalizadas'),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
 
             if (dashProvider.isLoadingMyReservations)
               const Center(
@@ -128,12 +161,12 @@ class _UtilizationChartState extends State<UtilizationChart> {
                   ),
                 ),
               )
-            else if (dashProvider.myReservations.isEmpty)
+            else if (dashProvider.filteredMyReservations.isEmpty)
               Center(
                 child: Padding(
                   padding: const EdgeInsets.all(40),
                   child: Text(
-                    'No hay reservaciones para este día',
+                    'No hay reservaciones',
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       color: AppColors.textSecondary,
@@ -145,9 +178,9 @@ class _UtilizationChartState extends State<UtilizationChart> {
               ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                itemCount: dashProvider.myReservations.length,
+                itemCount: dashProvider.filteredMyReservations.length,
                 itemBuilder: (context, index) {
-                  final reservation = dashProvider.myReservations[index];
+                  final reservation = dashProvider.filteredMyReservations[index];
                   return FadeInUp(
                     duration: const Duration(milliseconds: 400),
                     delay: Duration(milliseconds: index * 100),
@@ -280,6 +313,54 @@ class DashboardRequestCard extends StatelessWidget {
                     ),
                   ),
                 ],
+                if (request.status == ReservationStatus.inProgress) ...[
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => _confirmCancel(context),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            side: BorderSide(color: Colors.red[300]!),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          child: Text(
+                            AppStrings.cancelReservation,
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.red[600],
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => _confirmComplete(context),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            side: BorderSide(color: Colors.amber[600]!),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          child: Text(
+                            AppStrings.completeReservation,
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.amber[700],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
@@ -303,6 +384,58 @@ class DashboardRequestCard extends StatelessWidget {
                 ],
               ),
             ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmCancel(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text(AppStrings.cancelConfirmTitle),
+        content: const Text(AppStrings.cancelConfirmMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text(AppStrings.cancel),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.read<DashboardProvider>().cancelMyReservation(request.id);
+            },
+            child: const Text(
+              AppStrings.confirm,
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmComplete(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text(AppStrings.completeConfirmTitle),
+        content: const Text(AppStrings.completeConfirmMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text(AppStrings.cancel),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.read<DashboardProvider>().completeMyReservation(request.id);
+            },
+            child: Text(
+              AppStrings.confirm,
+              style: TextStyle(color: Colors.amber[700]),
+            ),
+          ),
         ],
       ),
     );
@@ -335,10 +468,21 @@ class _StatusBadge extends StatelessWidget {
         textColor = const Color(0xFFC81E1E);
         text = 'RECHAZADA';
         break;
-      default:
-        bgColor = Colors.grey[100]!;
-        textColor = Colors.grey[600]!;
-        text = 'OTRO';
+      case ReservationStatus.inProgress:
+        bgColor = const Color(0xFFE3F2FD);
+        textColor = const Color(0xFF1976D2);
+        text = 'EN CURSO';
+        break;
+      case ReservationStatus.completed:
+        bgColor = const Color(0xFFF3E5F5);
+        textColor = const Color(0xFF7B1FA2);
+        text = 'FINALIZADA';
+        break;
+      case ReservationStatus.cancelled:
+        bgColor = const Color(0xFFFFF3E0);
+        textColor = const Color(0xFFE65100);
+        text = 'CANCELADA';
+        break;
     }
 
     return Container(
@@ -396,6 +540,44 @@ class _DetailRow extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _StatusFilterChip extends StatelessWidget {
+  const _StatusFilterChip({
+    required this.label,
+    required this.isActive,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool isActive;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: isActive ? AppColors.primaryBlue : AppColors.surfaceLight,
+          borderRadius: BorderRadius.circular(20),
+          border: isActive
+              ? null
+              : Border.all(color: AppColors.border.withValues(alpha: 0.3)),
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: isActive ? Colors.white : AppColors.textSecondary,
+          ),
+        ),
+      ),
     );
   }
 }

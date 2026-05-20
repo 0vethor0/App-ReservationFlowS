@@ -29,6 +29,12 @@ class RequestsProvider extends ChangeNotifier {
           return r.status == ReservationStatus.approved;
         case 'Rechazadas':
           return r.status == ReservationStatus.rejected;
+        case 'En curso':
+          return r.status == ReservationStatus.inProgress;
+        case 'Finalizadas':
+          return r.status == ReservationStatus.completed;
+        case 'Canceladas':
+          return r.status == ReservationStatus.cancelled;
         default:
           return true;
       }
@@ -142,6 +148,22 @@ class RequestsProvider extends ChangeNotifier {
       }
     } catch (e) {
       debugPrint('[RequestsProvider] Error rejecting request: $e');
+    }
+  }
+
+  Future<void> cancelRequest(String id) async {
+    try {
+      debugPrint('[RequestsProvider] Cancelling request: $id');
+      final success = await _requestsRepository.updateRequestStatus(
+        requestId: id,
+        status: ReservationStatus.cancelled,
+      );
+
+      if (success) {
+        debugPrint('[RequestsProvider] Request cancelled successfully');
+      }
+    } catch (e) {
+      debugPrint('[RequestsProvider] Error cancelling request: $e');
     }
   }
 

@@ -58,6 +58,14 @@ class DashboardRemoteDataSource {
         .order('hora_inicio', ascending: true);
   }
 
+  /// Update reservation status
+  Future<void> updateReservationStatus(String id, String status) async {
+    await client
+        .from('reservas')
+        .update({'estado_reserva': status})
+        .eq('id', id);
+  }
+
   /// Emits when product availability changes (cron, trigger o admin).
   Stream<void> watchProductAvailability() {
     _productosController ??= StreamController<void>.broadcast();
