@@ -7,30 +7,78 @@ import '../../domain/entities/reservation_entity.dart';
 import '../datasources/reservation_remote_datasource.dart';
 
 class ReservationRepositoryImpl implements ReservationRepository {
+  ReservationRepositoryImpl(this.remoteDataSource);
+
   final ReservationRemoteDataSource remoteDataSource;
 
-  ReservationRepositoryImpl(this.remoteDataSource);
+  @override
+  Future<List<VideobeamEntity>> loadAllVideobeams() async {
+    final data = await remoteDataSource.loadAllVideobeams();
+    return data.map(_mapToVideobeamEntity).toList();
+  }
 
   @override
   Future<List<VideobeamEntity>> loadVideobeams() async {
     final data = await remoteDataSource.loadVideobeams();
+    return data.map(_mapToVideobeamEntity).toList();
+  }
 
-    return data.map((item) {
-      return VideobeamEntity(
-        id: item['id']?.toString() ?? 'unknown',
-        name: item['nombre'] as String? ?? 'Videobeam',
-        brand: item['marca'] as String? ?? '',
-        model: item['modelo'] as String? ?? '',
-        status: VideobeamStatus.available,
-      );
-    }).toList();
+  @override
+  Stream<void> watchProductAvailability() {
+    return remoteDataSource.watchProductAvailability();
+  }
+
+  @override
+  void disposeProductRealtime() {
+    remoteDataSource.disposeProductRealtime();
   }
 
   @override
   Future<List<ReservationEntity>> fetchReservations(DateTime date) async {
     final data = await remoteDataSource.fetchReservations(date);
+    return data.map(_mapToReservationEntity).toList();
+  }
 
-    return data.map((item) => _mapToReservationEntity(item)).toList();
+  @override
+  Future<List<Map<String, dynamic>>> fetchApprovedReservations() async {
+    return remoteDataSource.fetchApprovedReservations();
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>>
+  fetchApprovedReservationsForProductOnDate({
+    required String videobeamId,
+    required DateTime date,
+  }) async {
+    return remoteDataSource.fetchApprovedReservationsForProductOnDate(
+      productId: videobeamId,
+      date: date,
+    );
+  }
+
+  @override
+  Future<String> getProfileIdByEmail(String email) async {
+    return remoteDataSource.getProfileIdByEmail(email);
+  }
+
+  @override
+  Future<bool> createReservationViaRPC({
+    required String userId,
+    required String videobeamId,
+    required DateTime startTime,
+    required DateTime endTime,
+  }) async {
+    try {
+      await remoteDataSource.createReservationViaRpc(
+        userId: userId,
+        productId: videobeamId,
+        start: startTime,
+        end: endTime,
+      );
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   @override
@@ -59,7 +107,7 @@ class ReservationRepositoryImpl implements ReservationRepository {
         'estado': 'pending',
       });
       return true;
-    } catch (e) {
+    } catch (_) {
       return false;
     }
   }
@@ -69,7 +117,17 @@ class ReservationRepositoryImpl implements ReservationRepository {
     try {
       await remoteDataSource.cancelReservation(reservationId);
       return true;
-    } catch (e) {
+    } catch (_) {
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> deleteReservation(String reservationId) async {
+    try {
+      await remoteDataSource.deleteReservation(reservationId);
+      return true;
+    } catch (_) {
       return false;
     }
   }
@@ -77,44 +135,25 @@ class ReservationRepositoryImpl implements ReservationRepository {
   @override
   Future<List<ReservationEntity>> getUserReservations(String userId) async {
     final data = await remoteDataSource.getUserReservations(userId);
-
-    return data.map((item) => _mapToReservationEntity(item)).toList();
+    return data.map(_mapToReservationEntity).toList();
   }
 
-  @override
-  Future<List<Map<String, dynamic>>> fetchApprovedReservations() async {
-    // This would need to be added to the datasource
-    return [];
-  }
+  VideobeamEntity _mapToVideobeamEntity(Map<String, dynamic> item) {
+    final idEstado = item['id_estado'] as int?;
+    final status = switch (idEstado) {
+      1 => VideobeamStatus.available,
+      2 => VideobeamStatus.inUse,
+      3 || 4 => VideobeamStatus.maintenance,
+      _ => VideobeamStatus.available,
+    };
 
-  @override
-  Future<List<Map<String, dynamic>>> checkTimeConflicts({
-    required String videobeamId,
-    required DateTime date,
-  }) async {
-    // This would need to be added to the datasource
-    return [];
-  }
-
-  @override
-  Future<bool> createReservationViaRPC({
-    required String userId,
-    required String videobeamId,
-    required DateTime startTime,
-    required DateTime endTime,
-  }) async {
-    // RPC calls need special handling - return false for now
-    return false;
-  }
-
-  @override
-  Future<bool> deleteReservation(String reservationId) async {
-    try {
-      // This would need to be added to the datasource
-      return false;
-    } catch (e) {
-      return false;
-    }
+    return VideobeamEntity(
+      id: item['id']?.toString() ?? 'unknown',
+      name: item['nombre'] as String? ?? 'Videobeam',
+      brand: item['marca'] as String? ?? '',
+      model: item['modelo'] as String? ?? '',
+      status: status,
+    );
   }
 
   ReservationEntity _mapToReservationEntity(Map<String, dynamic> item) {

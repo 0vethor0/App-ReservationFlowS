@@ -3,30 +3,119 @@
 /// Handles all Supabase reservation-related calls.
 library;
 
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ReservationRemoteDataSource {
-  final SupabaseClient client;
-
   ReservationRemoteDataSource(this.client);
+
+  final SupabaseClient client;
+  RealtimeChannel? _productosChannel;
+  StreamController<void>? _productosController;
+
+  /// Load all videobeams (any status) for the reservation UI.
+  Future<List<Map<String, dynamic>>> loadAllVideobeams() async {
+    return client.from('productos').select('*, estados_producto(nombre)');
+  }
 
   /// Load available videobeams from productos table
   Future<List<Map<String, dynamic>>> loadVideobeams() async {
-    final data = await client
+    return client
         .from('productos')
         .select('*, estados_producto(nombre)')
         .eq('id_estado', 1);
+  }
 
-    return data;
+  /// Realtime stream fired when product availability changes in DB.
+  Stream<void> watchProductAvailability() {
+    _productosController ??= StreamController<void>.broadcast();
+
+    _productosChannel ??= client.channel('productos_availability')
+      ..onPostgresChanges(
+        event: PostgresChangeEvent.all,
+        schema: 'public',
+        table: 'productos',
+        callback: (payload) {
+          debugPrint(
+            '[ReservationDataSource] productos ${payload.eventType}',
+          );
+          if (!(_productosController?.isClosed ?? true)) {
+            _productosController!.add(null);
+          }
+        },
+      )
+      ..subscribe();
+
+    return _productosController!.stream;
+  }
+
+  void disposeProductRealtime() {
+    if (_productosChannel != null) {
+      client.removeChannel(_productosChannel!);
+      _productosChannel = null;
+    }
+    _productosController?.close();
+    _productosController = null;
   }
 
   /// Fetch reservations for a specific date
   Future<List<Map<String, dynamic>>> fetchReservations(DateTime date) async {
     final dateStr = date.toIso8601String().split('T').first;
 
-    final data = await client.from('reservas').select().eq('fecha', dateStr);
+    return client.from('reservas').select().eq('fecha', dateStr);
+  }
 
-    return data;
+  Future<List<Map<String, dynamic>>> fetchApprovedReservations() async {
+    return client
+        .from('reservas')
+        .select('*, productos(*)')
+        .eq('estado_reserva', 'aprobada')
+        .order('hora_inicio', ascending: true);
+  }
+
+  Future<List<Map<String, dynamic>>> fetchApprovedReservationsForProductOnDate({
+    required String productId,
+    required DateTime date,
+  }) async {
+    final startOfDay = DateTime(date.year, date.month, date.day);
+    final endOfDay = startOfDay.add(const Duration(days: 1));
+
+    return client
+        .from('reservas')
+        .select('*')
+        .eq('id_producto', productId)
+        .eq('estado_reserva', 'aprobada')
+        .gte('hora_inicio', startOfDay.toIso8601String())
+        .lt('hora_inicio', endOfDay.toIso8601String());
+  }
+
+  Future<String> getProfileIdByEmail(String email) async {
+    final profileData = await client
+        .from('perfiles')
+        .select('id')
+        .eq('correo', email)
+        .single();
+
+    return profileData['id'] as String;
+  }
+
+  Future<void> createReservationViaRpc({
+    required String userId,
+    required String productId,
+    required DateTime start,
+    required DateTime end,
+  }) async {
+    await client.rpc(
+      'intentar_reservar',
+      params: {
+        'p_usuario_id': userId,
+        'p_producto_id': productId,
+        'p_inicio': start.toIso8601String(),
+        'p_fin': end.toIso8601String(),
+      },
+    );
   }
 
   /// Create a new reservation
@@ -42,13 +131,12 @@ class ReservationRemoteDataSource {
         .eq('id', reservationId);
   }
 
+  Future<void> deleteReservation(String reservationId) async {
+    await client.from('reservas').delete().eq('id', reservationId);
+  }
+
   /// Get user's reservations
   Future<List<Map<String, dynamic>>> getUserReservations(String userId) async {
-    final data = await client
-        .from('reservas')
-        .select()
-        .eq('usuario_id', userId);
-
-    return data;
+    return client.from('reservas').select().eq('usuario_id', userId);
   }
 }

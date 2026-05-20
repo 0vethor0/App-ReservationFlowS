@@ -91,29 +91,12 @@ class RequestsRemoteDataSource {
         .update({'estado_reserva': status})
         .eq('id', requestId);
 
-    if (status == 'aprobada' && productId != null) {
-      debugPrint('[RequestsDataSource] Updating product $productId status to in_use (2)');
-      await client
-          .from('productos')
-          .update({'id_estado': 2})
-          .eq('id', productId);
-    } else if (status == 'rechazada' && productId != null) {
-      debugPrint('[RequestsDataSource] Checking if product $productId should be available');
-
-      final activeReservations = await client
-          .from('reservas')
-          .select('id')
-          .eq('id_producto', productId)
-          .eq('estado_reserva', 'aprobada')
-          .neq('id', requestId);
-
-      if (activeReservations.isEmpty) {
-        debugPrint('[RequestsDataSource] No active reservations, setting product $productId to available (1)');
-        await client
-            .from('productos')
-            .update({'id_estado': 1})
-            .eq('id', productId);
-      }
+    // Estado del producto: lo gestiona el trigger trg_reserva_estado_producto en Supabase.
+    // Realtime en tabla productos notifica a ReservationProvider y DashboardProvider.
+    if (productId != null) {
+      debugPrint(
+        '[RequestsDataSource] Reserva $requestId → $status; producto $productId vía trigger BD',
+      );
     }
   }
 

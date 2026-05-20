@@ -15,6 +15,7 @@ import '../../domain/entities/entities.dart'
 class DashboardProvider extends ChangeNotifier {
   final DashboardRepository _dashboardRepository;
   StreamSubscription? _realtimeSubscription;
+  StreamSubscription? _productAvailabilitySubscription;
   final Set<String> _shownInsertIds = {};
   
   // Callback for new reservation notifications
@@ -29,30 +30,37 @@ class DashboardProvider extends ChangeNotifier {
   }
 
   void _setupRealtime() {
-    // Subscribe to realtime updates via repository
     _realtimeSubscription = _dashboardRepository
         .subscribeToReservationsRealtime()
         .listen((data) {
-          // Check for new INSERT events
           for (final r in data) {
             final id = r['id'].toString();
             final eventType = r['@eventType'] as String?;
 
             if (eventType == 'INSERT' && !_shownInsertIds.contains(id)) {
               _shownInsertIds.add(id);
-              // Trigger notification callback
               onNewReservation?.call(r);
             }
           }
-          
-          // Only reload myReservations for the current filter date, not full dashboard
+
           loadMyReservations();
+        });
+
+    _productAvailabilitySubscription = _dashboardRepository
+        .watchProductAvailability()
+        .listen((_) {
+          debugPrint(
+            '[DashboardProvider] Disponibilidad de productos actualizada',
+          );
+          loadDashboard();
         });
   }
 
   @override
   void dispose() {
     _realtimeSubscription?.cancel();
+    _productAvailabilitySubscription?.cancel();
+    _dashboardRepository.disposeRealtime();
     super.dispose();
   }
 
@@ -304,6 +312,7 @@ class DashboardProvider extends ChangeNotifier {
       case 'desaprobado':
         return ReservationStatus.rejected;
       case 'completado':
+      case 'finalizada':
         return ReservationStatus.completed;
       case 'cancelado':
         return ReservationStatus.cancelled;

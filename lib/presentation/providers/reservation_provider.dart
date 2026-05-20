@@ -1,21 +1,27 @@
 library;
 
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../features/reservations/domain/repositories/reservation_repository.dart';
 import '../../features/reservations/domain/entities/videobeam_entity.dart';
 
 class ReservationProvider extends ChangeNotifier {
-  // ignore: unused_field
-  final ReservationRepository _reservationRepository;
-  final SupabaseClient _supabase = Supabase.instance.client;
-  RealtimeChannel? _productosChannel;
-
   ReservationProvider(this._reservationRepository) {
     _loadVideobeams();
-    _setupRealtimeSubscription();
+    _productAvailabilitySubscription = _reservationRepository
+        .watchProductAvailability()
+        .listen((_) {
+          debugPrint(
+            '[ReservationProvider] Disponibilidad actualizada (realtime)',
+          );
+          _loadVideobeams();
+        });
   }
+
+  final ReservationRepository _reservationRepository;
+  StreamSubscription<void>? _productAvailabilitySubscription;
 
   List<VideobeamEntity> _videobeams = [];
   List<dynamic> _reservations = [];
@@ -37,63 +43,16 @@ class ReservationProvider extends ChangeNotifier {
   String? get error => _error;
   String get notes => _notes;
 
-  void _setupRealtimeSubscription() {
-    debugPrint('[ReservationProvider] Setting up real-time subscription for productos');
-
-    _productosChannel = _supabase.channel('reservation_videobeams')
-      ..onPostgresChanges(
-        event: PostgresChangeEvent.all,
-        schema: 'public',
-        table: 'productos',
-        callback: (payload) {
-          debugPrint('[ReservationProvider] Producto changed: ${payload.eventType} - Reloading videobeams');
-          _loadVideobeams();
-        },
-      )
-      ..subscribe();
-  }
-
   Future<void> _loadVideobeams() async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      debugPrint('[ReservationProvider] Loading videobeams with all statuses...');
-      final data = await _supabase
-          .from('productos')
-          .select('*, estados_producto(nombre)');
-
-      debugPrint('[ReservationProvider] Found ${data.length} total videobeams');
-
-      _videobeams = data.map((item) {
-        final idEstado = item['id_estado'] as int?;
-        VideobeamStatus status;
-
-        switch (idEstado) {
-          case 1:
-            status = VideobeamStatus.available;
-            break;
-          case 2:
-            status = VideobeamStatus.inUse;
-            break;
-          case 3:
-          case 4:
-            status = VideobeamStatus.maintenance;
-            break;
-          default:
-            status = VideobeamStatus.available;
-        }
-
-        return VideobeamEntity(
-          id: item['id']?.toString() ?? 'unknown',
-          name: item['nombre'] as String? ?? 'Videobeam',
-          brand: item['marca'] as String? ?? '',
-          model: item['modelo'] as String? ?? '',
-          status: status,
-        );
-      }).toList();
-
-      debugPrint('[ReservationProvider] Successfully loaded ${_videobeams.length} videobeams');
+      debugPrint('[ReservationProvider] Loading videobeams...');
+      _videobeams = await _reservationRepository.loadAllVideobeams();
+      debugPrint(
+        '[ReservationProvider] Loaded ${_videobeams.length} videobeams',
+      );
       await fetchReservations();
     } catch (e, stackTrace) {
       debugPrint('[ReservationProvider] Error loading videobeams: $e');
@@ -159,20 +118,11 @@ class ReservationProvider extends ChangeNotifier {
         _endTime!.minute,
       );
 
-      final startOfDay = DateTime(
-        _selectedDate.year,
-        _selectedDate.month,
-        _selectedDate.day,
-      );
-      final endOfDay = startOfDay.add(const Duration(days: 1));
-
-      final existingReservations = await _supabase
-          .from('reservas')
-          .select('*')
-          .eq('id_producto', _selectedVideobeam!.id)
-          .eq('estado_reserva', 'aprobada')
-          .gte('hora_inicio', startOfDay.toIso8601String())
-          .lt('hora_inicio', endOfDay.toIso8601String());
+      final existingReservations = await _reservationRepository
+          .fetchApprovedReservationsForProductOnDate(
+            videobeamId: _selectedVideobeam!.id,
+            date: _selectedDate,
+          );
 
       if (existingReservations.isNotEmpty) {
         final startMinutes = _startTime!.hour * 60 + _startTime!.minute;
@@ -182,11 +132,14 @@ class ReservationProvider extends ChangeNotifier {
           final existingStart = DateTime.parse(
             reservation['hora_inicio'] as String,
           );
-          final existingEnd = DateTime.parse(reservation['hora_fin'] as String);
+          final existingEnd = DateTime.parse(
+            reservation['hora_fin'] as String,
+          );
 
           final existingStartMinutes =
               existingStart.hour * 60 + existingStart.minute;
-          final existingEndMinutes = existingEnd.hour * 60 + existingEnd.minute;
+          final existingEndMinutes =
+              existingEnd.hour * 60 + existingEnd.minute;
 
           if ((startMinutes >= existingStartMinutes &&
                   startMinutes < existingEndMinutes) ||
@@ -211,31 +164,28 @@ class ReservationProvider extends ChangeNotifier {
         }
       }
 
-      final user = _supabase.auth.currentUser;
+      final user = Supabase.instance.client.auth.currentUser;
       if (user == null) throw Exception('No user logged in');
 
-      final profileData = await _supabase
-          .from('perfiles')
-          .select('id')
-          .eq('correo', user.email!)
-          .single();
-
-      final profileId = profileData['id'];
+      final profileId = await _reservationRepository.getProfileIdByEmail(
+        user.email!,
+      );
 
       debugPrint(
         'Confirmando reserva via RPC: id_producto=${_selectedVideobeam!.id}, id_usuario=$profileId',
       );
       debugPrint('Horario: $startDateTime - $endDateTime');
 
-      await _supabase.rpc(
-        'intentar_reservar',
-        params: {
-          'p_usuario_id': profileId,
-          'p_producto_id': _selectedVideobeam!.id,
-          'p_inicio': startDateTime.toIso8601String(),
-          'p_fin': endDateTime.toIso8601String(),
-        },
+      final success = await _reservationRepository.createReservationViaRPC(
+        userId: profileId,
+        videobeamId: _selectedVideobeam!.id,
+        startTime: startDateTime,
+        endTime: endDateTime,
       );
+
+      if (!success) {
+        throw Exception('No se pudo crear la reserva');
+      }
 
       debugPrint('Reserva insertada con éxito via RPC');
 
@@ -255,12 +205,7 @@ class ReservationProvider extends ChangeNotifier {
 
   Future<void> fetchReservations() async {
     try {
-      final data = await _supabase
-          .from('reservas')
-          .select('*, productos(*)')
-          .eq('estado_reserva', 'aprobada')
-          .order('hora_inicio', ascending: true);
-      _reservations = data;
+      _reservations = await _reservationRepository.fetchApprovedReservations();
       notifyListeners();
     } catch (e) {
       debugPrint('Error fetching reservations: $e');
@@ -271,11 +216,13 @@ class ReservationProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
-      await _supabase.from('reservas').delete().eq('id', id);
-      await fetchReservations();
+      final success = await _reservationRepository.deleteReservation(id);
+      if (success) {
+        await fetchReservations();
+      }
       _isLoading = false;
       notifyListeners();
-      return true;
+      return success;
     } catch (e) {
       _isLoading = false;
       _error = 'Error eliminando reserva: $e';
@@ -296,10 +243,8 @@ class ReservationProvider extends ChangeNotifier {
 
   @override
   void dispose() {
-    if (_productosChannel != null) {
-      debugPrint('[ReservationProvider] Disposing realtime channel');
-      _supabase.removeChannel(_productosChannel!);
-    }
+    _productAvailabilitySubscription?.cancel();
+    _reservationRepository.disposeProductRealtime();
     super.dispose();
   }
 }

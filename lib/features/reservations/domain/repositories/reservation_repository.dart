@@ -7,8 +7,16 @@ import '../entities/videobeam_entity.dart';
 import '../entities/reservation_entity.dart';
 
 abstract class ReservationRepository {
+  /// Load all videobeams (any status) for reservation UI
+  Future<List<VideobeamEntity>> loadAllVideobeams();
+
   /// Load all available videobeams
   Future<List<VideobeamEntity>> loadVideobeams();
+
+  /// Stream that emits when product availability changes in Supabase Realtime
+  Stream<void> watchProductAvailability();
+
+  void disposeProductRealtime();
 
   /// Fetch reservations for a specific date
   Future<List<ReservationEntity>> fetchReservations(DateTime date);
@@ -16,11 +24,13 @@ abstract class ReservationRepository {
   /// Fetch all approved reservations
   Future<List<Map<String, dynamic>>> fetchApprovedReservations();
 
-  /// Check for time conflicts
-  Future<List<Map<String, dynamic>>> checkTimeConflicts({
+  /// Approved reservations for a product on a given day (conflict check)
+  Future<List<Map<String, dynamic>>> fetchApprovedReservationsForProductOnDate({
     required String videobeamId,
     required DateTime date,
   });
+
+  Future<String> getProfileIdByEmail(String email);
 
   /// Create a new reservation via RPC
   Future<bool> createReservationViaRPC({

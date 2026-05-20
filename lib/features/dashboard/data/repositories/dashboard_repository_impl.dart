@@ -8,11 +8,11 @@ import '../../../reservations/domain/entities/reservation_entity.dart';
 import '../datasources/dashboard_remote_datasource.dart';
 
 class DashboardRepositoryImpl implements DashboardRepository {
-  final DashboardRemoteDataSource remoteDataSource;
-  RealtimeChannel? _realtimeChannel;
-  final SupabaseClient client;
-
   DashboardRepositoryImpl(this.remoteDataSource, this.client);
+
+  final DashboardRemoteDataSource remoteDataSource;
+  // ignore: unused_field
+  final SupabaseClient client;
 
   @override
   Future<DashboardMetrics> loadDashboardMetrics() async {
@@ -51,12 +51,11 @@ class DashboardRepositoryImpl implements DashboardRepository {
       endDate: tomorrow.toIso8601String(),
     );
 
-    return data.map((item) => _mapToReservationEntity(item)).toList();
+    return data.map(_mapToReservationEntity).toList();
   }
 
   @override
   Future<List<ReservationEntity>> loadMyReservations(String userId) async {
-    // Implementation would filter by userId
     return [];
   }
 
@@ -66,32 +65,13 @@ class DashboardRepositoryImpl implements DashboardRepository {
   }
 
   @override
-  void subscribeToRealtimeUpdates() {
-    _realtimeChannel = client.channel('dashboard_metrics')
-      ..onPostgresChanges(
-        event: PostgresChangeEvent.all,
-        schema: 'public',
-        table: 'productos',
-        callback: (payload) {
-          // Notify listeners to reload
-        },
-      )
-      ..onPostgresChanges(
-        event: PostgresChangeEvent.all,
-        schema: 'public',
-        table: 'reservas',
-        callback: (payload) {
-          // Notify listeners to reload
-        },
-      )
-      ..subscribe();
+  Stream<void> watchProductAvailability() {
+    return remoteDataSource.watchProductAvailability();
   }
 
   @override
   void disposeRealtime() {
-    if (_realtimeChannel != null) {
-      client.removeChannel(_realtimeChannel!);
-    }
+    remoteDataSource.disposeProductRealtime();
   }
 
   ReservationEntity _mapToReservationEntity(Map<String, dynamic> item) {

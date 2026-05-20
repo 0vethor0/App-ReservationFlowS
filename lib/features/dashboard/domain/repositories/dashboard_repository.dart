@@ -20,8 +20,8 @@ abstract class DashboardRepository {
   /// Subscribe to realtime updates for reservations
   Stream<List<Map<String, dynamic>>> subscribeToReservationsRealtime();
 
-  /// Subscribe to realtime updates
-  void subscribeToRealtimeUpdates();
+  /// Emits when product availability changes (liberación automática o admin)
+  Stream<void> watchProductAvailability();
 
   /// Dispose realtime subscriptions
   void disposeRealtime();
