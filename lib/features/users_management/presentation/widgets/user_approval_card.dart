@@ -1,8 +1,8 @@
-
-/// Este widget muestra una tarjeta con la informacion de un usuario pendiente de aprobacion.
+/// Card for pending registration or admin promotion requests.
 library;
 
 import 'package:flutter/material.dart';
+import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/pending_user_entity.dart';
 
@@ -28,7 +28,6 @@ class _UserApprovalCardState extends State<UserApprovalCard> {
   Future<void> _handleApprove() async {
     setState(() => _isProcessing = true);
     widget.onApprove();
-    // Small delay to show loading state
     await Future.delayed(const Duration(milliseconds: 300));
     if (mounted) {
       setState(() => _isProcessing = false);
@@ -46,56 +45,61 @@ class _UserApprovalCardState extends State<UserApprovalCard> {
 
   @override
   Widget build(BuildContext context) {
+    final isAdminPromotion =
+        widget.user.kind == PendingApprovalKind.adminPromotion;
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       elevation: 4,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: AppColors.primaryBlue.withValues(alpha: 0.2), width: 1),
+        side: BorderSide(
+          color: isAdminPromotion
+              ? AppColors.accentOrange.withValues(alpha: 0.4)
+              : AppColors.primaryBlue.withValues(alpha: 0.2),
+          width: 1,
+        ),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(20),
         child: _isProcessing
-            ? const Center(
-                child: CircularProgressIndicator(),
-              )
+            ? const Center(child: CircularProgressIndicator())
             : Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Header
-                  const Text(
-                    'Se ha registrado un nuevo usuario en la app.',
+                  Text(
+                    isAdminPromotion
+                        ? AppStrings.adminPromotionRequestHeader
+                        : AppStrings.newUserRegistrationHeader,
                     style: TextStyle(
-                      color: Colors.lightBlueAccent,
+                      color: isAdminPromotion
+                          ? AppColors.accentOrange
+                          : Colors.lightBlueAccent,
                       fontWeight: FontWeight.bold,
                       fontSize: 12,
-                      
                     ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 16),
-                  // Avatar and User Info Row
                   Row(
-                    crossAxisAlignment: CrossAxisAlignment.center, // Vertically center avatar
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // Avatar
                       CircleAvatar(
                         radius: 35,
-                        backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.1),
-                        backgroundImage: widget.user.avatarUrl != null &&
+                        backgroundColor:
+                            AppColors.primaryBlue.withValues(alpha: 0.1),
+                        backgroundImage:
+                            widget.user.avatarUrl != null &&
                                 widget.user.avatarUrl!.isNotEmpty
                             ? NetworkImage(widget.user.avatarUrl!)
                             : null,
-                        child: widget.user.avatarUrl == null ||
+                        child:
+                            widget.user.avatarUrl == null ||
                                 widget.user.avatarUrl!.isEmpty
-                            ? const Icon(
-                                Icons.person,
-                                size: 35,
-                              )
+                            ? const Icon(Icons.person, size: 35)
                             : null,
                       ),
                       const SizedBox(width: 20),
-                      // User info
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -146,7 +150,6 @@ class _UserApprovalCardState extends State<UserApprovalCard> {
                     ],
                   ),
                   const SizedBox(height: 20),
-                  // Action buttons
                   Row(
                     children: [
                       Expanded(

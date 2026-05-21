@@ -4,6 +4,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../features/users_management/domain/entities/pending_user_entity.dart';
 import '../../../features/users_management/presentation/providers/user_management_provider.dart';
 import '../../../features/users_management/presentation/widgets/user_approval_card.dart';
 import '../../components/global_back_button.dart';
@@ -51,7 +52,7 @@ class UserApprovalsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Todos los usuarios han sido procesados',
+                    'Registros y promociones a admin están al día',
                     style: TextStyle(
                       fontSize: 14,
                       color: AppColors.textSecondary,
@@ -72,8 +73,8 @@ class UserApprovalsScreen extends StatelessWidget {
                 final user = provider.pendingUsers[index];
                 return UserApprovalCard(
                   user: user,
-                  onApprove: () => provider.approveUser(user.id, context),
-                  onReject: () => provider.rejectUser(user.id, context),
+                  onApprove: () => _onApprove(context, provider, user),
+                  onReject: () => _onReject(context, provider, user),
                 );
               },
             ),
@@ -81,5 +82,29 @@ class UserApprovalsScreen extends StatelessWidget {
         },
       ),
     );
+  }
+
+  void _onApprove(
+    BuildContext context,
+    UserManagementProvider provider,
+    PendingUserEntity user,
+  ) {
+    if (user.kind == PendingApprovalKind.adminPromotion) {
+      provider.approveAdminPromotion(user.id, context);
+    } else {
+      provider.approveUser(user.id, context);
+    }
+  }
+
+  void _onReject(
+    BuildContext context,
+    UserManagementProvider provider,
+    PendingUserEntity user,
+  ) {
+    if (user.kind == PendingApprovalKind.adminPromotion) {
+      provider.rejectAdminPromotion(user.id, context);
+    } else {
+      provider.rejectUser(user.id, context);
+    }
   }
 }

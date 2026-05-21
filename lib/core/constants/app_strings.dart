@@ -71,7 +71,16 @@ abstract final class AppStrings {
   static const String requestAdminDesc =
       'Envía una solicitud para obtener permisos de administrador';
   static const String adminRequestSent = 'Solicitud enviada';
+  static const String adminRequestPending =
+      'Solicitud en revisión. Un administrador la procesará pronto.';
+  static const String adminRequestDeniedContact =
+      'Contacte con el administrador, el ingeniero Rafael López';
+  static const String adminRequestDeniedButton = 'Solicitud denegada';
   static const String alreadyAdmin = 'Ya eres administrador';
+  static const String newUserRegistrationHeader =
+      'Se ha registrado un nuevo usuario en la app.';
+  static const String adminPromotionRequestHeader =
+      'Solicitud para ser administrador';
   static const String usagePolicies = 'Políticas de Uso del Sistema';
   static const String policiesTitle = 'Políticas de Uso';
   static const String policiesContent =

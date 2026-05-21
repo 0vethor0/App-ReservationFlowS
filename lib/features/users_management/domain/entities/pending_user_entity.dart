@@ -1,7 +1,10 @@
-/// Entity representing a user pending approval.
-///
-/// Pure domain class without external dependencies.
+/// Entity representing a user pending approval (registration or admin promotion).
 library;
+
+enum PendingApprovalKind {
+  registration,
+  adminPromotion,
+}
 
 class PendingUserEntity {
   const PendingUserEntity({
@@ -10,6 +13,7 @@ class PendingUserEntity {
     required this.email,
     required this.especialidad,
     required this.carrera,
+    required this.kind,
     this.avatarUrl,
     required this.registeredAt,
   });
@@ -21,4 +25,5 @@ class PendingUserEntity {
   final DateTime registeredAt;
   final String? especialidad;
   final String? carrera;
+  final PendingApprovalKind kind;
 }

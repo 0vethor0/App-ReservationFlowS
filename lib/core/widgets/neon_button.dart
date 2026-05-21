@@ -115,23 +115,30 @@ class _NeonButtonState extends State<NeonButton>
                       ),
                     ),
                   )
-                : Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (widget.icon != null) ...[
-                        Icon(widget.icon, color: widget.textColor, size: 20),
-                        const SizedBox(width: 8),
-                      ],
-                      Text(
-                        widget.text,
-                        style: TextStyle(
-                          color: widget.textColor,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                : Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (widget.icon != null) ...[
+                          Icon(widget.icon, color: widget.textColor, size: 20),
+                          const SizedBox(width: 8),
+                        ],
+                        Flexible(
+                          child: Text(
+                            widget.text,
+                            style: TextStyle(
+                              color: widget.textColor,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
           ),
         ),

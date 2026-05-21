@@ -2,6 +2,8 @@
 /// ser admin, políticas de uso y datos del desarrollador.
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -12,6 +14,8 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/neon_card.dart';
 import '../../../core/widgets/neon_button.dart';
+import '../../../features/users_management/domain/entities/admin_request_status_entity.dart';
+import '../../../features/users_management/domain/repositories/i_user_management_repository.dart';
 import '../../providers/auth_provider.dart';
 import '../../components/global_back_button.dart';
 
@@ -25,11 +29,25 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   Map<String, dynamic>? _userProfile;
   bool _isLoading = true;
+  AdminRequestStatusEntity _adminRequestStatus = const AdminRequestStatusEntity(
+    uiState: AdminRequestUiState.canRequest,
+  );
+  StreamSubscription<AdminRequestStatusEntity>? _adminStatusSubscription;
+  bool _isSubmittingAdminRequest = false;
 
   @override
   void initState() {
     super.initState();
     _fetchUserProfile();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _watchAdminRequestStatus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _adminStatusSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _fetchUserProfile() async {
@@ -41,20 +59,70 @@ class _ProfileScreenState extends State<ProfileScreen> {
             .select()
             .eq('id', user.id)
             .single();
+        if (!mounted) return;
         setState(() {
           _userProfile = data;
           _isLoading = false;
         });
       } else {
+        if (!mounted) return;
         setState(() {
           _isLoading = false;
         });
       }
     } catch (e) {
       debugPrint('Error fetching profile: $e');
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
       });
+    }
+  }
+
+  void _watchAdminRequestStatus() {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) return;
+
+    final repository = context.read<IUserManagementRepository>();
+    _adminStatusSubscription =
+        repository.watchAdminRequestStatus(userId).listen((status) {
+      if (!mounted) return;
+      setState(() => _adminRequestStatus = status);
+    });
+  }
+
+  Future<void> _submitAdminRequest() async {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) return;
+
+    setState(() => _isSubmittingAdminRequest = true);
+    try {
+      await context.read<IUserManagementRepository>().submitAdminRequest(
+        userId,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(AppStrings.adminRequestSent),
+          backgroundColor: AppColors.primaryBlue,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(12)),
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al enviar solicitud: $e'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmittingAdminRequest = false);
+      }
     }
   }
 
@@ -115,6 +183,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       delay: const Duration(milliseconds: 200),
                       child: _RequestAdminCard(
                         role: _userProfile?['rol'] ?? authUser?.role,
+                        adminRequestStatus: _adminRequestStatus,
+                        isSubmitting: _isSubmittingAdminRequest,
+                        onRequestAdmin: _submitAdminRequest,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -418,13 +489,79 @@ class _InfoRow extends StatelessWidget {
 }
 
 class _RequestAdminCard extends StatelessWidget {
-  const _RequestAdminCard({required this.role});
+  const _RequestAdminCard({
+    required this.role,
+    required this.adminRequestStatus,
+    required this.isSubmitting,
+    required this.onRequestAdmin,
+  });
+
   final dynamic role;
+  final AdminRequestStatusEntity adminRequestStatus;
+  final bool isSubmitting;
+  final VoidCallback onRequestAdmin;
 
   @override
   Widget build(BuildContext context) {
     final isAdmin =
         role.toString() == 'UserRole.admin' || role.toString() == 'admin';
+    final status = adminRequestStatus.uiState;
+
+    String title;
+    String description;
+    String buttonText;
+    IconData buttonIcon;
+    bool enabled;
+    VoidCallback? onPressed;
+    LinearGradient? gradient;
+
+    switch (status) {
+      case AdminRequestUiState.alreadyAdmin:
+        title = AppStrings.alreadyAdmin;
+        description = AppStrings.requestAdminDesc;
+        buttonText = AppStrings.alreadyAdmin;
+        buttonIcon = Icons.check_circle;
+        enabled = false;
+        onPressed = null;
+        gradient = const LinearGradient(
+          colors: [AppColors.success, Color(0xFF2ECC71)],
+        );
+      case AdminRequestUiState.rejected:
+        title = AppStrings.requestAdmin;
+        description = AppStrings.adminRequestDeniedContact;
+        buttonText = AppStrings.adminRequestDeniedButton;
+        buttonIcon = Icons.support_agent_outlined;
+        enabled = false;
+        onPressed = null;
+        gradient = LinearGradient(
+          colors: [
+            AppColors.textTertiary,
+            AppColors.textTertiary.withValues(alpha: 0.8),
+          ],
+        );
+      case AdminRequestUiState.pending:
+        title = AppStrings.requestAdmin;
+        description = AppStrings.adminRequestPending;
+        buttonText = AppStrings.adminRequestSent;
+        buttonIcon = Icons.hourglass_top;
+        enabled = false;
+        onPressed = null;
+        gradient = AppColors.primaryGradient;
+      case AdminRequestUiState.canRequest:
+        title = AppStrings.requestAdmin;
+        description = AppStrings.requestAdminDesc;
+        buttonText = AppStrings.requestAdmin;
+        buttonIcon = Icons.send_outlined;
+        enabled = !isAdmin && !isSubmitting;
+        onPressed = isAdmin ? null : onRequestAdmin;
+        gradient = AppColors.primaryGradient;
+    }
+
+    if (isAdmin) {
+      title = AppStrings.alreadyAdmin;
+      enabled = false;
+      onPressed = null;
+    }
 
     return NeonCard(
       padding: const EdgeInsets.all(20),
@@ -451,7 +588,7 @@ class _RequestAdminCard extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  isAdmin ? AppStrings.alreadyAdmin : AppStrings.requestAdmin,
+                  title,
                   style: GoogleFonts.poppins(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
@@ -463,7 +600,7 @@ class _RequestAdminCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            AppStrings.requestAdminDesc,
+            description,
             style: GoogleFonts.inter(
               fontSize: 13,
               color: AppColors.textSecondary,
@@ -471,30 +608,13 @@ class _RequestAdminCard extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           NeonButton(
-            text: isAdmin ? AppStrings.alreadyAdmin : AppStrings.requestAdmin,
+            text: buttonText,
             height: 44,
             borderRadius: 14,
-            icon: isAdmin ? Icons.check_circle : Icons.send_outlined,
-            enabled: !isAdmin,
-            gradient: isAdmin
-                ? const LinearGradient(
-                    colors: [AppColors.success, Color(0xFF2ECC71)],
-                  )
-                : AppColors.primaryGradient,
-            onPressed: isAdmin
-                ? null
-                : () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(AppStrings.adminRequestSent),
-                        backgroundColor: AppColors.primaryBlue,
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(12)),
-                        ),
-                      ),
-                    );
-                  },
+            icon: buttonIcon,
+            enabled: enabled,
+            gradient: gradient,
+            onPressed: onPressed,
           ),
         ],
       ),

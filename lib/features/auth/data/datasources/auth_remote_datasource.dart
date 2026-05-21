@@ -11,9 +11,9 @@ class AuthRemoteDataSource {
   final SupabaseClient client;
 
   AuthRemoteDataSource(this.client);
+
   /// Realizar inicio de sesion con correo electronico y contraseña
-  /// Sign in with email and password
-  Future<AuthResponse>  signInWithEmail(String email, String password) async {
+  Future<AuthResponse> signInWithEmail(String email, String password) async {
     return await client.auth.signInWithPassword(
       email: email,
       password: password,
@@ -21,7 +21,6 @@ class AuthRemoteDataSource {
   }
 
   /// Realizar registro con correo electronico y contraseña
-  /// Sign up with email and password
   Future<AuthResponse> signUpWithEmail({
     required String email,
     required String password,
@@ -32,29 +31,46 @@ class AuthRemoteDataSource {
     );
   }
 
-  /// Realizar inicio de sesion con cuenta de Google
-  /// Sign in with Google
+  /// Realizar inicio de sesion con Google OAuth.
+  ///
+  /// FLUJO COMPLETO:
+  /// 1. supabase_flutter genera el code_verifier PKCE y lo guarda en SharedPreferences.
+  /// 2. Abre el navegador con el flujo OAuth de Google.
+  /// 3. Google autentica al usuario y devuelve el control a Supabase.
+  /// 4. Supabase redirige al Site URL (landing page en tudominio.com/welcome)
+  ///    con el parámetro ?code=XXXX (porque el redirectTo de abajo no está
+  ///    en la lista de URLs permitidas del proyecto Supabase).
+  /// 5. La landing page reenvía al usuario a:
+  ///    io.supabase.flutter://callback/?code=XXXX
+  /// 6. Android intercepta esa URI (intent-filter en AndroidManifest.xml)
+  ///    y abre la app con el deep link.
+  /// 7. supabase_flutter detecta el deep link automáticamente, extrae el code,
+  ///    lo intercambia por una sesión usando el code_verifier guardado.
+  /// 8. onAuthStateChange dispara AuthChangeEvent.signedIn.
+  /// 9. AuthProvider detecta el evento y verifica datos adicionales del perfil.
+  ///
+  /// IMPORTANTE: El `redirectTo` aquí le indica a supabase_flutter qué
+  /// esquema de deep link debe escuchar. NO cambiarlo por la URL de la
+  /// landing page, ya que eso confundiría el manejo interno de PKCE.
   Future<void> signInWithGoogle() async {
     await client.auth.signInWithOAuth(
       OAuthProvider.google,
       redirectTo: 'io.supabase.flutter://callback/',
+      authScreenLaunchMode: LaunchMode.externalApplication,
     );
   }
 
   /// Realizar cierre de sesion
-  /// Sign out
   Future<void> signOut() async {
     await client.auth.signOut();
   }
 
   /// Get current session
-  /// obtener la sesion actual
   Session? getCurrentSession() {
     return client.auth.currentSession;
   }
 
-  /// obtener perfil de usuario desde la tabla perfiles
-  /// Get user profile from perfiles table
+  /// Obtener perfil de usuario desde la tabla perfiles
   Future<Map<String, dynamic>?> getUserProfile(String userId) async {
     final response = await client
         .from('perfiles')
@@ -66,7 +82,6 @@ class AuthRemoteDataSource {
   }
 
   /// Obtener perfil completo del usuario con todos los campos
-  /// Get complete user profile including role and status
   Future<UserProfileComplete?> getUserProfileComplete(String userId) async {
     final response = await client
         .from('perfiles')
@@ -86,8 +101,7 @@ class AuthRemoteDataSource {
     );
   }
 
-  /// guardar perfil de usuario en la tabla perfiles
-  /// Save user profile to perfiles table
+  /// Guardar perfil de usuario en la tabla perfiles
   Future<void> saveUserProfile({
     required String userId,
     required String firstName,
@@ -111,20 +125,17 @@ class AuthRemoteDataSource {
   }
 
   /// Refrescar sesion
-  /// Refresh session
   Future<Session> refreshSession() async {
     final response = await client.auth.refreshSession();
     return response.session!;
   }
 
   /// Escuchar cambios de estado de autenticacion
-  /// Listen to auth state changes
   Stream<AuthState> listenToAuthState() {
     return client.auth.onAuthStateChange;
   }
 
   /// Observar cambios de estado de usuario en tiempo real
-  /// Watch current user status changes in real-time
   Stream<UserStatus> watchCurrentUserStatus(String uid) {
     return client
         .from('perfiles')
@@ -135,7 +146,9 @@ class AuthRemoteDataSource {
       final statusStr = maps.first['status'] as String? ?? 'pending';
       return statusStr == 'approved'
           ? UserStatus.approved
-          : (statusStr == 'rejected' ? UserStatus.rejected : UserStatus.pending);
+          : (statusStr == 'rejected'
+              ? UserStatus.rejected
+              : UserStatus.pending);
     });
   }
 }

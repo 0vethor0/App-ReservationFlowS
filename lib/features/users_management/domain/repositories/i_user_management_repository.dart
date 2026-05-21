@@ -1,21 +1,27 @@
 /// Repository interface for user management operations.
-///
-/// Defines the contract for admin user approval workflows.
 library;
 
+import '../entities/admin_request_status_entity.dart';
 import '../entities/pending_user_entity.dart';
 
 abstract class IUserManagementRepository {
-  /// Get list of users pending approval
   Future<List<PendingUserEntity>> getPendingUsers();
 
-  /// Approve a user's registration
   Future<void> approveUser(String userId);
 
-  /// Reject a user's registration
   Future<void> rejectUser(String userId);
 
-  /// Watch for changes in pending users list in real-time
   Stream<List<PendingUserEntity>> watchPendingUsers();
-}
 
+  Future<void> submitAdminRequest(String userId);
+
+  Future<AdminRequestStatusEntity> getAdminRequestStatus(String userId);
+
+  Stream<AdminRequestStatusEntity> watchAdminRequestStatus(String userId);
+
+  Future<void> approveAdminPromotion(String userId);
+
+  Future<void> rejectAdminPromotion(String userId);
+
+  void disposeRealtime();
+}
