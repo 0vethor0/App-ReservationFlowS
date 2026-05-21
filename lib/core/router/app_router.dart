@@ -13,6 +13,9 @@ import '../../presentation/screens/splash/splash_screen.dart';
 import '../../presentation/screens/profile/profile_screen.dart';
 import '../../presentation/screens/auth/waiting_approval_screen.dart';
 import '../../presentation/screens/admin/user_approvals_screen.dart';
+import 'package:provider/provider.dart';
+import '../../features/view_reservation_calendar/domain/repositories/view_reservation_calendar_repository.dart';
+import '../../presentation/providers/reservation_calendar_provider.dart';
 import '../../presentation/screens/reservation/reservation_calendar_view.dart';
 import '../../features/auth/domain/entities/user_entity.dart';
 
@@ -131,7 +134,14 @@ class AppRouter {
         ),
         GoRoute(
           path: '/reservation-calendar',
-          builder: (context, state) => const ReservationCalendarView(),
+          builder: (context, state) {
+            return ChangeNotifierProvider(
+              create: (ctx) => ReservationCalendarProvider(
+                ctx.read<ViewReservationCalendarRepository>(),
+              ),
+              child: const ReservationCalendarView(),
+            );
+          },
         ),
       ],
     );

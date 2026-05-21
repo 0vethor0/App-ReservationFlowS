@@ -38,6 +38,7 @@ abstract class ReservationRepository {
     required String videobeamId,
     required DateTime startTime,
     required DateTime endTime,
+    String? notes,
   });
 
   /// Create a new reservation

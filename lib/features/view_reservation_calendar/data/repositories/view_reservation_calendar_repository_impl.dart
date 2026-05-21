@@ -1,8 +1,11 @@
+import '../../domain/entities/calendar_product_entity.dart';
+import '../../domain/entities/calendar_status_filter.dart';
 import '../../domain/repositories/view_reservation_calendar_repository.dart';
 import '../datasources/view_reservation_calendar_remote_datasource.dart';
 import '../../../reservations/domain/entities/reservation_entity.dart';
 
-class ViewReservationCalendarRepositoryImpl implements ViewReservationCalendarRepository {
+class ViewReservationCalendarRepositoryImpl
+    implements ViewReservationCalendarRepository {
   ViewReservationCalendarRepositoryImpl(this.remoteDataSource);
 
   final ViewReservationCalendarRemoteDataSource remoteDataSource;
@@ -10,7 +13,43 @@ class ViewReservationCalendarRepositoryImpl implements ViewReservationCalendarRe
   @override
   Future<List<ReservationEntity>> fetchReservationsForDate(DateTime date) async {
     final rawData = await remoteDataSource.fetchReservationsForDate(date);
-    return rawData.map((item) => _mapToReservationEntity(item)).toList();
+    return rawData.map(_mapToReservationEntity).toList();
+  }
+
+  @override
+  Future<List<CalendarProductEntity>> fetchProducts() async {
+    final raw = await remoteDataSource.fetchProducts();
+    return raw
+        .map(
+          (item) => CalendarProductEntity(
+            id: item['id']?.toString() ?? '',
+            name: item['nombre'] as String? ?? 'Videobeam',
+          ),
+        )
+        .where((p) => p.id.isNotEmpty)
+        .toList();
+  }
+
+  @override
+  Future<List<ReservationEntity>> fetchCalendarReservations({
+    String? productId,
+    required CalendarStatusFilter statusFilter,
+  }) async {
+    final rawData = await remoteDataSource.fetchCalendarReservations(
+      productId: productId,
+      statusFilter: statusFilter,
+    );
+    return rawData.map(_mapToReservationEntity).toList();
+  }
+
+  @override
+  Stream<void> watchReservationsChanges() {
+    return remoteDataSource.watchReservationsChanges();
+  }
+
+  @override
+  void disposeRealtime() {
+    remoteDataSource.disposeRealtime();
   }
 
   ReservationEntity _mapToReservationEntity(Map<String, dynamic> item) {
@@ -27,12 +66,16 @@ class ViewReservationCalendarRepositoryImpl implements ViewReservationCalendarRe
     return ReservationEntity(
       id: item['id']?.toString() ?? 'unknown',
       userId: u['id']?.toString() ?? 'unknown',
-      userName: '${u['primer_nombre'] ?? 'Usuario'} ${u['primer_apellido'] ?? ''}',
+      userName:
+          '${u['primer_nombre'] ?? 'Usuario'} ${u['primer_apellido'] ?? ''}',
       videobeamId: p['id']?.toString() ?? 'unknown',
       videobeamName: p['nombre'] as String? ?? 'Videobeam',
       date: item['hora_inicio'] != null
-          ? DateTime.parse(item['hora_inicio'])
+          ? DateTime.parse(item['hora_inicio'] as String)
           : DateTime.now(),
+      endDateTime: item['hora_fin'] != null
+          ? DateTime.parse(item['hora_fin'] as String)
+          : null,
       startTime: item['hora_inicio'] != null && item['hora_inicio'].length > 16
           ? item['hora_inicio'].substring(11, 16)
           : '00:00',
@@ -45,7 +88,9 @@ class ViewReservationCalendarRepositoryImpl implements ViewReservationCalendarRe
       userAvatarUrl: u['foto_url'] as String?,
       notes: item['notas'] as String?,
       isRead: item['leido_por_admin'] as bool? ?? false,
-      createdAt: item['creado_en'] != null ? DateTime.parse(item['creado_en']) : null,
+      createdAt: item['creado_en'] != null
+          ? DateTime.parse(item['creado_en'] as String)
+          : null,
     );
   }
 
@@ -57,7 +102,6 @@ class ViewReservationCalendarRepositoryImpl implements ViewReservationCalendarRe
         return ReservationStatus.approved;
       case 'rechazada':
       case 'rechazado':
-      case 'desaprobado':
         return ReservationStatus.rejected;
       case 'en_curso':
         return ReservationStatus.inProgress;

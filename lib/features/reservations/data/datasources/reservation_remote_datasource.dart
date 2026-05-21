@@ -106,6 +106,7 @@ class ReservationRemoteDataSource {
     required String productId,
     required DateTime start,
     required DateTime end,
+    String? notes,
   }) async {
     await client.rpc(
       'intentar_reservar',
@@ -114,6 +115,7 @@ class ReservationRemoteDataSource {
         'p_producto_id': productId,
         'p_inicio': start.toIso8601String(),
         'p_fin': end.toIso8601String(),
+        if (notes != null) 'p_notas': notes,
       },
     );
   }

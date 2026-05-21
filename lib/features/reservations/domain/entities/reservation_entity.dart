@@ -20,6 +20,7 @@ class ReservationEntity {
     this.notes,
     this.isRead = false,
     this.createdAt,
+    this.endDateTime,
   });
 
   final String id;
@@ -37,6 +38,7 @@ class ReservationEntity {
   final String? notes;
   final bool isRead;
   final DateTime? createdAt;
+  final DateTime? endDateTime;
 }
 
 enum ReservationStatus { pending, approved, rejected, inProgress, completed, cancelled }

@@ -181,6 +181,7 @@ class ReservationProvider extends ChangeNotifier {
         videobeamId: _selectedVideobeam!.id,
         startTime: startDateTime,
         endTime: endDateTime,
+        notes: _notes.isNotEmpty ? _notes : null,
       );
 
       if (!success) {

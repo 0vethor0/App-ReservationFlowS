@@ -15,6 +15,9 @@ import '../../../features/auth/domain/entities/user_entity.dart';
 import '../../providers/dashboard_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/reservation_provider.dart';
+import '../../providers/reservation_calendar_provider.dart';
+import '../../../features/view_reservation_calendar/domain/repositories/view_reservation_calendar_repository.dart';
+
 
 import '../reservation/reservation_screen.dart';
 import '../reservation/reservation_calendar_view.dart';
@@ -422,6 +425,11 @@ class _CalendarioTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const ReservationCalendarView(showAppBar: false);
+    return ChangeNotifierProvider(
+      create: (context) => ReservationCalendarProvider(
+        context.read<ViewReservationCalendarRepository>(),
+      ),
+      child: const ReservationCalendarView(showAppBar: false),
+    );
   }
 }

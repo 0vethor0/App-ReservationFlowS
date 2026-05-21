@@ -67,6 +67,7 @@ class ReservationRepositoryImpl implements ReservationRepository {
     required String videobeamId,
     required DateTime startTime,
     required DateTime endTime,
+    String? notes,
   }) async {
     try {
       await remoteDataSource.createReservationViaRpc(
@@ -74,6 +75,7 @@ class ReservationRepositoryImpl implements ReservationRepository {
         productId: videobeamId,
         start: startTime,
         end: endTime,
+        notes: notes,
       );
       return true;
     } catch (_) {

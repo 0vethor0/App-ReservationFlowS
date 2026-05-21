@@ -1,10 +1,12 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../providers/reservation_provider.dart';
+import '../../../features/reservations/domain/entities/reservation_entity.dart';
+import '../../../features/view_reservation_calendar/domain/entities/calendar_status_filter.dart';
+import '../../providers/reservation_calendar_provider.dart';
+import '../../widgets/calendar_filter_bar.dart';
 
 class ReservationCalendarView extends StatefulWidget {
   const ReservationCalendarView({super.key, this.showAppBar = true});
@@ -73,7 +75,7 @@ class _ReservationCalendarViewState extends State<ReservationCalendarView> {
               ],
             )
           : null,
-      body: Consumer<ReservationProvider>(
+      body: Consumer<ReservationCalendarProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading && provider.reservations.isEmpty) {
             return const Center(
@@ -81,13 +83,29 @@ class _ReservationCalendarViewState extends State<ReservationCalendarView> {
             );
           }
 
+          if (provider.error != null && provider.reservations.isEmpty) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  provider.error!,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(color: AppColors.error),
+                ),
+              ),
+            );
+          }
+
           return SfCalendar(
             controller: _calendarController,
             view: CalendarView.week,
             backgroundColor: AppColors.background,
-            firstDayOfWeek: 1, // Lunes
+            firstDayOfWeek: 1,
             initialDisplayDate: DateTime.now(),
-            dataSource: _ReservationDataSource(provider.reservations),
+            dataSource: _ReservationDataSource(
+              provider.reservations,
+              provider.statusFilter,
+            ),
             allowDragAndDrop: false,
             allowAppointmentResize: false,
             cellBorderColor: AppColors.border.withValues(alpha: 0.1),
@@ -135,85 +153,67 @@ class _ReservationCalendarViewState extends State<ReservationCalendarView> {
           );
         },
       ),
+      bottomNavigationBar: Consumer<ReservationCalendarProvider>(
+        builder: (context, provider, _) {
+          return CalendarFilterBar(
+            products: provider.products,
+            selectedProductId: provider.selectedProductId,
+            selectedStatus: provider.statusFilter,
+            onProductSelected: provider.selectProduct,
+            onStatusSelected: provider.selectStatusFilter,
+          );
+        },
+      ),
     );
   }
 }
 
 class _ReservationDataSource extends CalendarDataSource {
-  _ReservationDataSource(List<dynamic> source) {
-    appointments = _getAppointments(source);
+  _ReservationDataSource(
+    List<ReservationEntity> source,
+    CalendarStatusFilter statusFilter,
+  ) {
+    appointments = _getAppointments(source, statusFilter);
   }
 
-  List<Appointment> _getAppointments(List<dynamic> source) {
-    final List<Appointment> appointments = <Appointment>[];
-    final random = Random();
+  List<Appointment> _getAppointments(
+    List<ReservationEntity> source,
+    CalendarStatusFilter statusFilter,
+  ) {
+    final appointments = <Appointment>[];
 
-    final List<Color> pastelColors = [
-      AppColors.primaryBlue,
-      AppColors.success,
-      AppColors.warning,
-      AppColors.accentOrange,
-      Colors.indigo,
-      Colors.teal,
-      Colors.deepPurple,
-      Colors.cyan,
-      Colors.pink,
-    ];
+    for (final reservation in source) {
+      try {
+        final startTime = reservation.date;
+        final endTime = reservation.endDateTime;
+        if (endTime == null || !endTime.isAfter(startTime)) continue;
 
-    for (var reservation in source) {
-      // Filtrar solo reservaciones aprobadas por seguridad
-      final estadoReserva = reservation['estado_reserva'] as String? ?? '';
-      if (estadoReserva != 'aprobada') {
-        continue;
-      }
+        final subject = reservation.videobeamName;
 
-      if (reservation['hora_inicio'] != null &&
-          reservation['hora_fin'] != null) {
-        try {
-          // Parsear la hora de inicio
-          final String startTimeStr = reservation['hora_inicio'] as String;
-          DateTime startTime = DateTime.parse(startTimeStr);
-
-          // Parsear la hora de fin
-          final String endTimeStr = reservation['hora_fin'] as String;
-          DateTime endTime = DateTime.parse(endTimeStr);
-
-          // Ajuste de timezone: Supabase retorna UTC, convertimos a hora local
-          // Esto asegura que las horas se muestren correctamente en la zona horaria del usuario
-          startTime = startTime.toLocal();
-          endTime = endTime.toLocal();
-
-          final String productName =
-              reservation['productos'] != null &&
-                  reservation['productos']['nombre'] != null
-              ? reservation['productos']['nombre']
-              : 'Reserva';
-
-          final String location =
-              reservation['productos'] != null &&
-                  reservation['productos']['ubicacion'] != null
-              ? reservation['productos']['ubicacion']
-              : '';
-
-          final Color randomColor =
-              pastelColors[random.nextInt(pastelColors.length)];
-
-          appointments.add(
-            Appointment(
-              startTime: startTime,
-              endTime: endTime,
-              subject: location.isNotEmpty
-                  ? '$productName - $location'
-                  : productName,
-              color: randomColor,
-              isAllDay: false,
-            ),
-          );
-        } catch (e) {
-          debugPrint('Error parsing reservation time: $e');
-        }
+        appointments.add(
+          Appointment(
+            startTime: startTime,
+            endTime: endTime,
+            subject: subject,
+            color: _colorForFilter(statusFilter),
+            isAllDay: false,
+          ),
+        );
+      } catch (e) {
+        debugPrint('Error parsing reservation: $e');
       }
     }
     return appointments;
+  }
+
+  Color _colorForFilter(CalendarStatusFilter filter) {
+    switch (filter) {
+      case CalendarStatusFilter.approved:
+        return AppColors.primaryBlue;
+      case CalendarStatusFilter.inProgress:
+        return AppColors.warning;
+      case CalendarStatusFilter.completed:
+        return AppColors.success;
+    }
   }
 }

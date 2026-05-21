@@ -125,6 +125,10 @@ abstract final class AppStrings {
   static const String highPriority = 'Alta Prioridad';
   static const String normalPriority = 'Normal';
 
+  static const String calendarFilterProduct = 'Videoproyector';
+  static const String calendarFilterAllProducts = 'Todos';
+  static const String calendarFilterStatus = 'Estado de reserva';
+
   static const String inProgress = 'En curso';
   static const String cancelled = 'Canceladas';
   static const String completed = 'Finalizadas';

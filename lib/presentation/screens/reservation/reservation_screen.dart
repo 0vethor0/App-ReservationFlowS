@@ -6,9 +6,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../providers/reservation_provider.dart';
-import '../view_reservation_calendar/view_reservation_calendar_screen.dart';
+import 'package:beam_reserve/core/theme/app_colors.dart';
+import 'package:beam_reserve/presentation/providers/reservation_provider.dart';
+import 'package:beam_reserve/features/view_reservation_calendar/domain/repositories/view_reservation_calendar_repository.dart';
+import 'package:beam_reserve/presentation/providers/reservation_calendar_provider.dart';
+import 'package:beam_reserve/presentation/screens/view_reservation_calendar/view_reservation_calendar_screen.dart';
 
 import 'components/videobeam_selector.dart';
 import 'components/calendar_section.dart';
@@ -212,8 +214,12 @@ class _ReservationScreenState extends State<ReservationScreen> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) =>
-                                            const ReservationCalendarView(),
+                                        builder: (context) => ChangeNotifierProvider(
+                                          create: (ctx) => ReservationCalendarProvider(
+                                            ctx.read<ViewReservationCalendarRepository>(),
+                                          ),
+                                          child: const ReservationCalendarView(),
+                                        ),
                                       ),
                                     );
                                   },
