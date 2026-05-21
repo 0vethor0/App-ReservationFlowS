@@ -92,6 +92,8 @@ abstract final class AppStrings {
   static const String dashboard = 'Dashboard';
   static const String reserve = 'Reservar';
   static const String requests = 'Solicitudes';
+  static const String calendario = 'Calendario';
+  static const String expandCalendar = 'Ampliar calendario';
 
   // ─── Reservation ───
   static const String selectVideobeam = 'Seleccionar Videobeam';

@@ -13,6 +13,7 @@ import '../../presentation/screens/splash/splash_screen.dart';
 import '../../presentation/screens/profile/profile_screen.dart';
 import '../../presentation/screens/auth/waiting_approval_screen.dart';
 import '../../presentation/screens/admin/user_approvals_screen.dart';
+import '../../presentation/screens/reservation/reservation_calendar_view.dart';
 import '../../features/auth/domain/entities/user_entity.dart';
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -127,6 +128,10 @@ class AppRouter {
         GoRoute(
           path: '/admin/user-approvals',
           builder: (context, state) => const UserApprovalsScreen(),
+        ),
+        GoRoute(
+          path: '/reservation-calendar',
+          builder: (context, state) => const ReservationCalendarView(),
         ),
       ],
     );

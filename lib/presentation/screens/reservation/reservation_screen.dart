@@ -7,8 +7,8 @@ import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
 
 import '../../../core/theme/app_colors.dart';
-
 import '../../providers/reservation_provider.dart';
+import '../view_reservation_calendar/view_reservation_calendar_screen.dart';
 
 import 'components/videobeam_selector.dart';
 import 'components/calendar_section.dart';
@@ -17,173 +17,334 @@ import 'components/reservation_summary.dart';
 import 'components/description_screen.dart';
 import 'reservation_calendar_view.dart';
 
-class ReservationScreen extends StatelessWidget {
+class ReservationScreen extends StatefulWidget {
   const ReservationScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Consumer<ReservationProvider>(
-      builder: (context, provider, _) {
-        return SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 20),
+  State<ReservationScreen> createState() => _ReservationScreenState();
+}
 
-                // Title & Calendar Button
-                FadeInDown(
-                  duration: const Duration(milliseconds: 500),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Nueva Reservación',
-                            style: GoogleFonts.poppins(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.primaryBlue,
-                            ),
-                          ),
-                          IconButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const ReservationCalendarView(),
-                                ),
-                              );
-                            },
-                            icon: const Icon(
-                              Icons.calendar_month_rounded,
-                              color: AppColors.primaryBlue,
-                              size: 28,
-                            ),
-                            tooltip: 'Ver calendario',
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Sigue los siguientes pasos para realizar tu reservación',
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.textSecondary,
+class _ReservationScreenState extends State<ReservationScreen> {
+  bool? _showCalendarChoice;
+
+  @override
+  Widget build(BuildContext context) {
+    if (_showCalendarChoice == null) {
+      // Step 1: Decision screen prompt
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+            child: Center(
+              child: FadeInUp(
+                duration: const Duration(milliseconds: 600),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryBlue.withValues(alpha: 0.08),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: AppColors.primaryBlue.withValues(alpha: 0.15),
                         ),
                       ),
-                    ],
-                  ),
+                      child: const Icon(
+                        Icons.calendar_today_rounded,
+                        size: 64,
+                        color: AppColors.primaryBlue,
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    Text(
+                      '¿Para continuar, desea inspeccionar primero las reservaciones actuales a la fecha hechas por otros usuarios?',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Esto le permitirá ver los horarios ocupados y planificar mejor su reservación.',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
+                        height: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 48),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () {
+                              setState(() {
+                                _showCalendarChoice = false;
+                              });
+                            },
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              side: const BorderSide(color: AppColors.primaryBlue, width: 1.5),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            child: Text(
+                              'Reservar',
+                              style: GoogleFonts.inter(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.primaryBlue,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () {
+                              setState(() {
+                                _showCalendarChoice = true;
+                              });
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primaryBlue,
+                              foregroundColor: Colors.white,
+                              elevation: 2,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            child: Text(
+                              'Ver calendario',
+                              style: GoogleFonts.inter(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-
-                const SizedBox(height: 20),
-
-                // Videobeam selector
-                FadeInUp(
-                  duration: const Duration(milliseconds: 500),
-                  delay: const Duration(milliseconds: 100),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const _StepHeader(
-                        step: 1,
-                        title: 'Seleccionar VideoBeam',
-                        icon: Icons.videocam_outlined,
-                      ),
-                      const SizedBox(height: 12),
-                      VideobeamSelector(
-                        videobeams: provider.videobeams,
-                        selected: provider.selectedVideobeam,
-                        onSelect: (v) => provider.selectVideobeam(v),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // Calendar
-                FadeInUp(
-                  duration: const Duration(milliseconds: 500),
-                  delay: const Duration(milliseconds: 200),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const _StepHeader(
-                        step: 2,
-                        title: 'Seleccionar la fecha',
-                        icon: Icons.calendar_today_outlined,
-                      ),
-                      const SizedBox(height: 12),
-                      CalendarSection(
-                        selectedDate: provider.selectedDate,
-                        onDateSelected: (d) => provider.selectDate(d),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // Time picker section
-                FadeInUp(
-                  duration: const Duration(milliseconds: 500),
-                  delay: const Duration(milliseconds: 300),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const _StepHeader(
-                        step: 3,
-                        title: 'Seleccionar el horario',
-                        icon: Icons.access_time_filled,
-                      ),
-                      const SizedBox(height: 16),
-                      TimePickerSection(
-                        startTime: provider.startTime,
-                        endTime: provider.endTime,
-                        onStartTimeSelected: (t) => provider.setStartTime(t),
-                        onEndTimeSelected: (t) => provider.setEndTime(t),
-                        selectedDate: provider.selectedDate,
-                        videobeamId: provider.selectedVideobeam?.id,
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // Description field
-                FadeInUp(
-                  duration: const Duration(milliseconds: 500),
-                  delay: const Duration(milliseconds: 350),
-                  child: DescriptionScreen(
-                    notes: provider.notes,
-                    onChanged: (val) => provider.setNotes(val),
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // Summary + confirm
-                if (provider.selectedVideobeam != null &&
-                    provider.startTime != null &&
-                    provider.endTime != null)
-                  FadeInUp(
-                    duration: const Duration(milliseconds: 400),
-                    child: ReservationSummary(provider: provider),
-                  ),
-
-                const SizedBox(height: 100),
-              ],
+              ),
             ),
           ),
-        );
-      },
+        ),
+      );
+    }
+
+    if (_showCalendarChoice == true) {
+      // Step 3: Inspeccionar calendario (split screen view)
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: ViewReservationCalendarScreen(
+              onGoToReserve: () {
+                setState(() {
+                  _showCalendarChoice = false;
+                });
+              },
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Step 2: Traditional reservation steps
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: Consumer<ReservationProvider>(
+        builder: (context, provider, _) {
+          return SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 20),
+
+                  // Title & Buttons
+                  FadeInDown(
+                    duration: const Duration(milliseconds: 500),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Nueva Reservación',
+                              style: GoogleFonts.poppins(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.primaryBlue,
+                              ),
+                            ),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      _showCalendarChoice = true;
+                                    });
+                                  },
+                                  icon: const Icon(
+                                    Icons.info_outline_rounded,
+                                    color: AppColors.primaryBlue,
+                                    size: 26,
+                                  ),
+                                  tooltip: 'Inspeccionar calendario',
+                                ),
+                                IconButton(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const ReservationCalendarView(),
+                                      ),
+                                    );
+                                  },
+                                  icon: const Icon(
+                                    Icons.calendar_month_rounded,
+                                    color: AppColors.primaryBlue,
+                                    size: 26,
+                                  ),
+                                  tooltip: 'Ver calendario mensual',
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Sigue los siguientes pasos para realizar tu reservación',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Videobeam selector
+                  FadeInUp(
+                    duration: const Duration(milliseconds: 500),
+                    delay: const Duration(milliseconds: 100),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const _StepHeader(
+                          step: 1,
+                          title: 'Seleccionar VideoBeam',
+                          icon: Icons.videocam_outlined,
+                        ),
+                        const SizedBox(height: 12),
+                        VideobeamSelector(
+                          videobeams: provider.videobeams,
+                          selected: provider.selectedVideobeam,
+                          onSelect: (v) => provider.selectVideobeam(v),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Calendar
+                  FadeInUp(
+                    duration: const Duration(milliseconds: 500),
+                    delay: const Duration(milliseconds: 200),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const _StepHeader(
+                          step: 2,
+                          title: 'Seleccionar la fecha',
+                          icon: Icons.calendar_today_outlined,
+                        ),
+                        const SizedBox(height: 12),
+                        CalendarSection(
+                          selectedDate: provider.selectedDate,
+                          onDateSelected: (d) => provider.selectDate(d),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Time picker section
+                  FadeInUp(
+                    duration: const Duration(milliseconds: 500),
+                    delay: const Duration(milliseconds: 300),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const _StepHeader(
+                          step: 3,
+                          title: 'Seleccionar el horario',
+                          icon: Icons.access_time_filled,
+                        ),
+                        const SizedBox(height: 16),
+                        TimePickerSection(
+                          startTime: provider.startTime,
+                          endTime: provider.endTime,
+                          onStartTimeSelected: (t) => provider.setStartTime(t),
+                          onEndTimeSelected: (t) => provider.setEndTime(t),
+                          selectedDate: provider.selectedDate,
+                          videobeamId: provider.selectedVideobeam?.id,
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Description field
+                  FadeInUp(
+                    duration: const Duration(milliseconds: 500),
+                    delay: const Duration(milliseconds: 350),
+                    child: DescriptionScreen(
+                      notes: provider.notes,
+                      onChanged: (val) => provider.setNotes(val),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Summary + confirm
+                  if (provider.selectedVideobeam != null &&
+                      provider.startTime != null &&
+                      provider.endTime != null)
+                    FadeInUp(
+                      duration: const Duration(milliseconds: 400),
+                      child: ReservationSummary(provider: provider),
+                    ),
+
+                  const SizedBox(height: 100),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }

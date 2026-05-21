@@ -17,6 +17,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/reservation_provider.dart';
 
 import '../reservation/reservation_screen.dart';
+import '../reservation/reservation_calendar_view.dart';
 import '../requests/requests_screen.dart';
 
 import 'components/dashboard_header.dart';
@@ -115,6 +116,7 @@ class _DashboardScreenState extends State<DashboardScreen>
 
     final screens = [
       const _DashboardBody(),
+      const _CalendarioTab(),
       const ReservationScreen(),
       if (isAdmin) const RequestsScreen(),
     ];
@@ -144,6 +146,14 @@ class _DashboardScreenState extends State<DashboardScreen>
             BottomNavigationBarItem(
               icon: Icon(
                 _currentIndex == 1
+                    ? Icons.date_range_rounded
+                    : Icons.date_range_outlined,
+              ),
+              label: AppStrings.calendario,
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(
+                _currentIndex == 2
                     ? Icons.calendar_month
                     : Icons.calendar_month_outlined,
               ),
@@ -152,7 +162,7 @@ class _DashboardScreenState extends State<DashboardScreen>
             if (isAdmin)
               BottomNavigationBarItem(
                 icon: Icon(
-                  _currentIndex == 2 ? Icons.mail : Icons.mail_outline,
+                  _currentIndex == 3 ? Icons.mail : Icons.mail_outline,
                 ),
                 label: AppStrings.requests,
               ),
@@ -404,5 +414,14 @@ class _UpcomingReservationsSection extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+class _CalendarioTab extends StatelessWidget {
+  const _CalendarioTab();
+
+  @override
+  Widget build(BuildContext context) {
+    return const ReservationCalendarView(showAppBar: false);
   }
 }

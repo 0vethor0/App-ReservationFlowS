@@ -7,7 +7,9 @@ import '../../../core/theme/app_colors.dart';
 import '../../providers/reservation_provider.dart';
 
 class ReservationCalendarView extends StatefulWidget {
-  const ReservationCalendarView({super.key});
+  const ReservationCalendarView({super.key, this.showAppBar = true});
+
+  final bool showAppBar;
 
   @override
   State<ReservationCalendarView> createState() =>
@@ -27,48 +29,50 @@ class _ReservationCalendarViewState extends State<ReservationCalendarView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.surfaceLight,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'Calendario de Reservas',
-          style: GoogleFonts.poppins(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w600,
-            fontSize: 18,
-          ),
-        ),
-        actions: [
-          PopupMenuButton<CalendarView>(
-            icon: const Icon(
-              Icons.calendar_view_month,
-              color: AppColors.primaryBlue,
-            ),
-            onSelected: (CalendarView view) {
-              _calendarController.view = view;
-            },
-            itemBuilder: (BuildContext context) =>
-                <PopupMenuEntry<CalendarView>>[
-                  const PopupMenuItem<CalendarView>(
-                    value: CalendarView.day,
-                    child: Text('Día'),
+      appBar: widget.showAppBar
+          ? AppBar(
+              backgroundColor: AppColors.surfaceLight,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+                onPressed: () => Navigator.pop(context),
+              ),
+              title: Text(
+                'Calendario de Reservas',
+                style: GoogleFonts.poppins(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 18,
+                ),
+              ),
+              actions: [
+                PopupMenuButton<CalendarView>(
+                  icon: const Icon(
+                    Icons.calendar_view_month,
+                    color: AppColors.primaryBlue,
                   ),
-                  const PopupMenuItem<CalendarView>(
-                    value: CalendarView.week,
-                    child: Text('Semana'),
-                  ),
-                  const PopupMenuItem<CalendarView>(
-                    value: CalendarView.month,
-                    child: Text('Mes'),
-                  ),
-                ],
-          ),
-        ],
-      ),
+                  onSelected: (CalendarView view) {
+                    _calendarController.view = view;
+                  },
+                  itemBuilder: (BuildContext context) =>
+                      <PopupMenuEntry<CalendarView>>[
+                        const PopupMenuItem<CalendarView>(
+                          value: CalendarView.day,
+                          child: Text('Día'),
+                        ),
+                        const PopupMenuItem<CalendarView>(
+                          value: CalendarView.week,
+                          child: Text('Semana'),
+                        ),
+                        const PopupMenuItem<CalendarView>(
+                          value: CalendarView.month,
+                          child: Text('Mes'),
+                        ),
+                      ],
+                ),
+              ],
+            )
+          : null,
       body: Consumer<ReservationProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading && provider.reservations.isEmpty) {
