@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_colors.dart';
 
-class DescriptionScreen extends StatelessWidget {
+class DescriptionScreen extends StatefulWidget {
   const DescriptionScreen({
     super.key,
     required this.notes,
@@ -11,6 +11,33 @@ class DescriptionScreen extends StatelessWidget {
 
   final String notes;
   final ValueChanged<String> onChanged;
+
+  @override
+  State<DescriptionScreen> createState() => _DescriptionScreenState();
+}
+
+class _DescriptionScreenState extends State<DescriptionScreen> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.notes);
+  }
+
+  @override
+  void didUpdateWidget(covariant DescriptionScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.notes != widget.notes) {
+      _controller.value = TextEditingValue(text: widget.notes);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +55,8 @@ class DescriptionScreen extends StatelessWidget {
         const SizedBox(height: 12),
         TextField(
           maxLines: 3,
-          onChanged: onChanged,
+          controller: _controller,
+          onChanged: widget.onChanged,
           style: GoogleFonts.inter(fontSize: 14, color: AppColors.textPrimary),
           decoration: InputDecoration(
             hintText: 'Añade detalles adicionales para tu reserva...',

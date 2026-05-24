@@ -5,6 +5,7 @@ import '../../domain/repositories/reservation_repository.dart';
 import '../../domain/entities/videobeam_entity.dart';
 import '../../domain/entities/reservation_entity.dart';
 import '../datasources/reservation_remote_datasource.dart';
+import 'dart:developer' as developer;
 
 class ReservationRepositoryImpl implements ReservationRepository {
   ReservationRepositoryImpl(this.remoteDataSource);
@@ -79,6 +80,32 @@ class ReservationRepositoryImpl implements ReservationRepository {
       );
       return true;
     } catch (_) {
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> createMultipleReservations({
+    required String userId,
+    required String productId,
+    required List<Map<String, dynamic>> dates,
+    String? globalNotes,
+  }) async {
+    try {
+      final response = await remoteDataSource.createMultipleReservationsViaRpc(
+        userId: userId,
+        productId: productId,
+        dates: dates,
+        globalNotes: globalNotes,
+      );
+      
+      final success = response['success'] as bool? ?? false;
+      if (!success) {
+        developer.log('[ReservationRepositoryImpl] Error desde RPC: ${response['message']}');
+      }
+      return success;
+    } catch (e) {
+      developer.log('[ReservationRepositoryImpl] Excepción al llamar RPC: $e');
       return false;
     }
   }

@@ -204,6 +204,51 @@ class ReservationProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> confirmMultipleReservations(
+    List<Map<String, dynamic>> dates,
+    String? globalNotes,
+  ) async {
+    if (_selectedVideobeam == null || dates.isEmpty) {
+      _error = 'Selecciona un equipo y al menos una fecha/horario';
+      notifyListeners();
+      return false;
+    }
+
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user == null) throw Exception('No user logged in');
+
+      final profileId = await _reservationRepository.getProfileIdByEmail(
+        user.email!,
+      );
+
+      final success = await _reservationRepository.createMultipleReservations(
+        userId: profileId,
+        productId: _selectedVideobeam!.id,
+        dates: dates,
+        globalNotes: globalNotes,
+      );
+
+      if (!success) {
+        throw Exception('No se pudo crear la reserva múltiple');
+      }
+
+      _isLoading = false;
+      _error = null;
+      await fetchReservations();
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _error = 'Error confirmando reservas múltiples: $e';
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<void> fetchReservations() async {
     try {
       _reservations = await _reservationRepository.fetchApprovedReservations();

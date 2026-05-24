@@ -10,6 +10,7 @@ import '../../../../core/widgets/neon_card.dart';
 import '../../../../core/widgets/neon_button.dart';
 import '../../../providers/reservation_provider.dart';
 import 'summary_row.dart';
+import 'multiple_reservation_bottom_sheet.dart';
 
 class ReservationSummary extends StatelessWidget {
   const ReservationSummary({super.key, required this.provider});
@@ -87,6 +88,62 @@ class ReservationSummary extends StatelessWidget {
             },
             isLoading: provider.isLoading,
           ),
+          const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () async {
+                  final rpcDates = await MultipleReservationBottomSheet.show(context);
+                  if (rpcDates == null) return;
+
+                  final success = await provider.confirmMultipleReservations(
+                    rpcDates,
+                    'Reserva Recurrente',
+                  );
+
+                  if (!context.mounted) return;
+                  if (success) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: const Text('Reservas creadas exitosamente'),
+                        backgroundColor: AppColors.success,
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    );
+                    provider.reset();
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(provider.error ?? 'Error al realizar reservas múltiples'),
+                        backgroundColor: AppColors.error,
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    );
+                  }
+                },
+                icon: const Icon(Icons.repeat, color: AppColors.primaryBlue),
+                label: Text(
+                  'Configurar Recurrencia / Reservas Múltiples',
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primaryBlue,
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  side: const BorderSide(color: AppColors.primaryBlue, width: 1.5),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );

@@ -219,40 +219,31 @@ class _DashboardBody extends StatelessWidget {
 
                 const SizedBox(height: 16),
 
-                // Metric Cards Row 1
-                Row(
-                  children: [
-                    Expanded(
-                      child: MetricCard(
-                        icon: Icons.calendar_today,
-                        iconBg: AppColors.lightBlue,
-                        value: '${m.reservationsToday}',
-                        label: AppStrings.reservationsToday,
-                        badge: '+2',
-                        badgeColor: AppColors.primaryBlue,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: MetricCard(
-                        icon: Icons.devices,
-                        iconBg: AppColors.lightBlue,
-                        value: '${m.availableEquipment}',
-                        label: AppStrings.availableEquipment,
-                        suffix: ' ${AppStrings.available}',
-                        topRight: AppStrings.totalEquipment,
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 12),
-
-                // Metric Cards Row 2 (Maintenance & In Use)
-                _MaintenanceStatusCard(
-                  inMaintenance: m.inMaintenance,
-                  inUseNow: m.inUseNow,
-                ),
+                 // Metric Cards Row 1
+                 Row(
+                   children: [
+                     Expanded(
+                       child: MetricCard(
+                         icon: Icons.calendar_today,
+                         iconBg: AppColors.lightBlue,
+                         value: '${m.reservationsToday}',
+                         label: AppStrings.reservationsToday,
+                         badge: '+2',
+                         badgeColor: AppColors.primaryBlue,
+                       ),
+                     ),
+                     const SizedBox(width: 12),
+                     Expanded(
+                       child: MetricCard(
+                         icon: Icons.devices,
+                         iconBg: AppColors.lightBlue,
+                         value: '${m.availableEquipment}',
+                         label: AppStrings.availableEquipment,
+                         suffix: ' ${AppStrings.available}',
+                       ),
+                     ),
+                   ],
+                 ),
 
                 const SizedBox(height: 16),
 

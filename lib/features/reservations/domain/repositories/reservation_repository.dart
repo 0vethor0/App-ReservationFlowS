@@ -41,6 +41,14 @@ abstract class ReservationRepository {
     String? notes,
   });
 
+  /// Create multiple reservations via RPC
+  Future<bool> createMultipleReservations({
+    required String userId,
+    required String productId,
+    required List<Map<String, dynamic>> dates,
+    String? globalNotes,
+  });
+
   /// Create a new reservation
   Future<bool> createReservation({
     required String userId,

@@ -113,9 +113,38 @@ class ReservationRemoteDataSource {
         'p_producto_id': productId,
         'p_inicio': start.toIso8601String(),
         'p_fin': end.toIso8601String(),
-        'p_notas': ?notes,
+        'p_notas': notes,
       },
     );
+  }
+
+  Future<Map<String, dynamic>> createMultipleReservationsViaRpc({
+    required String userId,
+    required String productId,
+    required List<Map<String, dynamic>> dates,
+    String? globalNotes,
+  }) async {
+    final params = {
+      'p_usuario_id': userId,
+      'p_producto_id': productId,
+      'p_reservas': dates,
+      'p_notas_globales': globalNotes,
+    };
+    debugPrint('[ReservationRemoteDataSource] Llamando RPC intentar_reservas_multiples con params: $params');
+    
+    final response = await client.rpc(
+      'intentar_reservas_multiples',
+      params: params,
+    );
+    
+    debugPrint('[ReservationRemoteDataSource] Respuesta RPC: $response');
+    
+    // Asumimos que la respuesta es un Map, pero client.rpc puede devolver otras cosas según la función.
+    // Si la función devuelve jsonb, debería ser un Map o List.
+    if (response is Map<String, dynamic>) {
+        return response;
+    }
+    return {'success': false, 'message': 'Respuesta inesperada: $response'};
   }
 
   /// Create a new reservation
