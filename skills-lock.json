@@ -13,6 +13,12 @@
       "skillPath": "SKILL.md",
       "computedHash": "6fb210f257bd3d82de0ca568c202d89573aaaae9c632c3eb804778650ada112b"
     },
+    "caveman": {
+      "source": "juliusbrussee/caveman",
+      "sourceType": "github",
+      "skillPath": "skills/caveman/SKILL.md",
+      "computedHash": "7935e83f9c6a8b7cbb5404d144b0d19e3ba93583f4388301c3dada37cd25adf8"
+    },
     "flutter-add-widget-preview": {
       "source": "flutter/skills",
       "sourceType": "github",

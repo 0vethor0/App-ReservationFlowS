@@ -38,9 +38,7 @@ class ReservationRemoteDataSource {
         schema: 'public',
         table: 'productos',
         callback: (payload) {
-          debugPrint(
-            '[ReservationDataSource] productos ${payload.eventType}',
-          );
+          debugPrint('[ReservationDataSource] productos ${payload.eventType}');
           if (!(_productosController?.isClosed ?? true)) {
             _productosController!.add(null);
           }
@@ -115,7 +113,7 @@ class ReservationRemoteDataSource {
         'p_producto_id': productId,
         'p_inicio': start.toIso8601String(),
         'p_fin': end.toIso8601String(),
-        if (notes != null) 'p_notas': notes,
+        'p_notas': ?notes,
       },
     );
   }

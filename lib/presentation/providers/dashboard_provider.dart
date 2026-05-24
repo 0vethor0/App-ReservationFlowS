@@ -17,10 +17,10 @@ class DashboardProvider extends ChangeNotifier {
   StreamSubscription? _realtimeSubscription;
   StreamSubscription? _productAvailabilitySubscription;
   final Set<String> _shownInsertIds = {};
-  
+
   // Callback for new reservation notifications
   Function(Map<String, dynamic> newReservation)? onNewReservation;
-  
+
   // Separate loading state for my reservations
   bool _isLoadingMyReservations = false;
 
@@ -76,12 +76,14 @@ class DashboardProvider extends ChangeNotifier {
   DashboardMetrics get metrics => _metrics;
   List<ReservationEntity> get upcomingReservations => _upcomingReservations;
   List<ReservationEntity> get myReservations => _myReservations;
-  
+
   String get myReservationsFilter => _myReservationsFilter;
-  
+
   List<ReservationEntity> get filteredMyReservations {
     return _myReservations.where((r) {
       switch (_myReservationsFilter) {
+        case 'Pendientes':
+          return r.status == ReservationStatus.pending;
         case 'Aprobadas':
           return r.status == ReservationStatus.approved;
         case 'En curso':
@@ -90,12 +92,14 @@ class DashboardProvider extends ChangeNotifier {
           return r.status == ReservationStatus.cancelled;
         case 'Finalizadas':
           return r.status == ReservationStatus.completed;
+        case 'Rechazadas':
+          return r.status == ReservationStatus.rejected;
         default:
           return true;
       }
     }).toList();
   }
-  
+
   DateTime get filterDate => _filterDate;
   bool get isLoading => _isLoading;
   bool get isLoadingMyReservations => _isLoadingMyReservations;
@@ -224,15 +228,9 @@ class DashboardProvider extends ChangeNotifier {
       );
       final endOfDay = startOfDay.add(const Duration(days: 1));
 
-      debugPrint(
-        '=== Loading My Reservations for $_filterDate ===',
-      );
-      debugPrint(
-        'Start: ${startOfDay.toUtc().toIso8601String()}',
-      );
-      debugPrint(
-        'End: ${endOfDay.toUtc().toIso8601String()}',
-      );
+      debugPrint('=== Loading My Reservations for $_filterDate ===');
+      debugPrint('Start: ${startOfDay.toUtc().toIso8601String()}');
+      debugPrint('End: ${endOfDay.toUtc().toIso8601String()}');
 
       // Filtramos por 'hora_inicio' (la fecha de la reserva) para que coincida con el uso esperado
       final data = await _supabase
@@ -343,7 +341,7 @@ class DashboardProvider extends ChangeNotifier {
       userAvatarUrl: u['foto_url'] as String?,
       notes: r['notas'] as String?,
       isRead: r['leido_por_admin'] as bool? ?? false,
-      createdAt: r['creado_en'] != null ? DateTime.parse(r['creado_en']) : null,
+      createdAt: r['creado_en'] != null ? DateTime.parse(r['creado_en']).toLocal() : null,
     );
   }
 

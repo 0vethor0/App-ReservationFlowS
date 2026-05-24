@@ -119,33 +119,52 @@ class _UtilizationChartState extends State<UtilizationChart> {
               ],
             ),
             const SizedBox(height: 16),
-            
+
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
                   _StatusFilterChip(
+                    label: AppStrings.pending,
+                    isActive: dashProvider.myReservationsFilter == 'Pendientes',
+                    onTap: () =>
+                        dashProvider.setMyReservationsFilter('Pendientes'),
+                  ),
+                  const SizedBox(width: 8),
+                  _StatusFilterChip(
                     label: AppStrings.approved,
                     isActive: dashProvider.myReservationsFilter == 'Aprobadas',
-                    onTap: () => dashProvider.setMyReservationsFilter('Aprobadas'),
+                    onTap: () =>
+                        dashProvider.setMyReservationsFilter('Aprobadas'),
                   ),
                   const SizedBox(width: 8),
                   _StatusFilterChip(
                     label: AppStrings.inProgress,
                     isActive: dashProvider.myReservationsFilter == 'En curso',
-                    onTap: () => dashProvider.setMyReservationsFilter('En curso'),
+                    onTap: () =>
+                        dashProvider.setMyReservationsFilter('En curso'),
                   ),
                   const SizedBox(width: 8),
                   _StatusFilterChip(
                     label: AppStrings.cancelled,
                     isActive: dashProvider.myReservationsFilter == 'Canceladas',
-                    onTap: () => dashProvider.setMyReservationsFilter('Canceladas'),
+                    onTap: () =>
+                        dashProvider.setMyReservationsFilter('Canceladas'),
                   ),
                   const SizedBox(width: 8),
                   _StatusFilterChip(
                     label: AppStrings.completed,
-                    isActive: dashProvider.myReservationsFilter == 'Finalizadas',
-                    onTap: () => dashProvider.setMyReservationsFilter('Finalizadas'),
+                    isActive:
+                        dashProvider.myReservationsFilter == 'Finalizadas',
+                    onTap: () =>
+                        dashProvider.setMyReservationsFilter('Finalizadas'),
+                  ),
+                  const SizedBox(width: 8),
+                  _StatusFilterChip(
+                    label: AppStrings.rejected,
+                    isActive: dashProvider.myReservationsFilter == 'Rechazadas',
+                    onTap: () =>
+                        dashProvider.setMyReservationsFilter('Rechazadas'),
                   ),
                 ],
               ),
@@ -180,7 +199,8 @@ class _UtilizationChartState extends State<UtilizationChart> {
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: dashProvider.filteredMyReservations.length,
                 itemBuilder: (context, index) {
-                  final reservation = dashProvider.filteredMyReservations[index];
+                  final reservation =
+                      dashProvider.filteredMyReservations[index];
                   return FadeInUp(
                     duration: const Duration(milliseconds: 400),
                     delay: Duration(milliseconds: index * 100),
@@ -429,7 +449,9 @@ class DashboardRequestCard extends StatelessWidget {
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
-              context.read<DashboardProvider>().completeMyReservation(request.id);
+              context.read<DashboardProvider>().completeMyReservation(
+                request.id,
+              );
             },
             child: Text(
               AppStrings.confirm,

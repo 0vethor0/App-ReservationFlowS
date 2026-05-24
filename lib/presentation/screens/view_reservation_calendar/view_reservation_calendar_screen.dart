@@ -13,10 +13,7 @@ import '../../providers/view_reservation_calendar_provider.dart';
 import '../../../../features/reservations/domain/entities/reservation_entity.dart';
 
 class ViewReservationCalendarScreen extends StatefulWidget {
-  const ViewReservationCalendarScreen({
-    super.key,
-    required this.onGoToReserve,
-  });
+  const ViewReservationCalendarScreen({super.key, required this.onGoToReserve});
 
   final VoidCallback onGoToReserve;
 
@@ -40,10 +37,7 @@ class _ViewReservationCalendarScreenState
     )..repeat(reverse: true);
 
     _pulseAnimation = Tween<double>(begin: 1.0, end: 1.08).animate(
-      CurvedAnimation(
-        parent: _pulseController,
-        curve: Curves.easeInOut,
-      ),
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
   }
 
@@ -57,306 +51,302 @@ class _ViewReservationCalendarScreenState
   Widget build(BuildContext context) {
     return Consumer<ViewReservationCalendarProvider>(
       builder: (context, provider, _) {
-        final dateStr = DateFormat('EEEE, d ' 'de' ' MMMM', 'es')
-            .format(provider.selectedDate);
+        final dateStr = DateFormat(
+          'EEEE, d '
+              'de'
+              ' MMMM',
+          'es',
+        ).format(provider.selectedDate);
 
-        return Stack(
+        return Column(
           children: [
             // Main scrollable content
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 20),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 20),
 
-                // Header Section
-                FadeInDown(
-                  duration: const Duration(milliseconds: 500),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Calendario General',
-                        style: GoogleFonts.poppins(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primaryBlue,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Inspecciona las reservas actuales de otros usuarios',
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-                // Upper Section: Weekly Calendar Card with "Ampliar calendario" button
-                FadeInUp(
-                  duration: const Duration(milliseconds: 500),
-                  delay: const Duration(milliseconds: 100),
-                  child: NeonCard(
-                    padding: const EdgeInsets.all(12),
-                    glowOpacity: 0.03,
+                  // Header Section
+                  FadeInDown(
+                    duration: const Duration(milliseconds: 500),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // "Ampliar calendario" button at top-left
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: GestureDetector(
-                            onTap: () => context.push('/reservation-calendar'),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    AppColors.primaryBlue,
-                                    AppColors.primaryBlue.withValues(alpha: 0.85),
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(10),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.primaryBlue
-                                        .withValues(alpha: 0.3),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(
-                                    Icons.open_in_full_rounded,
-                                    size: 14,
-                                    color: Colors.white,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    AppStrings.expandCalendar,
-                                    style: GoogleFonts.inter(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+                        Text(
+                          'Lista de Reservaciones Globales',
+                          style: GoogleFonts.poppins(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primaryBlue,
                           ),
                         ),
-                        // Calendar widget
-                        TableCalendar(
-                          locale: 'es_ES',
-                          firstDay: DateTime.now()
-                              .subtract(const Duration(days: 30)),
-                          lastDay:
-                              DateTime.now().add(const Duration(days: 90)),
-                          focusedDay: provider.selectedDate,
-                          currentDay: provider.selectedDate,
-                          calendarFormat: CalendarFormat.week,
-                          availableCalendarFormats: const {
-                            CalendarFormat.week: 'Semana'
-                          },
-                          startingDayOfWeek: StartingDayOfWeek.monday,
-                          headerStyle: HeaderStyle(
-                            titleTextStyle: GoogleFonts.poppins(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
-                            ),
-                            formatButtonVisible: false,
-                            leftChevronIcon: const Icon(
-                              Icons.chevron_left,
-                              color: AppColors.primaryBlue,
-                            ),
-                            rightChevronIcon: const Icon(
-                              Icons.chevron_right,
-                              color: AppColors.primaryBlue,
-                            ),
-                          ),
-                          calendarStyle: CalendarStyle(
-                            defaultTextStyle: GoogleFonts.inter(
-                                color: AppColors.textPrimary),
-                            weekendTextStyle: GoogleFonts.inter(
-                              color: AppColors.textSecondary,
-                            ),
-                            todayDecoration: BoxDecoration(
-                              color: AppColors.primaryBlue
-                                  .withValues(alpha: 0.2),
-                              shape: BoxShape.circle,
-                            ),
-                            selectedDecoration: BoxDecoration(
-                              color: AppColors.primaryBlue,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.primaryBlue
-                                      .withValues(alpha: 0.4),
-                                  blurRadius: 10,
-                                  spreadRadius: 2,
+                        const SizedBox(height: 4),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Upper Section: Weekly Calendar Card with "Ampliar calendario" button
+                  FadeInUp(
+                    duration: const Duration(milliseconds: 500),
+                    delay: const Duration(milliseconds: 100),
+                    child: NeonCard(
+                      padding: const EdgeInsets.all(12),
+                      glowOpacity: 0.03,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // "Ampliar calendario" button at top-left
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: GestureDetector(
+                              onTap: () =>
+                                  context.push('/reservation-calendar'),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
                                 ),
-                              ],
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      AppColors.primaryBlue,
+                                      AppColors.primaryBlue.withValues(
+                                        alpha: 0.85,
+                                      ),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.primaryBlue.withValues(
+                                        alpha: 0.3,
+                                      ),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.open_in_full_rounded,
+                                      size: 14,
+                                      color: Colors.white,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      AppStrings.expandCalendar,
+                                      style: GoogleFonts.inter(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
                           ),
-                          onDaySelected: (selectedDay, focusedDay) {
-                            provider.selectDate(selectedDay);
-                          },
-                          selectedDayPredicate: (day) =>
-                              isSameDay(provider.selectedDate, day),
+                          // Calendar widget
+                          TableCalendar(
+                            locale: 'es_ES',
+                            firstDay: DateTime.now().subtract(
+                              const Duration(days: 30),
+                            ),
+                            lastDay: DateTime.now().add(
+                              const Duration(days: 90),
+                            ),
+                            focusedDay: provider.selectedDate,
+                            currentDay: provider.selectedDate,
+                            calendarFormat: CalendarFormat.week,
+                            availableCalendarFormats: const {
+                              CalendarFormat.week: 'Semana',
+                            },
+                            startingDayOfWeek: StartingDayOfWeek.monday,
+                            headerStyle: HeaderStyle(
+                              titleTextStyle: GoogleFonts.poppins(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textPrimary,
+                              ),
+                              formatButtonVisible: false,
+                              leftChevronIcon: const Icon(
+                                Icons.chevron_left,
+                                color: AppColors.primaryBlue,
+                              ),
+                              rightChevronIcon: const Icon(
+                                Icons.chevron_right,
+                                color: AppColors.primaryBlue,
+                              ),
+                            ),
+                            calendarStyle: CalendarStyle(
+                              defaultTextStyle: GoogleFonts.inter(
+                                color: AppColors.textPrimary,
+                              ),
+                              weekendTextStyle: GoogleFonts.inter(
+                                color: AppColors.textSecondary,
+                              ),
+                              todayDecoration: BoxDecoration(
+                                color: AppColors.primaryBlue.withValues(
+                                  alpha: 0.2,
+                                ),
+                                shape: BoxShape.circle,
+                              ),
+                              selectedDecoration: BoxDecoration(
+                                color: AppColors.primaryBlue,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.primaryBlue.withValues(
+                                      alpha: 0.4,
+                                    ),
+                                    blurRadius: 10,
+                                    spreadRadius: 2,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            onDaySelected: (selectedDay, focusedDay) {
+                              provider.selectDate(selectedDay);
+                            },
+                            selectedDayPredicate: (day) =>
+                                isSameDay(provider.selectedDate, day),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Filter Chips Section (without "Canceladas")
+                  FadeInUp(
+                    duration: const Duration(milliseconds: 500),
+                    delay: const Duration(milliseconds: 200),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              dateStr.toUpperCase(),
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textSecondary,
+                                letterSpacing: 1.1,
+                              ),
+                            ),
+                            Text(
+                              '${provider.filteredReservations.length} reservas',
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                color: AppColors.textSecondary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              _FilterChip(
+                                label: 'Aprobadas',
+                                isActive:
+                                    provider.selectedFilter == 'Aprobadas',
+                                onTap: () => provider.selectFilter('Aprobadas'),
+                              ),
+                              const SizedBox(width: 8),
+                              _FilterChip(
+                                label: 'En curso',
+                                isActive: provider.selectedFilter == 'En curso',
+                                onTap: () => provider.selectFilter('En curso'),
+                              ),
+                              const SizedBox(width: 8),
+                              _FilterChip(
+                                label: 'Finalizadas',
+                                isActive:
+                                    provider.selectedFilter == 'Finalizadas',
+                                onTap: () =>
+                                    provider.selectFilter('Finalizadas'),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
                   ),
-                ),
 
-                const SizedBox(height: 20),
+                  const SizedBox(height: 16),
 
-                // Filter Chips Section (without "Canceladas")
-                FadeInUp(
-                  duration: const Duration(milliseconds: 500),
-                  delay: const Duration(milliseconds: 200),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            dateStr.toUpperCase(),
-                            style: GoogleFonts.poppins(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textSecondary,
-                              letterSpacing: 1.1,
+                  // Lower Section: Detailed Reservations List
+                  Expanded(
+                    child: provider.isLoading
+                        ? const Center(
+                            child: CircularProgressIndicator(
+                              color: AppColors.primaryBlue,
                             ),
-                          ),
-                          Text(
-                            '${provider.filteredReservations.length} reservas',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              color: AppColors.textSecondary,
-                              fontWeight: FontWeight.w500,
+                          )
+                        : provider.error != null
+                        ? Center(
+                            child: Text(
+                              provider.error!,
+                              style: GoogleFonts.inter(color: Colors.red[600]),
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: [
-                            _FilterChip(
-                              label: 'Aprobadas',
-                              isActive:
-                                  provider.selectedFilter == 'Aprobadas',
-                              onTap: () =>
-                                  provider.selectFilter('Aprobadas'),
-                            ),
-                            const SizedBox(width: 8),
-                            _FilterChip(
-                              label: 'En curso',
-                              isActive:
-                                  provider.selectedFilter == 'En curso',
-                              onTap: () =>
-                                  provider.selectFilter('En curso'),
-                            ),
-                            const SizedBox(width: 8),
-                            _FilterChip(
-                              label: 'Finalizadas',
-                              isActive:
-                                  provider.selectedFilter == 'Finalizadas',
-                              onTap: () =>
-                                  provider.selectFilter('Finalizadas'),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                // Lower Section: Detailed Reservations List
-                Expanded(
-                  child: provider.isLoading
-                      ? const Center(
-                          child: CircularProgressIndicator(
-                              color: AppColors.primaryBlue),
-                        )
-                      : provider.error != null
-                          ? Center(
-                              child: Text(
-                                provider.error!,
-                                style: GoogleFonts.inter(
-                                    color: Colors.red[600]),
-                              ),
-                            )
-                          : provider.filteredReservations.isEmpty
-                              ? FadeIn(
-                                  child: Center(
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.calendar_today_outlined,
-                                          size: 48,
-                                          color: AppColors.textSecondary
-                                              .withValues(alpha: 0.4),
-                                        ),
-                                        const SizedBox(height: 12),
-                                        Text(
-                                          'No hay reservaciones en este estado',
-                                          style: GoogleFonts.inter(
-                                            fontSize: 14,
-                                            color: AppColors.textSecondary,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ],
+                          )
+                        : provider.filteredReservations.isEmpty
+                        ? FadeIn(
+                            child: Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.calendar_today_outlined,
+                                    size: 48,
+                                    color: AppColors.textSecondary.withValues(
+                                      alpha: 0.4,
                                     ),
                                   ),
-                                )
-                              : ListView.builder(
-                                  itemCount:
-                                      provider.filteredReservations.length,
-                                  padding:
-                                      const EdgeInsets.only(bottom: 100),
-                                  itemBuilder: (context, index) {
-                                    final res = provider
-                                        .filteredReservations[index];
-                                    return FadeInUp(
-                                      duration: const Duration(
-                                          milliseconds: 300),
-                                      delay: Duration(
-                                          milliseconds: index * 50),
-                                      child: _ReservationDetailCard(
-                                          reservation: res),
-                                    );
-                                  },
-                                ),
-                ),
-              ],
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    'No hay reservaciones en este estado',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 14,
+                                      color: AppColors.textSecondary,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
+                        : ListView.builder(
+                            itemCount: provider.filteredReservations.length,
+                            padding: const EdgeInsets.only(bottom: 16),
+                            itemBuilder: (context, index) {
+                              final res = provider.filteredReservations[index];
+                              return FadeInUp(
+                                duration: const Duration(milliseconds: 300),
+                                delay: Duration(milliseconds: index * 50),
+                                child: _ReservationDetailCard(reservation: res),
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
             ),
 
             // Fixed animated reservation button at the bottom
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 16,
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16, top: 8),
               child: Center(
                 child: AnimatedBuilder(
                   animation: _pulseAnimation,
@@ -370,28 +360,29 @@ class _ViewReservationCalendarScreenState
                     onTap: widget.onGoToReserve,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 28, vertical: 16),
+                        horizontal: 28,
+                        vertical: 16,
+                      ),
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [
-                            AppColors.primaryBlue,
-                            Color(0xFF3D8BFF),
-                          ],
+                          colors: [AppColors.primaryBlue, Color(0xFF3D8BFF)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.primaryBlue
-                                .withValues(alpha: 0.45),
+                            color: AppColors.primaryBlue.withValues(
+                              alpha: 0.45,
+                            ),
                             blurRadius: 18,
                             spreadRadius: 2,
                             offset: const Offset(0, 6),
                           ),
                           BoxShadow(
-                            color: AppColors.primaryBlue
-                                .withValues(alpha: 0.15),
+                            color: AppColors.primaryBlue.withValues(
+                              alpha: 0.15,
+                            ),
                             blurRadius: 40,
                             spreadRadius: 8,
                             offset: const Offset(0, 4),
@@ -407,12 +398,15 @@ class _ViewReservationCalendarScreenState
                             color: Colors.white,
                           ),
                           const SizedBox(width: 10),
-                          Text(
-                            'Haz tu reservación aquí, pulsa el botón',
-                            style: GoogleFonts.inter(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                          Flexible(
+                            child: Text(
+                              'Haz tu reservación aquí, pulsa el botón',
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
@@ -501,8 +495,11 @@ class _ReservationDetailCard extends StatelessWidget {
                       : null,
                   backgroundColor: AppColors.surfaceLight,
                   child: reservation.userAvatarUrl == null
-                      ? const Icon(Icons.person,
-                          color: AppColors.textSecondary, size: 20)
+                      ? const Icon(
+                          Icons.person,
+                          color: AppColors.textSecondary,
+                          size: 20,
+                        )
                       : null,
                 ),
                 const SizedBox(width: 12),
@@ -542,14 +539,18 @@ class _ReservationDetailCard extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.videocam_rounded,
-                          size: 16, color: AppColors.primaryBlue),
+                      const Icon(
+                        Icons.videocam_rounded,
+                        size: 16,
+                        color: AppColors.primaryBlue,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         'Proyector: ',
                         style: GoogleFonts.inter(
-                            fontSize: 11,
-                            color: AppColors.textSecondary),
+                          fontSize: 11,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                       Expanded(
                         child: Text(
@@ -566,14 +567,18 @@ class _ReservationDetailCard extends StatelessWidget {
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      const Icon(Icons.access_time_filled_rounded,
-                          size: 16, color: AppColors.primaryBlue),
+                      const Icon(
+                        Icons.access_time_filled_rounded,
+                        size: 16,
+                        color: AppColors.primaryBlue,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         'Horario: ',
                         style: GoogleFonts.inter(
-                            fontSize: 11,
-                            color: AppColors.textSecondary),
+                          fontSize: 11,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                       Expanded(
                         child: Text(
@@ -590,8 +595,7 @@ class _ReservationDetailCard extends StatelessWidget {
                 ],
               ),
             ),
-            if (reservation.notes != null &&
-                reservation.notes!.isNotEmpty) ...[
+            if (reservation.notes != null && reservation.notes!.isNotEmpty) ...[
               const SizedBox(height: 10),
               Text(
                 'Notas del propósito:',
