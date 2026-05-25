@@ -6,6 +6,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/services/notification/notification_service.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/domain/repositories/storage_repository.dart';
 import '../../features/auth/domain/entities/user_entity.dart';
@@ -13,8 +14,9 @@ import '../../features/auth/domain/entities/user_entity.dart';
 class AuthProvider extends ChangeNotifier {
   final AuthRepository _authRepository;
   final StorageRepository? _storageRepository;
+  final NotificationService? _notificationService;
 
-  AuthProvider(this._authRepository, [this._storageRepository]) {
+  AuthProvider(this._authRepository, [this._storageRepository, this._notificationService]) {
     _init();
   }
 
@@ -49,6 +51,7 @@ class AuthProvider extends ChangeNotifier {
       if (_currentUser != null) {
         debugPrint('[${DateTime.now()}] AuthProvider._init - Sesión existente detectada: ${_currentUser!.id}');
         _checkAdditionalData(_currentUser!.id);
+        _saveDeviceToken(); // fire-and-forget: guarda el token FCM
       }
     } else {
       // No session: no need to wait for data
@@ -62,17 +65,18 @@ class AuthProvider extends ChangeNotifier {
       debugPrint('[${DateTime.now()}] AuthProvider - Evento: $event');
 
       switch (event) {
-        case AuthChangeEvent.signedIn:
-        case AuthChangeEvent.tokenRefreshed:
-          if (session != null) {
-            _isAuthenticated = true;
-            _currentUser = _authRepository.getCurrentUser();
-            if (_currentUser != null) {
-              debugPrint('[${DateTime.now()}] AuthProvider - Usuario: ${_currentUser!.id}. Verificando datos...');
-              await _checkAdditionalData(_currentUser!.id);
+          case AuthChangeEvent.signedIn:
+          case AuthChangeEvent.tokenRefreshed:
+            if (session != null) {
+              _isAuthenticated = true;
+              _currentUser = _authRepository.getCurrentUser();
+              if (_currentUser != null) {
+                debugPrint('[${DateTime.now()}] AuthProvider - Usuario: ${_currentUser!.id}. Verificando datos...');
+                await _checkAdditionalData(_currentUser!.id);
+                _saveDeviceToken(); // fire-and-forget: guarda el token FCM tras login
+              }
+              notifyListeners();
             }
-            notifyListeners();
-          }
           break;
         case AuthChangeEvent.signedOut:
           _isAuthenticated = false;
@@ -145,6 +149,21 @@ Future<void> _checkAdditionalData(String userId) async {
       case 'approved': return UserStatus.approved;
       case 'rejected': return UserStatus.rejected;
       default:         return UserStatus.pending;
+    }
+  }
+
+  Future<void> _saveDeviceToken() async {
+    try {
+      final token = await _notificationService?.getDeviceToken();
+      if (token != null && _currentUser != null) {
+        await _authRepository.updateFcmToken(
+          userId: _currentUser!.id,
+          token: token,
+        );
+        debugPrint('[${DateTime.now()}] AuthProvider - FCM token guardado');
+      }
+    } catch (e) {
+      debugPrint('[${DateTime.now()}] AuthProvider - Error guardando FCM token: $e');
     }
   }
 

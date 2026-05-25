@@ -135,6 +135,14 @@ class AuthRemoteDataSource {
     return client.auth.onAuthStateChange;
   }
 
+  /// Actualizar el token FCM del usuario en la tabla perfiles
+  Future<void> updateFcmToken({
+    required String userId,
+    required String token,
+  }) async {
+    await client.from('perfiles').update({'fcm_token': token}).eq('id', userId);
+  }
+
   /// Observar cambios de estado de usuario en tiempo real
   Stream<UserStatus> watchCurrentUserStatus(String uid) {
     return client

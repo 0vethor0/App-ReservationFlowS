@@ -9,7 +9,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
-import '../../../core/widgets/neon_card.dart';
 import '../../../features/auth/domain/entities/user_entity.dart';
 
 import '../../providers/dashboard_provider.dart';
@@ -292,63 +291,6 @@ class _SectionTitle extends StatelessWidget {
         fontWeight: FontWeight.w700,
         color: AppColors.textSecondary,
         letterSpacing: 1.5,
-      ),
-    );
-  }
-}
-
-class _MaintenanceStatusCard extends StatelessWidget {
-  const _MaintenanceStatusCard({
-    required this.inMaintenance,
-    required this.inUseNow,
-  });
-
-  final int inMaintenance;
-  final int inUseNow;
-
-  @override
-  Widget build(BuildContext context) {
-    return NeonCard(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: AppColors.lightBlue,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.build_outlined,
-              color: AppColors.primaryBlue,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Text(
-            '$inMaintenance',
-            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(width: 4),
-          const Expanded(
-            child: Text(
-              AppStrings.inMaintenance,
-              style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
-            ),
-          ),
-          Container(width: 1, height: 36, color: AppColors.divider),
-          const SizedBox(width: 16),
-          Text(
-            '$inUseNow',
-            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(width: 4),
-          const Text(
-            AppStrings.inUseNow,
-            style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
-          ),
-        ],
       ),
     );
   }

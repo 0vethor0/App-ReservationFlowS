@@ -265,6 +265,12 @@ class DashboardProvider extends ChangeNotifier {
     }
   }
 
+  void setFilterDate(DateTime date) {
+    _filterDate = date;
+    notifyListeners();
+    loadMyReservations();
+  }
+
   void nextDate() {
     _filterDate = _filterDate.add(const Duration(days: 1));
     // Don't call loadMyReservations here - let the UI trigger it via the loading state

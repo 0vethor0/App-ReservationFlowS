@@ -5,14 +5,18 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 import 'core/theme/app_theme.dart';
+import 'core/services/notification/notification_service.dart';
+import 'core/services/notification/notification_service_impl.dart';
 import 'presentation/providers/auth_provider.dart';
 import 'presentation/providers/dashboard_provider.dart';
 import 'presentation/providers/reservation_provider.dart';
@@ -46,9 +50,25 @@ import 'features/view_reservation_calendar/data/repositories/view_reservation_ca
 import 'features/view_reservation_calendar/domain/repositories/view_reservation_calendar_repository.dart';
 import 'presentation/providers/view_reservation_calendar_provider.dart';
 
+late final NotificationService notificationService;
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+
+  // 1. Inicializar Firebase (OBLIGATORIO antes de usar cualquier servicio de Firebase)
+  await Firebase.initializeApp();
+
+  // 2. Inicializar el servicio de notificaciones
+  notificationService = NotificationServiceImpl();
+  await notificationService.initialize();
+
+  // 3. Obtener el token FCM y guardarlo en Supabase
+  final token = await notificationService.getDeviceToken();
+  if (token != null) {
+    // Guardar el token en la tabla 'profiles' de Supabase
+    // await supabaseClient.from('profiles').update({'fcm_token': token}).eq('id', userId);
+  }
   // Load environment variables (gracefully handle errors in test environments)
   try {
     await dotenv.load(fileName: '.env');
@@ -67,6 +87,13 @@ Future<void> main() async {
   final supabaseAnonKey = dotenv.isInitialized
       ? (dotenv.maybeGet('SUPABASE_ANON_KEY') ?? '')
       : '';
+
+  // Initialize Firebase (for FCM push notifications)
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    debugPrint('Warning: Firebase initialization failed: $e');
+  }
 
   // Initialize Supabase
   await Supabase.initialize(
@@ -100,6 +127,7 @@ class BeamReserveApp extends StatefulWidget {
 class _BeamReserveAppState extends State<BeamReserveApp> {
   late final GoRouter _router;
   late final AuthProvider _authProvider;
+  late final NotificationService _notificationService;
 
   // Clean Architecture: Repositories
   late final AuthRepository _authRepository;
@@ -109,8 +137,6 @@ class _BeamReserveAppState extends State<BeamReserveApp> {
   late final RequestsRepository _requestsRepository;
   late final IUserManagementRepository _usersManagementRepository;
   late final ViewReservationCalendarRepository _viewReservationCalendarRepository;
-
-  
 
   @override
   void initState() {
@@ -148,10 +174,16 @@ class _BeamReserveAppState extends State<BeamReserveApp> {
       viewReservationCalendarRemoteDataSource,
     );
 
-    
+    // Initialize Notification service (FCM push notifications)
+    _notificationService = NotificationServiceImpl();
+    try {
+      _notificationService.initialize(); // fire-and-forget: permisos, canales, listeners
+    } catch (e) {
+      debugPrint('Warning: NotificationService.initialize() failed: $e');
+    }
 
     // Create SINGLE AuthProvider instance (shared by router AND UI)
-    _authProvider = AuthProvider(_authRepository, _storageRepository);
+    _authProvider = AuthProvider(_authRepository, _storageRepository, _notificationService);
 
     // Create the router instance once, passing the SAME auth provider
     _router = AppRouter.router(_authProvider);
@@ -197,6 +229,16 @@ class _BeamReserveAppState extends State<BeamReserveApp> {
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         routerConfig: _router,
+        locale: const Locale('es'),
+        supportedLocales: const [
+          Locale('es'),
+          Locale('en'),
+        ],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
       ),
     );
   }

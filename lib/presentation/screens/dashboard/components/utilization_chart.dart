@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -19,6 +21,7 @@ class _UtilizationChartState extends State<UtilizationChart> {
   @override
   void initState() {
     super.initState();
+    initializeDateFormatting('es', null);// para que el datepicker muestre la fecha en español
     // Setup notification callback via provider
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final dashProvider = context.read<DashboardProvider>();
@@ -42,6 +45,73 @@ class _UtilizationChartState extends State<UtilizationChart> {
     );
   }
 
+  void _showDatePicker(BuildContext context, DashboardProvider dashProvider) {
+    showCupertinoModalPopup<void>(
+      context: context,
+      builder: (BuildContext context) {
+        final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+        return Container(
+          height: 300,
+          padding: const EdgeInsets.only(top: 6.0),
+          decoration: BoxDecoration(
+            color: isDarkMode ? const Color(0xFF1E1E1E) : CupertinoColors.systemBackground.resolveFrom(context),
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
+          child: CupertinoTheme(
+            data: CupertinoThemeData(
+              brightness: isDarkMode ? Brightness.dark : Brightness.light,
+            ),
+            child: SafeArea(
+              top: false,
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(
+                          color: isDarkMode ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.1),
+                          width: 0.5,
+                        ),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        CupertinoButton(
+                          padding: EdgeInsets.zero,
+                          child: const Text('Cancelar', style: TextStyle(color: Colors.red)),
+                          onPressed: () => Navigator.of(context).pop(),
+                        ),
+                        CupertinoButton(
+                          padding: EdgeInsets.zero,
+                          child: const Text('Aceptar', style: TextStyle(color: AppColors.primaryBlue)),
+                          onPressed: () => Navigator.of(context).pop(),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: CupertinoDatePicker(
+                      mode: CupertinoDatePickerMode.date,
+                      initialDateTime: dashProvider.filterDate,
+                      onDateTimeChanged: (DateTime newDate) {
+                        dashProvider.setFilterDate(newDate);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // Usar context.watch() para escuchar cambios en el provider
@@ -50,73 +120,93 @@ class _UtilizationChartState extends State<UtilizationChart> {
     return Builder(
       builder: (context) {
         final dateStr = DateFormat(
-          'dd MMM yyyy',
+          "dd'/'MM'/'yyyy",
+          'es',
         ).format(dashProvider.filterDate);
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              runSpacing: 10,
-              children: [
-                SizedBox(
-                  width: 150,
-                  child: Text(
-                    'MIS RESERVACIONES',
-                    style: GoogleFonts.poppins(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textSecondary,
-                      letterSpacing: 1.2,
-                    ),
+            Text(
+              'MIS RESERVACIONES',
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textSecondary,
+                letterSpacing: 1.2,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 15,
+                    offset: const Offset(0, 5),
                   ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 4,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceLight,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: AppColors.border.withValues(alpha: 0.1),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
+                ],
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      IconButton(
-                        icon: const Icon(Icons.chevron_left, size: 20),
+                      _ArrowButton(
+                        icon: Icons.chevron_left,
                         onPressed: dashProvider.previousDate,
-                        constraints: const BoxConstraints(),
-                        padding: const EdgeInsets.all(4),
-                        color: AppColors.primaryBlue,
                       ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: Text(
-                          dateStr,
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => _showDatePicker(context, dashProvider),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color.fromARGB(255, 8, 122, 235),
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    dateStr,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: const Color.fromARGB(255, 255, 255, 255),
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                const Icon(
+                                  Icons.calendar_month,
+                                  size: 18,
+                                  color: Color.fromARGB(255, 255, 255, 255),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.chevron_right, size: 20),
+                      const SizedBox(width: 12),
+                      _ArrowButton(
+                        icon: Icons.chevron_right,
                         onPressed: dashProvider.nextDate,
-                        constraints: const BoxConstraints(),
-                        padding: const EdgeInsets.all(4),
-                        color: AppColors.primaryBlue,
                       ),
                     ],
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             const SizedBox(height: 16),
 
@@ -597,6 +687,45 @@ class _StatusFilterChip extends StatelessWidget {
             fontSize: 13,
             fontWeight: FontWeight.w600,
             color: isActive ? Colors.white : AppColors.textSecondary,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ArrowButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onPressed;
+
+  const _ArrowButton({required this.icon, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: onPressed,
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Icon(
+              icon,
+              color: AppColors.primaryBlue,
+              size: 20,
+            ),
           ),
         ),
       ),

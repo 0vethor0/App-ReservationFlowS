@@ -1,0 +1,129 @@
+import 'dart:convert';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'notification_service.dart';
+
+// Debe ser una función global (fuera de cualquier clase), anotada con @pragma
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  // Firebase requiere reinicializar en el isolate de segundo plano
+  await Firebase.initializeApp();
+  // No se necesita hacer nada más aquí: cuando la app está cerrada,
+  // FCM muestra la notificación automáticamente usando el canal declarado en AndroidManifest.
+}
+
+class NotificationServiceImpl implements NotificationService {
+  final FirebaseMessaging _fcm = FirebaseMessaging.instance;
+  final FlutterLocalNotificationsPlugin _localNotifications =
+      FlutterLocalNotificationsPlugin();
+
+  final String _channelId = 'beamflow_high_importance_channel';
+  final String _channelName = 'Notificaciones de Alta Importancia';
+
+  @override
+  Future<void> initialize() async {
+    // 1. Solicitar permisos al usuario
+    final NotificationSettings settings = await _fcm.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+
+    if (settings.authorizationStatus != AuthorizationStatus.authorized &&
+        settings.authorizationStatus != AuthorizationStatus.provisional) {
+      // El usuario denegó los permisos; las notificaciones no funcionarán.
+      return;
+    }
+
+    // 2. Registrar el manejador de mensajes en segundo plano
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+    // 3. Configurar notificaciones locales (para cuando la app está en primer plano)
+    const AndroidInitializationSettings androidSettings =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+
+    await _localNotifications.initialize(
+      settings: const InitializationSettings(android: androidSettings),
+      onDidReceiveNotificationResponse: _onNotificationTap,
+    );
+
+    // 4. Crear el canal de alta importancia en Android
+    //    Esto garantiza las notificaciones flotantes (Heads-up) con sonido del sistema
+    final AndroidNotificationChannel channel = AndroidNotificationChannel(
+      _channelId,
+      _channelName,
+      importance: Importance.max,
+      playSound: true,
+    );
+
+    await _localNotifications
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(channel);
+
+    // 5. Escuchar mensajes cuando la app está ABIERTA (foreground)
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      final notification = message.notification;
+      if (notification != null) {
+        showLocalNotification(
+          id: notification.hashCode,
+          title: notification.title ?? 'BeamFlow',
+          body: notification.body ?? '',
+          payload: message.data,
+        );
+      }
+    });
+
+    // 6. (Opcional) Escuchar cuando el usuario toca una notificación con la app en segundo plano
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      _handleNavigation(message.data);
+    });
+  }
+
+  @override
+  Future<String?> getDeviceToken() async {
+    return await _fcm.getToken();
+  }
+
+  @override
+  Future<void> showLocalNotification({
+    required int id,
+    required String title,
+    required String body,
+    Map<String, dynamic>? payload,
+  }) async {
+    await _localNotifications.show(
+      id: id,
+      title: title,
+      body: body,
+      notificationDetails: NotificationDetails(
+        android: AndroidNotificationDetails(
+          _channelId,
+          _channelName,
+          importance: Importance.max,
+          priority: Priority.high,
+        ),
+      ),
+      payload: payload != null ? jsonEncode(payload) : null,
+    );
+  }
+
+  void _onNotificationTap(NotificationResponse response) {
+    if (response.payload != null) {
+      final data = jsonDecode(response.payload!) as Map<String, dynamic>;
+      _handleNavigation(data);
+    }
+  }
+
+  void _handleNavigation(Map<String, dynamic> data) {
+    // Lógica de redirección basada en el tipo de notificación
+    final type = data['type'];
+    if (type == 'reservation') {
+      // ignore: unused_local_variable
+      final reservationId = data['reservation_id'];
+      // Navegar a la pantalla de detalles de la reserva
+      // Ejemplo: NavigationService.pushNamed('/reservations', arguments: reservationId);
+    }
+  }
+}

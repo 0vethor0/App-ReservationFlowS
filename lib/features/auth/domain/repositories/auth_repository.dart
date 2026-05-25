@@ -56,6 +56,13 @@ abstract class AuthRepository {
   /// Obtener perfil completo del usuario
   /// Get complete user profile with all fields
   Future<UserProfileComplete?> getUserProfileComplete(String userId);
+
+  /// Actualizar el token FCM del dispositivo en la tabla perfiles
+  /// Update the device FCM token in the perfiles table
+  Future<void> updateFcmToken({
+    required String userId,
+    required String token,
+  });
 }
 
 class UserProfileComplete {

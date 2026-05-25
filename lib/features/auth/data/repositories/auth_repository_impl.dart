@@ -3,6 +3,7 @@
 /// Connects AuthRemoteDataSource to domain layer.
 library;
 
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/entities/user_entity.dart';
@@ -132,6 +133,18 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Stream<UserStatus> watchCurrentUserStatus(String uid) {
     return remoteDataSource.watchCurrentUserStatus(uid);
+  }
+
+  @override
+  Future<void> updateFcmToken({
+    required String userId,
+    required String token,
+  }) async {
+    try {
+      await remoteDataSource.updateFcmToken(userId: userId, token: token);
+    } catch (e) {
+      debugPrint('Error updating FCM token: $e');
+    }
   }
 
   @override
