@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -83,7 +84,12 @@ class NotificationServiceImpl implements NotificationService {
 
   @override
   Future<String?> getDeviceToken() async {
-    return await _fcm.getToken();
+    try {
+      return await _fcm.getToken();
+    } catch (e) {
+      debugPrint('\u26A0\uFE0F Warning: getDeviceToken() failed - $e');
+      return null;
+    }
   }
 
   @override
