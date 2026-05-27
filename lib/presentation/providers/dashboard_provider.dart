@@ -335,11 +335,11 @@ class DashboardProvider extends ChangeNotifier {
       date: r['hora_inicio'] != null
           ? DateTime.parse(r['hora_inicio'])
           : DateTime.now(),
-      startTime: r['hora_inicio'] != null && r['hora_inicio'].length > 16
-          ? r['hora_inicio'].substring(11, 16)
+      startTime: r['hora_inicio'] != null
+          ? "${DateTime.parse(r['hora_inicio']).toLocal().hour.toString().padLeft(2, '0')}:${DateTime.parse(r['hora_inicio']).toLocal().minute.toString().padLeft(2, '0')}"
           : '00:00',
-      endTime: r['hora_fin'] != null && r['hora_fin'].length > 16
-          ? r['hora_fin'].substring(11, 16)
+      endTime: r['hora_fin'] != null
+          ? "${DateTime.parse(r['hora_fin']).toLocal().hour.toString().padLeft(2, '0')}:${DateTime.parse(r['hora_fin']).toLocal().minute.toString().padLeft(2, '0')}"
           : '00:00',
       status: _mapStatus(r['estado_reserva']),
       department: u['especialidad'] as String? ?? u['carrera'] as String? ?? '',

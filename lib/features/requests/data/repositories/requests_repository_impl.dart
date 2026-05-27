@@ -84,11 +84,11 @@ class RequestsRepositoryImpl implements RequestsRepository {
       date: item['hora_inicio'] != null
           ? DateTime.parse(item['hora_inicio'])
           : DateTime.now(),
-      startTime: item['hora_inicio'] != null && item['hora_inicio'].length > 16
-          ? item['hora_inicio'].substring(11, 16)
+      startTime: item['hora_inicio'] != null
+          ? "${DateTime.parse(item['hora_inicio']).toLocal().hour.toString().padLeft(2, '0')}:${DateTime.parse(item['hora_inicio']).toLocal().minute.toString().padLeft(2, '0')}"
           : '00:00',
-      endTime: item['hora_fin'] != null && item['hora_fin'].length > 16
-          ? item['hora_fin'].substring(11, 16)
+      endTime: item['hora_fin'] != null
+          ? "${DateTime.parse(item['hora_fin']).toLocal().hour.toString().padLeft(2, '0')}:${DateTime.parse(item['hora_fin']).toLocal().minute.toString().padLeft(2, '0')}"
           : '00:00',
       status: _mapStatus(item['estado_reserva']),
       department: u['especialidad'] as String? ?? u['carrera'] as String? ?? '',

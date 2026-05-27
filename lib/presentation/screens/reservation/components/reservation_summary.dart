@@ -57,12 +57,45 @@ class ReservationSummary extends StatelessWidget {
                 '${DateFormat('dd MMM yyyy').format(provider.selectedDate)} • $startStr - $endStr',
           ),
           const SizedBox(height: 16),
-          NeonButton(
-            text: AppStrings.confirmReservation,
-            onPressed: () async {
-              debugPrint('>>> BOTÓN CONFIRMAR PRESIONADO <<<');
-              final success = await provider.confirmReservation();
-              debugPrint('Resultado confirmación: $success');
+                NeonButton(
+                  text: AppStrings.confirmReservation,
+                  onPressed: () async {
+                    debugPrint('>>> BOTÓN CONFIRMAR PRESIONADO <<<');
+                    
+                    // Validar conflicto de horario localmente antes de enviar
+                    final DateTime inicioPropuesto = DateTime(
+                      provider.selectedDate.year,
+                      provider.selectedDate.month,
+                      provider.selectedDate.day,
+                      provider.startTime!.hour,
+                      provider.startTime!.minute,
+                    );
+                    final DateTime finPropuesto = DateTime(
+                      provider.selectedDate.year,
+                      provider.selectedDate.month,
+                      provider.selectedDate.day,
+                      provider.endTime!.hour,
+                      provider.endTime!.minute,
+                    );
+
+                    if (provider.tieneConflictoDeHorario(inicioPropuesto, finPropuesto)) {
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text('⚠️ El rango de tiempo seleccionado coincide con una reservación existente. Por favor, rectifica tu horario.'),
+                          backgroundColor: Colors.redAccent,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      );
+                      return;
+                    }
+
+                    final success = await provider.confirmReservation();
+                    debugPrint('Resultado confirmación: $success');
+
 
               if (!context.mounted) return;
               if (success) {
@@ -95,6 +128,27 @@ class ReservationSummary extends StatelessWidget {
                 onPressed: () async {
                   final rpcDates = await MultipleReservationBottomSheet.show(context);
                   if (rpcDates == null) return;
+
+                  // Validar conflictos para cada fecha seleccionada
+                  for (var dateMap in rpcDates) {
+                    final inicio = DateTime.parse(dateMap['inicio']);
+                    final fin = DateTime.parse(dateMap['fin']);
+                    
+                    if (provider.tieneConflictoDeHorario(inicio, fin)) {
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('⚠️ Conflicto detectado el día ${DateFormat('dd/MM').format(inicio)}. Por favor, rectifica tu horario.'),
+                          backgroundColor: Colors.redAccent,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      );
+                      return; // Detener el proceso si hay al menos un conflicto
+                    }
+                  }
 
                   final success = await provider.confirmMultipleReservations(
                     rpcDates,

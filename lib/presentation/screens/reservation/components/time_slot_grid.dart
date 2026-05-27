@@ -4,14 +4,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
-
-class _BlockedRange {
-  _BlockedRange({required this.startMinutes, required this.endMinutes});
-  final int startMinutes;
-  final int endMinutes;
-}
+import '../../../providers/reservation_provider.dart';
+import '../../../../features/reservations/domain/entities/time_slot.dart';
 
 class TimePickerSection extends StatefulWidget {
   const TimePickerSection({
@@ -38,104 +35,35 @@ class TimePickerSection extends StatefulWidget {
 class _TimePickerSectionState extends State<TimePickerSection> {
   bool _isCheckingAvailability = false;
   String? _availabilityError;
-  List<_BlockedRange> _blockedRanges = [];
-  RealtimeChannel? _reservasChannel;
-  StreamSubscription<dynamic>? _reservasSubscription;
 
   static const int _minHour = 7; // 7:00 AM VET
   static const int _maxHour = 17; // 5:00 PM VET
 
   @override
-  void initState() {
-    super.initState();
-    _setupRealtime();
-    _loadBlockedRanges();
-  }
-
-  @override
-  void didUpdateWidget(TimePickerSection oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.selectedDate != widget.selectedDate ||
-        oldWidget.videobeamId != widget.videobeamId) {
-      _loadBlockedRanges();
-    }
-  }
-
-  @override
   void dispose() {
-    _reservasSubscription?.cancel();
-    if (_reservasChannel != null) {
-      Supabase.instance.client.removeChannel(_reservasChannel!);
-    }
     super.dispose();
   }
 
-  void _setupRealtime() {
-    _reservasChannel ??= Supabase.instance.client.channel('time_slot_reservas')
-      ..onPostgresChanges(
-        event: PostgresChangeEvent.all,
-        schema: 'public',
-        table: 'reservas',
-        callback: (payload) {
-          debugPrint('[TimeSlotGrid] reservas ${payload.eventType}');
-          _loadBlockedRanges();
-        },
-      )
-      ..subscribe();
-  }
-
-  Future<void> _loadBlockedRanges() async {
-    if (widget.videobeamId == null) return;
-
-    try {
-      final supabase = Supabase.instance.client;
-      final dateStr =
-          '${widget.selectedDate.year}-${widget.selectedDate.month.toString().padLeft(2, '0')}-${widget.selectedDate.day.toString().padLeft(2, '0')}';
-
-      final response = await supabase
-          .from('reservas')
-          .select('hora_inicio, hora_fin')
-          .eq('id_producto', widget.videobeamId!)
-          .inFilter('estado_reserva', ['aprobada', 'en_curso'])
-          .like('hora_inicio', '$dateStr%');
-
-      final ranges = <_BlockedRange>[];
-      for (final r in response) {
-        final start = DateTime.parse(r['hora_inicio'] as String);
-        final end = DateTime.parse(r['hora_fin'] as String);
-
-        final startMin = start.hour * 60 + start.minute;
-        final endMin = end.hour * 60 + end.minute;
-        ranges.add(_BlockedRange(startMinutes: startMin, endMinutes: endMin));
-      }
-
-      if (mounted) {
-        setState(() {
-          _blockedRanges = ranges;
-        });
-      }
-    } catch (e) {
-      debugPrint('[TimeSlotGrid] Error loading blocked ranges: $e');
-    }
-  }
-
-  bool _isTimeBlocked(int minutes) {
-    for (final range in _blockedRanges) {
-      if (minutes >= range.startMinutes && minutes < range.endMinutes) {
+  bool _isTimeBlocked(BuildContext context, int minutes) {
+    final provider = context.read<ReservationProvider>();
+    for (final slot in provider.bloquesOcupadosDelDia) {
+      final startMin = slot.start.hour * 60 + slot.start.minute;
+      final endMin = slot.end.hour * 60 + slot.end.minute;
+      if (minutes >= startMin && minutes < endMin) {
         return true;
       }
     }
     return false;
   }
 
-  bool _isRangeBlocked(int startMinutes, int endMinutes) {
-    for (final range in _blockedRanges) {
-      if ((startMinutes >= range.startMinutes &&
-              startMinutes < range.endMinutes) ||
-          (endMinutes > range.startMinutes &&
-              endMinutes <= range.endMinutes) ||
-          (startMinutes <= range.startMinutes &&
-              endMinutes >= range.endMinutes)) {
+  bool _isRangeBlocked(BuildContext context, int startMinutes, int endMinutes) {
+    final provider = context.read<ReservationProvider>();
+    for (final slot in provider.bloquesOcupadosDelDia) {
+      final startMin = slot.start.hour * 60 + slot.start.minute;
+      final endMin = slot.end.hour * 60 + slot.end.minute;
+      if ((startMinutes >= startMin && startMinutes < endMin) ||
+          (endMinutes > startMin && endMinutes <= endMin) ||
+          (startMinutes <= startMin && endMinutes >= endMin)) {
         return true;
       }
     }
@@ -147,6 +75,11 @@ class _TimePickerSectionState extends State<TimePickerSection> {
     final h = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
     return '$h:00 $period';
   }
+
+  /// Despliega el BottomSheet con el selector de rodillo vertical personalizado de 12 horas.
+
+
+  /// Despliega el BottomSheet con el selector de rodillo vertical personalizado de 12 horas.
 
   /// Despliega el BottomSheet con el selector de rodillo vertical personalizado de 12 horas.
   Future<void> _selectTime(BuildContext context, bool isStartTime) async {
@@ -170,12 +103,12 @@ class _TimePickerSectionState extends State<TimePickerSection> {
     );
 
     // Al cerrar el modal, procesamos la hora seleccionada
+    if (!context.mounted) return;
     final minutes = pickedTime.hour * 60 + pickedTime.minute;
     final minAllowed = _minHour * 60;
     final maxAllowed = _maxHour * 60;
 
     if (minutes < minAllowed || minutes > maxAllowed) {
-      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
@@ -187,8 +120,7 @@ class _TimePickerSectionState extends State<TimePickerSection> {
       return;
     }
 
-    if (_isTimeBlocked(minutes)) {
-      if (!context.mounted) return;
+    if (_isTimeBlocked(context, minutes)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Esta hora ya está reservada por otro usuario'),
@@ -235,7 +167,7 @@ class _TimePickerSectionState extends State<TimePickerSection> {
         return;
       }
 
-      if (_isRangeBlocked(startMinutes, endMinutes)) {
+      if (_isRangeBlocked(context, startMinutes, endMinutes)) {
         setState(() {
           _availabilityError =
               'No puedes elegir ese bloque de horas en este día, ya que otro usuario ya tiene una reservación';
@@ -337,7 +269,7 @@ class _TimePickerSectionState extends State<TimePickerSection> {
         ),
         const SizedBox(height: 16),
         _TimeRangeBar(
-          blockedRanges: _blockedRanges,
+          blockedRanges: context.watch<ReservationProvider>().bloquesOcupadosDelDia,
           startTime: widget.startTime,
           endTime: widget.endTime,
           minHour: _minHour,
@@ -363,14 +295,14 @@ class _TimePickerSectionState extends State<TimePickerSection> {
             ],
           ),
         ),
-        if (_blockedRanges.isNotEmpty) ...[
+        if (context.watch<ReservationProvider>().bloquesOcupadosDelDia.isNotEmpty) ...[
           const SizedBox(height: 4),
-          ...List.generate(_blockedRanges.length, (i) {
-            final r = _blockedRanges[i];
-            final sh = r.startMinutes ~/ 60;
-            final sm = r.startMinutes % 60;
-            final eh = r.endMinutes ~/ 60;
-            final em = r.endMinutes % 60;
+          ...List.generate(context.watch<ReservationProvider>().bloquesOcupadosDelDia.length, (i) {
+            final r = context.watch<ReservationProvider>().bloquesOcupadosDelDia[i];
+            final sh = r.start.hour;
+            final sm = r.start.minute;
+            final eh = r.end.hour;
+            final em = r.end.minute;
             return Padding(
               padding: const EdgeInsets.only(top: 2),
               child: Text(
@@ -780,7 +712,7 @@ class _TimeRangeBar extends StatelessWidget {
     required this.maxHour,
   });
 
-  final List<_BlockedRange> blockedRanges;
+  final List<TimeSlot> blockedRanges;
   final TimeOfDay? startTime;
   final TimeOfDay? endTime;
   final int minHour;
@@ -812,11 +744,13 @@ class _TimeRangeBar extends StatelessWidget {
                 final hour = minHour + i;
                 final slotStart = hour * 60;
                 final slotEnd = (hour + 1) * 60;
-                final isBlocked = blockedRanges.any((r) =>
-                    (slotStart >= r.startMinutes &&
-                        slotStart < r.endMinutes) ||
-                    (slotEnd > r.startMinutes && slotEnd <= r.endMinutes) ||
-                    (slotStart <= r.startMinutes && slotEnd >= r.endMinutes));
+                final isBlocked = blockedRanges.any((slot) {
+                  final startMin = slot.start.hour * 60 + slot.start.minute;
+                  final endMin = slot.end.hour * 60 + slot.end.minute;
+                  return (slotStart >= startMin && slotStart < endMin) ||
+                      (slotEnd > startMin && slotEnd <= endMin) ||
+                      (slotStart <= startMin && slotEnd >= endMin);
+                });
 
                 final isSelected = startTime != null && endTime != null &&
                     hour >= startTime!.hour &&
