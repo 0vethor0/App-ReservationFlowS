@@ -9,9 +9,14 @@ import '../../providers/reservation_calendar_provider.dart';
 import '../../widgets/calendar_filter_bar.dart';
 
 class ReservationCalendarView extends StatefulWidget {
-  const ReservationCalendarView({super.key, this.showAppBar = true});
+  const ReservationCalendarView({
+    super.key,
+    this.showAppBar = true,
+    this.showBackButton = true,
+  });
 
   final bool showAppBar;
+  final bool showBackButton;
 
   @override
   State<ReservationCalendarView> createState() =>
@@ -35,10 +40,13 @@ class _ReservationCalendarViewState extends State<ReservationCalendarView> {
           ? AppBar(
               backgroundColor: AppColors.surfaceLight,
               elevation: 0,
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-                onPressed: () => Navigator.pop(context),
-              ),
+              automaticallyImplyLeading: widget.showBackButton,
+              leading: widget.showBackButton
+                  ? IconButton(
+                      icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+                      onPressed: () => Navigator.pop(context),
+                    )
+                  : null,
               title: Text(
                 'Calendario de Reservas',
                 style: GoogleFonts.poppins(
@@ -113,9 +121,51 @@ class _ReservationCalendarViewState extends State<ReservationCalendarView> {
               color: Colors.transparent,
               border: Border.all(color: AppColors.primaryBlue, width: 2),
             ),
+            appointmentBuilder: (context, details) {
+              final Appointment appointment =
+                  details.appointments.first as Appointment;
+              return Container(
+                padding: const EdgeInsets.all(4.0),
+                clipBehavior: Clip.hardEdge,
+                decoration: BoxDecoration(
+                  color: appointment.color.withValues(alpha: 0.85),
+                  borderRadius: BorderRadius.circular(4.0),
+                ),
+                child: SingleChildScrollView(
+                  physics: const NeverScrollableScrollPhysics(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        appointment.subject,
+                        style: GoogleFonts.inter(
+                          fontSize: 8.0,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2.0),
+                      Text(
+                        'Por: ${appointment.notes ?? 'Usuario'}',
+                        style: GoogleFonts.inter(
+                          fontSize: 8.0,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white.withValues(alpha: 0.9),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
             timeSlotViewSettings: TimeSlotViewSettings(
               startHour: 7,
-              endHour: 22,
+              endHour: 17,
               timeTextStyle: GoogleFonts.inter(
                 color: AppColors.textSecondary,
                 fontSize: 12,
@@ -197,6 +247,7 @@ class _ReservationDataSource extends CalendarDataSource {
             subject: subject,
             color: _colorForFilter(statusFilter),
             isAllDay: false,
+            notes: reservation.userName,
           ),
         );
       } catch (e) {

@@ -71,10 +71,10 @@ class ViewReservationCalendarRepositoryImpl
       videobeamId: p['id']?.toString() ?? 'unknown',
       videobeamName: p['nombre'] as String? ?? 'Videobeam',
       date: item['hora_inicio'] != null
-          ? DateTime.parse(item['hora_inicio'] as String)
+          ? DateTime.parse(item['hora_inicio'] as String).toLocal()
           : DateTime.now(),
       endDateTime: item['hora_fin'] != null
-          ? DateTime.parse(item['hora_fin'] as String)
+          ? DateTime.parse(item['hora_fin'] as String).toLocal()
           : null,
       startTime: item['hora_inicio'] != null
           ? "${DateTime.parse(item['hora_inicio'] as String).toLocal().hour.toString().padLeft(2, '0')}:${DateTime.parse(item['hora_inicio'] as String).toLocal().minute.toString().padLeft(2, '0')}"

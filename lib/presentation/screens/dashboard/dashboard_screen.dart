@@ -362,7 +362,10 @@ class _CalendarioTab extends StatelessWidget {
       create: (context) => ReservationCalendarProvider(
         context.read<ViewReservationCalendarRepository>(),
       ),
-      child: const ReservationCalendarView(showAppBar: false),
+      child: const ReservationCalendarView(
+        showAppBar: true,
+        showBackButton: false,
+      ),
     );
   }
 }
