@@ -62,6 +62,11 @@ class _AdditionalUserDataScreenState extends State<AdditionalUserDataScreen> {
     
     // Restore saved image if exists (persistence)
     _restoreLocalImage();
+
+    // Forzar re-verificación desde DB para confirmar que los datos
+    // adicionales realmente faltan (o detectar si ya fueron completados)
+    final auth = context.read<AuthProvider>();
+    Future.microtask(() => auth.refreshAdditionalDataCheck());
   }
 
   @override

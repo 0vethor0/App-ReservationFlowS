@@ -134,6 +134,16 @@ Future<void> _checkAdditionalData(String userId) async {
     }
   }
 
+  /// Fuerza una re-verificación completa desde la base de datos del estado
+  /// de datos adicionales del usuario. Útil cuando el usuario llega a la
+  /// pantalla de datos adicionales y se quiere confirmar que efectivamente
+  /// siguen faltando (o si ya fueron completados desde otro lugar).
+  Future<void> refreshAdditionalDataCheck() async {
+    if (_currentUser == null) return;
+    debugPrint('[${DateTime.now()}] refreshAdditionalDataCheck - Forzando re-verificación desde DB');
+    await _checkAdditionalData(_currentUser!.id);
+  }
+
   // --- Funciones auxiliares para limpiar el código principal ---
 
   UserRole _mapRole(String? roleStr) {

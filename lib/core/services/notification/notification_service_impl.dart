@@ -109,6 +109,12 @@ class NotificationServiceImpl implements NotificationService {
           _channelName,
           importance: Importance.max,
           priority: Priority.high,
+          styleInformation: BigTextStyleInformation(
+            body,
+            contentTitle: title,
+            htmlFormatBigText: true,  // Permite HTML
+            htmlFormatTitle: true,
+          ),
         ),
       ),
       payload: payload != null ? jsonEncode(payload) : null,

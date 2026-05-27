@@ -111,8 +111,8 @@ class ReservationRemoteDataSource {
       params: {
         'p_usuario_id': userId,
         'p_producto_id': productId,
-        'p_inicio': start.toIso8601String(),
-        'p_fin': end.toIso8601String(),
+        'p_inicio': start.toUtc().toIso8601String(),
+        'p_fin': end.toUtc().toIso8601String(),
         'p_notas': notes,
       },
     );
