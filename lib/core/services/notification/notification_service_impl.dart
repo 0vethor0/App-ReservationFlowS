@@ -42,7 +42,7 @@ class NotificationServiceImpl implements NotificationService {
 
     // 3. Configurar notificaciones locales (para cuando la app está en primer plano)
     const AndroidInitializationSettings androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+        AndroidInitializationSettings('@mipmap/launcher_icon');
 
     await _localNotifications.initialize(
       settings: const InitializationSettings(android: androidSettings),

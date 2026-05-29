@@ -18,6 +18,7 @@ import '../../features/view_reservation_calendar/domain/repositories/view_reserv
 import '../../presentation/providers/reservation_calendar_provider.dart';
 import '../../presentation/screens/reservation/reservation_calendar_view.dart';
 import '../../features/auth/domain/entities/user_entity.dart';
+import '../../features/messaging/presentation/screens/chat_screen.dart';
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -142,6 +143,10 @@ class AppRouter {
               child: const ReservationCalendarView(),
             );
           },
+        ),
+        GoRoute(
+          path: '/chat',
+          builder: (context, state) => const ChatScreen(),
         ),
       ],
     );

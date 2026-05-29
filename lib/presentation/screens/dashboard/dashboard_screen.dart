@@ -21,6 +21,7 @@ import '../../../features/view_reservation_calendar/domain/repositories/view_res
 import '../reservation/reservation_screen.dart';
 import '../reservation/reservation_calendar_view.dart';
 import '../requests/requests_screen.dart';
+import '../../../features/messaging/presentation/screens/chat_screen.dart';
 
 import 'components/dashboard_header.dart';
 import 'components/metric_card.dart';
@@ -33,14 +34,21 @@ class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
   @override
-  State<DashboardScreen> createState() => _DashboardScreenState();
+  State<DashboardScreen> createState() => DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen>
+class DashboardScreenState extends State<DashboardScreen>
     with WidgetsBindingObserver {
   int _currentIndex = 0;
   RealtimeChannel? _presenceChannel; // Ahora puede ser nula
   final SupabaseClient _supabase = Supabase.instance.client;
+
+  /// Allows child widgets to switch the active bottom navigation tab.
+  void switchToTab(int index) {
+    if (mounted) {
+      setState(() => _currentIndex = index);
+    }
+  }
 
   @override
   void initState() {
@@ -120,6 +128,7 @@ class _DashboardScreenState extends State<DashboardScreen>
       const _DashboardBody(),
       const _CalendarioTab(),
       const ReservationScreen(),
+      const ChatScreen(),
       if (isAdmin) const RequestsScreen(),
     ];
 
@@ -138,6 +147,7 @@ class _DashboardScreenState extends State<DashboardScreen>
           ],
         ),
         child: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
           currentIndex: _currentIndex,
           onTap: (i) => setState(() => _currentIndex = i),
           items: [
@@ -161,10 +171,18 @@ class _DashboardScreenState extends State<DashboardScreen>
               ),
               label: AppStrings.reserve,
             ),
+            BottomNavigationBarItem(
+              icon: Icon(
+                _currentIndex == 3
+                    ? Icons.chat_bubble
+                    : Icons.chat_bubble_outline,
+              ),
+              label: 'Chat',
+            ),
             if (isAdmin)
               BottomNavigationBarItem(
                 icon: Icon(
-                  _currentIndex == 3 ? Icons.mail : Icons.mail_outline,
+                  _currentIndex == 4 ? Icons.mail : Icons.mail_outline,
                 ),
                 label: AppStrings.requests,
               ),

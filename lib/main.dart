@@ -51,6 +51,12 @@ import 'features/view_reservation_calendar/data/repositories/view_reservation_ca
 import 'features/view_reservation_calendar/domain/repositories/view_reservation_calendar_repository.dart';
 import 'presentation/providers/view_reservation_calendar_provider.dart';
 
+// Messaging imports
+import 'features/messaging/data/datasources/messaging_remote_datasource.dart';
+import 'features/messaging/data/repositories/messaging_repository_impl.dart';
+import 'features/messaging/domain/repositories/i_messaging_repository.dart';
+import 'features/messaging/presentation/providers/messaging_provider.dart';
+
 late final NotificationService notificationService;
 
 Future<void> main() async {
@@ -178,6 +184,7 @@ class _BeamReserveAppState extends State<BeamReserveApp> {
   late final RequestsRepository _requestsRepository;
   late final IUserManagementRepository _usersManagementRepository;
   late final ViewReservationCalendarRepository _viewReservationCalendarRepository;
+  late final IMessagingRepository _messagingRepository;
 
   @override
   void initState() {
@@ -196,6 +203,7 @@ class _BeamReserveAppState extends State<BeamReserveApp> {
     final requestsRemoteDataSource = RequestsRemoteDataSource(supabaseClient);
     final usersRemoteDataSource = UsersRemoteDataSource(supabaseClient);
     final viewReservationCalendarRemoteDataSource = ViewReservationCalendarRemoteDataSource(supabaseClient);
+    final messagingRemoteDataSource = MessagingRemoteDataSource(supabaseClient);
 
     // Clean Architecture: Initialize Repositories
     _authRepository = AuthRepositoryImpl(authRemoteDataSource);
@@ -214,6 +222,7 @@ class _BeamReserveAppState extends State<BeamReserveApp> {
     _viewReservationCalendarRepository = ViewReservationCalendarRepositoryImpl(
       viewReservationCalendarRemoteDataSource,
     );
+    _messagingRepository = MessagingRepositoryImpl(messagingRemoteDataSource);
 
     // Initialize Notification service (FCM push notifications)
     _notificationService = NotificationServiceImpl();
@@ -246,6 +255,7 @@ class _BeamReserveAppState extends State<BeamReserveApp> {
         Provider<ViewReservationCalendarRepository>.value(
           value: _viewReservationCalendarRepository,
         ),
+        Provider<IMessagingRepository>.value(value: _messagingRepository),
 
         // Existing providers (refactored to use repositories)
         ChangeNotifierProvider<AuthProvider>.value(value: _authProvider),
@@ -263,6 +273,9 @@ class _BeamReserveAppState extends State<BeamReserveApp> {
         ),
         ChangeNotifierProvider(
           create: (_) => ViewReservationCalendarProvider(_viewReservationCalendarRepository),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => MessagingProvider(_messagingRepository),
         ),
       ],
       child: MaterialApp.router(
