@@ -17,7 +17,6 @@ import '../../providers/reservation_provider.dart';
 import '../../providers/reservation_calendar_provider.dart';
 import '../../../features/view_reservation_calendar/domain/repositories/view_reservation_calendar_repository.dart';
 
-
 import '../reservation/reservation_screen.dart';
 import '../reservation/reservation_calendar_view.dart';
 import '../requests/requests_screen.dart';
@@ -236,31 +235,31 @@ class _DashboardBody extends StatelessWidget {
 
                 const SizedBox(height: 16),
 
-                 // Metric Cards Row 1
-                 Row(
-                   children: [
-                     Expanded(
-                       child: MetricCard(
-                         icon: Icons.calendar_today,
-                         iconBg: AppColors.lightBlue,
-                         value: '${m.reservationsToday}',
-                         label: AppStrings.reservationsToday,
-                         badge: '+2',
-                         badgeColor: AppColors.primaryBlue,
-                       ),
-                     ),
-                     const SizedBox(width: 12),
-                     Expanded(
-                       child: MetricCard(
-                         icon: Icons.devices,
-                         iconBg: AppColors.lightBlue,
-                         value: '${m.availableEquipment}',
-                         label: AppStrings.availableEquipment,
-                         suffix: ' ${AppStrings.available}',
-                       ),
-                     ),
-                   ],
-                 ),
+                // Metric Cards Row 1
+                Row(
+                  children: [
+                    Expanded(
+                      child: MetricCard(
+                        icon: Icons.calendar_today,
+                        iconBg: AppColors.lightBlue,
+                        value: '${m.reservationsToday}',
+                        label: AppStrings.reservationsToday,
+                        badge: '+2',
+                        badgeColor: AppColors.primaryBlue,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: MetricCard(
+                        icon: Icons.devices,
+                        iconBg: AppColors.lightBlue,
+                        value: '${m.availableEquipment}',
+                        label: AppStrings.availableEquipment,
+                        suffix: ' ${AppStrings.available}',
+                      ),
+                    ),
+                  ],
+                ),
 
                 const SizedBox(height: 16),
 

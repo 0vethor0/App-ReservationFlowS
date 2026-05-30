@@ -24,15 +24,23 @@ class MessagingRemoteDataSource {
       return CanalModel.fromMap(existing);
     }
 
-    // 2. Crear si no existe. 
-    final reserva = await _supabase.from('reservas').select('id_usuario').eq('id', reservaId).single();
+    // 2. Crear si no existe.
+    final reserva = await _supabase
+        .from('reservas')
+        .select('id_usuario')
+        .eq('id', reservaId)
+        .single();
     final ownerId = reserva['id_usuario'] as String;
 
-    final inserted = await _supabase.from('canales_reserva').insert({
-      'reserva_id': reservaId,
-      'usuario_id': ownerId,
-      'estado': 'abierto',
-    }).select('*, perfiles(*)').single();
+    final inserted = await _supabase
+        .from('canales_reserva')
+        .insert({
+          'reserva_id': reservaId,
+          'usuario_id': ownerId,
+          'estado': 'abierto',
+        })
+        .select('*, perfiles(*)')
+        .single();
 
     return CanalModel.fromMap(inserted);
   }
@@ -43,7 +51,7 @@ class MessagingRemoteDataSource {
         .select('*, perfiles(*)')
         .eq('estado', 'abierto')
         .order('creado_en', ascending: false);
-    
+
     return res.map((m) => CanalModel.fromMap(m)).toList();
   }
 
@@ -60,7 +68,8 @@ class MessagingRemoteDataSource {
     final userId = _supabase.auth.currentUser?.id;
     if (userId == null) return null;
 
-    final fileName = '${DateTime.now().millisecondsSinceEpoch}_${p.basename(imagen.path)}';
+    final fileName =
+        '${DateTime.now().millisecondsSinceEpoch}_${p.basename(imagen.path)}';
     final path = '$userId/$fileName';
 
     await _supabase.storage.from('evidencias_reserva').upload(path, imagen);
@@ -82,10 +91,7 @@ class MessagingRemoteDataSource {
 
     if (texto == null && imageUrl == null) return;
 
-    final data = <String, dynamic>{
-      'canal_id': canalId,
-      'remitente_id': userId,
-    };
+    final data = <String, dynamic>{'canal_id': canalId, 'remitente_id': userId};
     if (texto != null) data['texto'] = texto;
     if (imageUrl != null) data['archivo_url'] = imageUrl;
 

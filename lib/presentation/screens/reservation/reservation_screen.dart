@@ -37,7 +37,10 @@ class _ReservationScreenState extends State<ReservationScreen> {
         backgroundColor: AppColors.background,
         body: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24.0,
+              vertical: 32.0,
+            ),
             child: Center(
               child: FadeInUp(
                 duration: const Duration(milliseconds: 600),
@@ -92,7 +95,10 @@ class _ReservationScreenState extends State<ReservationScreen> {
                             },
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 16),
-                              side: const BorderSide(color: AppColors.primaryBlue, width: 1.5),
+                              side: const BorderSide(
+                                color: AppColors.primaryBlue,
+                                width: 1.5,
+                              ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
                               ),
@@ -215,10 +221,15 @@ class _ReservationScreenState extends State<ReservationScreen> {
                                       context,
                                       MaterialPageRoute(
                                         builder: (context) => ChangeNotifierProvider(
-                                          create: (ctx) => ReservationCalendarProvider(
-                                            ctx.read<ViewReservationCalendarRepository>(),
-                                          ),
-                                          child: const ReservationCalendarView(),
+                                          create: (ctx) =>
+                                              ReservationCalendarProvider(
+                                                ctx
+                                                    .read<
+                                                      ViewReservationCalendarRepository
+                                                    >(),
+                                              ),
+                                          child:
+                                              const ReservationCalendarView(),
                                         ),
                                       ),
                                     );

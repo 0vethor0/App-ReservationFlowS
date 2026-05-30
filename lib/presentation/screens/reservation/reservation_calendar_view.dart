@@ -43,7 +43,10 @@ class _ReservationCalendarViewState extends State<ReservationCalendarView> {
               automaticallyImplyLeading: widget.showBackButton,
               leading: widget.showBackButton
                   ? IconButton(
-                      icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+                      icon: const Icon(
+                        Icons.arrow_back,
+                        color: AppColors.textPrimary,
+                      ),
                       onPressed: () => Navigator.pop(context),
                     )
                   : null,

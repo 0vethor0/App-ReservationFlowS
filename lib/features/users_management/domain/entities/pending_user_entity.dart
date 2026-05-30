@@ -1,10 +1,7 @@
 /// Entity representing a user pending approval (registration or admin promotion).
 library;
 
-enum PendingApprovalKind {
-  registration,
-  adminPromotion,
-}
+enum PendingApprovalKind { registration, adminPromotion }
 
 class PendingUserEntity {
   const PendingUserEntity({

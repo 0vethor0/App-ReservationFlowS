@@ -25,76 +25,86 @@ final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 class AppRouter {
   static GoRouter router(AuthProvider authProvider) {
     return GoRouter(
-    navigatorKey: rootNavigatorKey,
-    initialLocation: '/splash',
-    refreshListenable: authProvider,
-    redirect: (context, state) {
-      final isAuthenticated = authProvider.isAuthenticated;
-      final isLoadingAdditionalData = authProvider.isLoadingAdditionalData;
-      final hasAdditionalData = authProvider.hasAdditionalData;
-      final userStatus = authProvider.currentUserStatus;
-      final matchedLocation = state.matchedLocation;
+      navigatorKey: rootNavigatorKey,
+      initialLocation: '/splash',
+      refreshListenable: authProvider,
+      redirect: (context, state) {
+        final isAuthenticated = authProvider.isAuthenticated;
+        final isLoadingAdditionalData = authProvider.isLoadingAdditionalData;
+        final hasAdditionalData = authProvider.hasAdditionalData;
+        final userStatus = authProvider.currentUserStatus;
+        final matchedLocation = state.matchedLocation;
 
-      debugPrint('[${DateTime.now()}] [ROUTER] Evaluando redirect, pagina actual: → $matchedLocation | auth: $isAuthenticated | loadingData: $isLoadingAdditionalData | hasData: $hasAdditionalData');
+        debugPrint(
+          '[${DateTime.now()}] [ROUTER] Evaluando redirect, pagina actual: → $matchedLocation | auth: $isAuthenticated | loadingData: $isLoadingAdditionalData | hasData: $hasAdditionalData',
+        );
 
-      // 1. OAuth Callback - No intervenir
-      if (matchedLocation.contains('callback')) {
-        return null;
-      }
-
-      final isGoingToLogin = matchedLocation == '/login';
-      final isGoingToRegister = matchedLocation == '/register';
-      final isGoingToSplash = matchedLocation == '/splash';
-      final isGoingToAdditionalData = matchedLocation == '/additional-data';
-      final isGoingToWaiting = matchedLocation == '/waiting';
-      
-      // Pantalla de carga inicial
-      if (isGoingToSplash) return null;
-
-      // 2. MANEJO DE NO AUTENTICADOS
-      if (!isAuthenticated) {
-        if (!isGoingToLogin && !isGoingToRegister) {
-          return '/login';
-        }
-        return null;
-      }
-
-      // 3. MANEJO DE AUTENTICADOS
-      if (isAuthenticated) {
-        // === RACE CONDITION FIX: Esperar a que termine la verificación ===
-        if (isLoadingAdditionalData) {
-          debugPrint('[${DateTime.now()}] [ROUTER] Aún cargando datos adicionales → esperando');
-          return null; // No redirigir hasta tener resultado
+        // 1. OAuth Callback - No intervenir
+        if (matchedLocation.contains('callback')) {
+          return null;
         }
 
-        if (hasAdditionalData && isGoingToAdditionalData) {
-          debugPrint('[ROUTER] Ya tiene datos adicionales → redirigiendo a dashboard');
-          return '/waiting';
+        final isGoingToLogin = matchedLocation == '/login';
+        final isGoingToRegister = matchedLocation == '/register';
+        final isGoingToSplash = matchedLocation == '/splash';
+        final isGoingToAdditionalData = matchedLocation == '/additional-data';
+        final isGoingToWaiting = matchedLocation == '/waiting';
+
+        // Pantalla de carga inicial
+        if (isGoingToSplash) return null;
+
+        // 2. MANEJO DE NO AUTENTICADOS
+        if (!isAuthenticated) {
+          if (!isGoingToLogin && !isGoingToRegister) {
+            return '/login';
+          }
+          return null;
         }
 
-        // Redirección a datos adicionales
-        if (!hasAdditionalData && !isGoingToAdditionalData) {
-          debugPrint('[${DateTime.now()}] [ROUTER] Redirigiendo a additional-data');
-          return '/additional-data';
-        }
+        // 3. MANEJO DE AUTENTICADOS
+        if (isAuthenticated) {
+          // === RACE CONDITION FIX: Esperar a que termine la verificación ===
+          if (isLoadingAdditionalData) {
+            debugPrint(
+              '[${DateTime.now()}] [ROUTER] Aún cargando datos adicionales → esperando',
+            );
+            return null; // No redirigir hasta tener resultado
+          }
 
-        // Verificación de aprobación (Waiting Approval)
-        if (hasAdditionalData && userStatus != null) {
-          if ((userStatus == UserStatus.pending || userStatus == UserStatus.rejected) && !isGoingToWaiting) {
+          if (hasAdditionalData && isGoingToAdditionalData) {
+            debugPrint(
+              '[ROUTER] Ya tiene datos adicionales → redirigiendo a dashboard',
+            );
             return '/waiting';
           }
-          if (userStatus == UserStatus.approved && isGoingToWaiting) {
-            return '/';
+
+          // Redirección a datos adicionales
+          if (!hasAdditionalData && !isGoingToAdditionalData) {
+            debugPrint(
+              '[${DateTime.now()}] [ROUTER] Redirigiendo a additional-data',
+            );
+            return '/additional-data';
+          }
+
+          // Verificación de aprobación (Waiting Approval)
+          if (hasAdditionalData && userStatus != null) {
+            if ((userStatus == UserStatus.pending ||
+                    userStatus == UserStatus.rejected) &&
+                !isGoingToWaiting) {
+              return '/waiting';
+            }
+            if (userStatus == UserStatus.approved && isGoingToWaiting) {
+              return '/';
+            }
+          }
+
+          // Si ya está todo en orden y trata de entrar a login/register/splash -> al Dashboard
+          if (isGoingToLogin || isGoingToRegister || isGoingToSplash) {
+            return hasAdditionalData ? '/' : '/additional-data';
           }
         }
 
-        // Si ya está todo en orden y trata de entrar a login/register/splash -> al Dashboard
-        if (isGoingToLogin || isGoingToRegister || isGoingToSplash) {
-          return hasAdditionalData ? '/' : '/additional-data';
-        }
-      }
-
-      return null;
+        return null;
       },
       routes: [
         GoRoute(
@@ -144,10 +154,7 @@ class AppRouter {
             );
           },
         ),
-        GoRoute(
-          path: '/chat',
-          builder: (context, state) => const ChatScreen(),
-        ),
+        GoRoute(path: '/chat', builder: (context, state) => const ChatScreen()),
       ],
     );
   }

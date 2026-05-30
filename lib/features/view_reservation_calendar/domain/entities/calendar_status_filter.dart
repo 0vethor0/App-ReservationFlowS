@@ -1,11 +1,7 @@
 /// Status filter for the reservation calendar.
 library;
 
-enum CalendarStatusFilter {
-  approved,
-  inProgress,
-  completed,
-}
+enum CalendarStatusFilter { approved, inProgress, completed }
 
 extension CalendarStatusFilterX on CalendarStatusFilter {
   String get label {

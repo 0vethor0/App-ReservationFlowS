@@ -106,10 +106,7 @@ class UsersRemoteDataSource {
   Future<void> submitAdminRequest(String userId) async {
     await client
         .from('perfiles')
-        .update({
-          'solicita_admin': true,
-          'solicitud_admin_rechazada': false,
-        })
+        .update({'solicita_admin': true, 'solicitud_admin_rechazada': false})
         .eq('id', userId);
   }
 
@@ -182,10 +179,7 @@ class UsersRemoteDataSource {
   Future<void> rejectAdminPromotion(String userId) async {
     await client
         .from('perfiles')
-        .update({
-          'solicita_admin': false,
-          'solicitud_admin_rechazada': true,
-        })
+        .update({'solicita_admin': false, 'solicitud_admin_rechazada': true})
         .eq('id', userId);
   }
 

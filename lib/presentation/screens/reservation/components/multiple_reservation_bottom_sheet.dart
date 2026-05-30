@@ -46,20 +46,20 @@ class _MultipleReservationBottomSheetState
       final int targetWeekday = baseDate.weekday;
       DateTime current = DateTime(baseDate.year, baseDate.month, 1);
       while (current.month == baseDate.month) {
-        if (current.weekday == targetWeekday && 
+        if (current.weekday == targetWeekday &&
             current.isAfter(baseDate.subtract(const Duration(days: 1)))) {
           dates.add(current);
         }
         current = current.add(const Duration(days: 1));
       }
     } else if (option == 'toda_la_semana') {
-       DateTime current = baseDate;
-       for(int i = 0; i < 5; i++) {
-         if (current.month == baseDate.month) {
-           dates.add(current);
-         }
-         current = current.add(const Duration(days: 1));
-       }
+      DateTime current = baseDate;
+      for (int i = 0; i < 5; i++) {
+        if (current.month == baseDate.month) {
+          dates.add(current);
+        }
+        current = current.add(const Duration(days: 1));
+      }
     }
     return dates;
   }
@@ -91,7 +91,10 @@ class _MultipleReservationBottomSheetState
             ),
             const SizedBox(height: 16),
             RadioListTile<String>(
-              title: Text('Todos los $dayName del mes', style: GoogleFonts.inter(color: AppColors.textPrimary)),
+              title: Text(
+                'Todos los $dayName del mes',
+                style: GoogleFonts.inter(color: AppColors.textPrimary),
+              ),
               value: 'mismo_dia_mes',
               groupValue: _selectedOption,
               activeColor: AppColors.primaryBlue,
@@ -102,7 +105,10 @@ class _MultipleReservationBottomSheetState
               },
             ),
             RadioListTile<String>(
-              title: Text('5 días seguidos desde fecha seleccionada', style: GoogleFonts.inter(color: AppColors.textPrimary)),
+              title: Text(
+                '5 días seguidos desde fecha seleccionada',
+                style: GoogleFonts.inter(color: AppColors.textPrimary),
+              ),
               value: 'toda_la_semana',
               groupValue: _selectedOption,
               activeColor: AppColors.primaryBlue,
@@ -118,22 +124,40 @@ class _MultipleReservationBottomSheetState
               onPressed: () async {
                 final dates = _generateDates(baseDate, _selectedOption);
                 if (dates.isEmpty) {
-                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('No hay fechas válidas para esta opción')),
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('No hay fechas válidas para esta opción'),
+                    ),
                   );
                   return;
                 }
 
                 if (provider.startTime == null || provider.endTime == null) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Debe seleccionar horario en la pantalla anterior')),
+                    const SnackBar(
+                      content: Text(
+                        'Debe seleccionar horario en la pantalla anterior',
+                      ),
+                    ),
                   );
                   return;
                 }
 
                 final List<Map<String, dynamic>> rpcDates = dates.map((d) {
-                  final start = DateTime(d.year, d.month, d.day, provider.startTime!.hour, provider.startTime!.minute);
-                  final end = DateTime(d.year, d.month, d.day, provider.endTime!.hour, provider.endTime!.minute);
+                  final start = DateTime(
+                    d.year,
+                    d.month,
+                    d.day,
+                    provider.startTime!.hour,
+                    provider.startTime!.minute,
+                  );
+                  final end = DateTime(
+                    d.year,
+                    d.month,
+                    d.day,
+                    provider.endTime!.hour,
+                    provider.endTime!.minute,
+                  );
                   return {
                     'inicio': start.toUtc().toIso8601String(),
                     'fin': end.toUtc().toIso8601String(),

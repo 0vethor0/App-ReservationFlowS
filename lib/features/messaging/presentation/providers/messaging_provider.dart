@@ -11,7 +11,7 @@ class MessagingProvider extends ChangeNotifier {
   final LocalStorageService _localStorageService;
 
   MessagingProvider(this._repository)
-      : _localStorageService = LocalStorageService();
+    : _localStorageService = LocalStorageService();
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
@@ -81,25 +81,33 @@ class MessagingProvider extends ChangeNotifier {
 
   void _subscribeToMensajes(String canalId) {
     _mensajesSubscription?.cancel();
-    _mensajesSubscription = _repository.getMensajesStream(canalId).listen(
-      (nuevosMensajes) {
-        // Merge: keep optimistic (sending) + replace confirmed ones
-        final optimistic = _mensajes.where(
-          (m) => m.estado == MensajeEstado.enviando || m.estado == MensajeEstado.error,
-        ).toList();
+    _mensajesSubscription = _repository
+        .getMensajesStream(canalId)
+        .listen(
+          (nuevosMensajes) {
+            // Merge: keep optimistic (sending) + replace confirmed ones
+            final optimistic = _mensajes
+                .where(
+                  (m) =>
+                      m.estado == MensajeEstado.enviando ||
+                      m.estado == MensajeEstado.error,
+                )
+                .toList();
 
-        final serverIds = nuevosMensajes.map((m) => m.id).toSet();
-        // Remove optimistic messages that server already confirmed
-        final stillPending = optimistic.where((m) => !serverIds.contains(m.id)).toList();
+            final serverIds = nuevosMensajes.map((m) => m.id).toSet();
+            // Remove optimistic messages that server already confirmed
+            final stillPending = optimistic
+                .where((m) => !serverIds.contains(m.id))
+                .toList();
 
-        _mensajes = [...nuevosMensajes, ...stillPending];
-        _mensajes.sort((a, b) => a.creadoEn.compareTo(b.creadoEn));
-        notifyListeners();
-      },
-      onError: (e) {
-        debugPrint('Error en stream de mensajes: $e');
-      },
-    );
+            _mensajes = [...nuevosMensajes, ...stillPending];
+            _mensajes.sort((a, b) => a.creadoEn.compareTo(b.creadoEn));
+            notifyListeners();
+          },
+          onError: (e) {
+            debugPrint('Error en stream de mensajes: $e');
+          },
+        );
   }
 
   /// Envía con Optimistic UI: muestra burbuja inmediata, sube en background.

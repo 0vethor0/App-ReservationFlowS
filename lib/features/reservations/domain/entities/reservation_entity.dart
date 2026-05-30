@@ -41,6 +41,13 @@ class ReservationEntity {
   final DateTime? endDateTime;
 }
 
-enum ReservationStatus { pending, approved, rejected, inProgress, completed, cancelled }
+enum ReservationStatus {
+  pending,
+  approved,
+  rejected,
+  inProgress,
+  completed,
+  cancelled,
+}
 
 enum RequestPriority { normal, high }

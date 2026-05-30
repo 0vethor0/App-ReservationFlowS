@@ -25,9 +25,7 @@ class UserApprovalsScreen extends StatelessWidget {
         builder: (context, provider, child) {
           if (provider.isLoading && provider.pendingUsers.isEmpty) {
             return const Center(
-              child: CircularProgressIndicator(
-                color: AppColors.primaryBlue,
-              ),
+              child: CircularProgressIndicator(color: AppColors.primaryBlue),
             );
           }
 

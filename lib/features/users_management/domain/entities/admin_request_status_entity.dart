@@ -1,12 +1,7 @@
 /// Estado de la solicitud de administrador del usuario actual.
 library;
 
-enum AdminRequestUiState {
-  canRequest,
-  pending,
-  rejected,
-  alreadyAdmin,
-}
+enum AdminRequestUiState { canRequest, pending, rejected, alreadyAdmin }
 
 class AdminRequestStatusEntity {
   const AdminRequestStatusEntity({

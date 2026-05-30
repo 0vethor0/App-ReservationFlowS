@@ -144,14 +144,11 @@ class ReservationProvider extends ChangeNotifier {
           final existingStart = DateTime.parse(
             reservation['hora_inicio'] as String,
           );
-          final existingEnd = DateTime.parse(
-            reservation['hora_fin'] as String,
-          );
+          final existingEnd = DateTime.parse(reservation['hora_fin'] as String);
 
           final existingStartMinutes =
               existingStart.hour * 60 + existingStart.minute;
-          final existingEndMinutes =
-              existingEnd.hour * 60 + existingEnd.minute;
+          final existingEndMinutes = existingEnd.hour * 60 + existingEnd.minute;
 
           if ((startMinutes >= existingStartMinutes &&
                   startMinutes < existingEndMinutes) ||
@@ -304,39 +301,65 @@ class ReservationProvider extends ChangeNotifier {
     _bloquesOcupadosDelDia.clear();
 
     // 1. Definimos el inicio y fin del día usando la fecha puramente local (00:00:00 a 23:59:59)
-    final inicioDiaLocal = DateTime(fechaSeleccionada.year, fechaSeleccionada.month, fechaSeleccionada.day, 0, 0, 0);
-    final finDiaLocal = DateTime(fechaSeleccionada.year, fechaSeleccionada.month, fechaSeleccionada.day, 23, 59, 59);
+    final inicioDiaLocal = DateTime(
+      fechaSeleccionada.year,
+      fechaSeleccionada.month,
+      fechaSeleccionada.day,
+      0,
+      0,
+      0,
+    );
+    final finDiaLocal = DateTime(
+      fechaSeleccionada.year,
+      fechaSeleccionada.month,
+      fechaSeleccionada.day,
+      23,
+      59,
+      59,
+    );
 
     // 2. Abrimos el canal de Supabase
     _reservasRealtimeSubscription = Supabase.instance.client
         .from('reservas')
         .stream(primaryKey: ['id'])
         .eq('id_producto', productoId)
-        .listen((List<Map<String, dynamic>> snapshot) {
-      
-        final List<TimeSlot> nuevosBloques = [];
+        .listen(
+          (List<Map<String, dynamic>> snapshot) {
+            final List<TimeSlot> nuevosBloques = [];
 
-        for (var data in snapshot) {
-          final estado = data['estado_reserva'] as String?;
-          final validStatus = ['aprobada', 'en_curso', 'finalizada'];
-          
-          if (estado != null && validStatus.contains(estado) && data['hora_inicio'] != null && data['hora_fin'] != null) {
-            // Convertimos la hora UTC de la base de datos directamente a la hora local del dispositivo
-            final DateTime horaInicioLocal = DateTime.parse(data['hora_inicio']).toLocal();
-            final DateTime horaFinLocal = DateTime.parse(data['hora_fin']).toLocal();
+            for (var data in snapshot) {
+              final estado = data['estado_reserva'] as String?;
+              final validStatus = ['aprobada', 'en_curso', 'finalizada'];
 
-            // Comparamos manzanas con manzanas (Hora Local vs Fronteras Locales)
-            if (horaInicioLocal.isAfter(inicioDiaLocal) && horaInicioLocal.isBefore(finDiaLocal)) {
-              nuevosBloques.add(TimeSlot(start: horaInicioLocal, end: horaFinLocal));
+              if (estado != null &&
+                  validStatus.contains(estado) &&
+                  data['hora_inicio'] != null &&
+                  data['hora_fin'] != null) {
+                // Convertimos la hora UTC de la base de datos directamente a la hora local del dispositivo
+                final DateTime horaInicioLocal = DateTime.parse(
+                  data['hora_inicio'],
+                ).toLocal();
+                final DateTime horaFinLocal = DateTime.parse(
+                  data['hora_fin'],
+                ).toLocal();
+
+                // Comparamos manzanas con manzanas (Hora Local vs Fronteras Locales)
+                if (horaInicioLocal.isAfter(inicioDiaLocal) &&
+                    horaInicioLocal.isBefore(finDiaLocal)) {
+                  nuevosBloques.add(
+                    TimeSlot(start: horaInicioLocal, end: horaFinLocal),
+                  );
+                }
+              }
             }
-          }
-        }
 
-        _bloquesOcupadosDelDia = nuevosBloques;
-        notifyListeners(); // Notifica a la UI para repintar los cuadros en su posición real
-      }, onError: (error) {
-        debugPrint('Error en el stream de reservas: $error');
-      });
+            _bloquesOcupadosDelDia = nuevosBloques;
+            notifyListeners(); // Notifica a la UI para repintar los cuadros en su posición real
+          },
+          onError: (error) {
+            debugPrint('Error en el stream de reservas: $error');
+          },
+        );
   }
 
   /// Cancela la escucha activa (Llamar en el dispose del Screen o widget)
@@ -346,7 +369,10 @@ class ReservationProvider extends ChangeNotifier {
   }
 
   /// Verifica matemáticamente si el rango propuesto choca con algún bloque ocupado local
-  bool tieneConflictoDeHorario(DateTime horaInicioPropuesta, DateTime horaFinPropuesta) {
+  bool tieneConflictoDeHorario(
+    DateTime horaInicioPropuesta,
+    DateTime horaFinPropuesta,
+  ) {
     // Forzamos que los parámetros de entrada estén en hora local para la comparación
     final inicioLocal = horaInicioPropuesta.toLocal();
     final finLocal = horaFinPropuesta.toLocal();

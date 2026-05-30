@@ -21,7 +21,8 @@ class CanalModel extends CanalEntity {
           '${perfilesData['primer_nombre'] ?? ''} ${perfilesData['primer_apellido'] ?? ''}'
               .trim();
       if (userName.isEmpty) userName = null;
-      userSpecialty = perfilesData['especialidad'] as String? ??
+      userSpecialty =
+          perfilesData['especialidad'] as String? ??
           perfilesData['carrera'] as String?;
     }
 

@@ -18,13 +18,9 @@ class StorageRemoteDataSource {
     required String filePath,
     required File file,
   }) async {
-    await client.storage
-        .from(bucket)
-        .upload(filePath, file);
+    await client.storage.from(bucket).upload(filePath, file);
 
-    return client.storage
-        .from(bucket)
-        .getPublicUrl(filePath);
+    return client.storage.from(bucket).getPublicUrl(filePath);
   }
 
   /// Delete a file from Supabase Storage
@@ -32,9 +28,7 @@ class StorageRemoteDataSource {
     required String bucket,
     required String filePath,
   }) async {
-    await client.storage
-        .from(bucket)
-        .remove([filePath]);
+    await client.storage.from(bucket).remove([filePath]);
   }
 
   /// Upload profile photo with deterministic filename
@@ -49,10 +43,7 @@ class StorageRemoteDataSource {
 
     // Try to delete existing file first (if any)
     try {
-      await deleteFile(
-        bucket: 'profile-photos',
-        filePath: filePath,
-      );
+      await deleteFile(bucket: 'profile-photos', filePath: filePath);
     } catch (_) {
       // File might not exist, ignore error
     }

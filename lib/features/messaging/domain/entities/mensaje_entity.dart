@@ -1,9 +1,5 @@
 /// Estado de envío del mensaje para Optimistic UI.
-enum MensajeEstado {
-  enviando,
-  enviado,
-  error,
-}
+enum MensajeEstado { enviando, enviado, error }
 
 class MensajeEntity {
   final String id;

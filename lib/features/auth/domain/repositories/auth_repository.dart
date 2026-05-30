@@ -16,7 +16,7 @@ abstract class AuthRepository {
     required String email,
     required String password,
   });
-  
+
   /// Realizar inicio de sesion con Google OAuth
   /// Sign in with Google OAuth
   Future<void> signInWithGoogle();
@@ -49,7 +49,7 @@ abstract class AuthRepository {
   /// Listen to auth state changes
   void listenToAuthStateChanges();
 
-  /// Observar cambios de estado de usuario en tiempo real  
+  /// Observar cambios de estado de usuario en tiempo real
   /// Watch current user approval status changes in real-time
   Stream<UserStatus> watchCurrentUserStatus(String uid);
 
@@ -59,10 +59,7 @@ abstract class AuthRepository {
 
   /// Actualizar el token FCM del dispositivo en la tabla perfiles
   /// Update the device FCM token in the perfiles table
-  Future<void> updateFcmToken({
-    required String userId,
-    required String token,
-  });
+  Future<void> updateFcmToken({required String userId, required String token});
 }
 
 class UserProfileComplete {

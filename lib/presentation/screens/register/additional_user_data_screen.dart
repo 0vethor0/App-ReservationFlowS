@@ -37,7 +37,7 @@ class _AdditionalUserDataScreenState extends State<AdditionalUserDataScreen> {
   String? _localImagePath; // Track persistent local path
   final ImagePicker _picker = ImagePicker();
   final LocalStorageService _storageService = LocalStorageService();
-  
+
   // State for dynamic career dropdown and neon indicator
   bool _isCareerDropdownEnabled = false;
   bool _isStudentRole = false;
@@ -59,7 +59,7 @@ class _AdditionalUserDataScreenState extends State<AdditionalUserDataScreen> {
     super.initState();
     // Listen to changes in the profile/role field
     _profileController.addListener(_onProfileRoleChanged);
-    
+
     // Restore saved image if exists (persistence)
     _restoreLocalImage();
 
@@ -100,7 +100,7 @@ class _AdditionalUserDataScreenState extends State<AdditionalUserDataScreen> {
       setState(() {
         _isStudentRole = isStudent;
         _isCareerDropdownEnabled = isStudent;
-        
+
         // If not a student, clear the career selection
         if (!isStudent) {
           _selectedCareer = null;
@@ -117,7 +117,9 @@ class _AdditionalUserDataScreenState extends State<AdditionalUserDataScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('Se necesitan permisos para acceder a la cámara/galería'),
+              content: const Text(
+                'Se necesitan permisos para acceder a la cámara/galería',
+              ),
               action: SnackBarAction(
                 label: 'Configuración',
                 onPressed: () => _storageService.openAppSettings(),
@@ -270,7 +272,8 @@ class _AdditionalUserDataScreenState extends State<AdditionalUserDataScreen> {
       return;
     }
 
-    if (_selectedCareer == null && _profileController.text.trim().toLowerCase() == 'estudiante') {
+    if (_selectedCareer == null &&
+        _profileController.text.trim().toLowerCase() == 'estudiante') {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Por favor, selecciona una carrera')),
       );
@@ -294,19 +297,21 @@ class _AdditionalUserDataScreenState extends State<AdditionalUserDataScreen> {
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Datos guardados exitosamente. Tu cuenta está pendiente de aprobación.'),
+          content: Text(
+            'Datos guardados exitosamente. Tu cuenta está pendiente de aprobación.',
+          ),
           backgroundColor: AppColors.success,
         ),
       );
-      
+
       // Clean up local storage after successful upload
       await _storageService.clearTempDirectory();
-      
+
       // Disable the save button to prevent multiple submissions
       setState(() {
         _isSaveButtonDisabled = true;
       });
-      
+
       // Navigate to waiting approval screen using GoRouter
       if (mounted) {
         GoRouter.of(context).refresh();
@@ -447,15 +452,21 @@ class _AdditionalUserDataScreenState extends State<AdditionalUserDataScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
                               decoration: BoxDecoration(
-                                color: _isCareerDropdownEnabled 
-                                    ? AppColors.surfaceLight 
-                                    : AppColors.surfaceLight.withValues(alpha: 0.5),
+                                color: _isCareerDropdownEnabled
+                                    ? AppColors.surfaceLight
+                                    : AppColors.surfaceLight.withValues(
+                                        alpha: 0.5,
+                                      ),
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
                                   color: _isCareerDropdownEnabled
-                                      ? AppColors.primaryBlue.withValues(alpha: 0.5)
+                                      ? AppColors.primaryBlue.withValues(
+                                          alpha: 0.5,
+                                        )
                                       : AppColors.border.withValues(alpha: 0.3),
                                 ),
                               ),
@@ -468,7 +479,9 @@ class _AdditionalUserDataScreenState extends State<AdditionalUserDataScreen> {
                                     style: GoogleFonts.inter(
                                       color: _isCareerDropdownEnabled
                                           ? AppColors.textTertiary
-                                          : AppColors.textTertiary.withValues(alpha: 0.5),
+                                          : AppColors.textTertiary.withValues(
+                                              alpha: 0.5,
+                                            ),
                                     ),
                                   ),
                                   items: _isCareerDropdownEnabled
@@ -515,7 +528,9 @@ class _AdditionalUserDataScreenState extends State<AdditionalUserDataScreen> {
                             boxShadow: _isStudentRole
                                 ? [
                                     BoxShadow(
-                                      color: AppColors.success.withValues(alpha: 0.6),
+                                      color: AppColors.success.withValues(
+                                        alpha: 0.6,
+                                      ),
                                       blurRadius: 20,
                                       spreadRadius: 3,
                                     ),
@@ -525,7 +540,8 @@ class _AdditionalUserDataScreenState extends State<AdditionalUserDataScreen> {
                           child: NeonTextField(
                             controller: _profileController,
                             label: 'Perfil / Rol',
-                            hint: 'Ej: estudiante, docente, coordinador-docente',
+                            hint:
+                                'Ej: estudiante, docente, coordinador-docente',
                             validator: (v) =>
                                 v == null || v.isEmpty ? 'Requerido' : null,
                           ),

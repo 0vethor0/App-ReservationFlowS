@@ -86,8 +86,9 @@ class _UserApprovalCardState extends State<UserApprovalCard> {
                     children: [
                       CircleAvatar(
                         radius: 35,
-                        backgroundColor:
-                            AppColors.primaryBlue.withValues(alpha: 0.1),
+                        backgroundColor: AppColors.primaryBlue.withValues(
+                          alpha: 0.1,
+                        ),
                         backgroundImage:
                             widget.user.avatarUrl != null &&
                                 widget.user.avatarUrl!.isNotEmpty
@@ -155,7 +156,10 @@ class _UserApprovalCardState extends State<UserApprovalCard> {
                       Expanded(
                         child: ElevatedButton.icon(
                           onPressed: _handleApprove,
-                          icon: const Icon(Icons.check_circle_outline, size: 18),
+                          icon: const Icon(
+                            Icons.check_circle_outline,
+                            size: 18,
+                          ),
                           label: const Text('Aprobar'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.green,

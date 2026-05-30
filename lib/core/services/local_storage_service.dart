@@ -35,12 +35,12 @@ class LocalStorageService {
 
     // Check if all required permissions are granted
     final cameraGranted = statuses[Permission.camera]?.isGranted ?? false;
-    
+
     // For Android 13+, we need photos permission
     // For older versions, storage permission is enough
     final storageGranted = Platform.isAndroid
         ? (await Permission.photos.status).isGranted ||
-            (await Permission.storage.status).isGranted
+              (await Permission.storage.status).isGranted
         : true;
 
     return cameraGranted && storageGranted;

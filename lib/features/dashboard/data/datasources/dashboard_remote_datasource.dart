@@ -76,9 +76,7 @@ class DashboardRemoteDataSource {
         schema: 'public',
         table: 'productos',
         callback: (payload) {
-          debugPrint(
-            '[DashboardDataSource] productos ${payload.eventType}',
-          );
+          debugPrint('[DashboardDataSource] productos ${payload.eventType}');
           if (!(_productosController?.isClosed ?? true)) {
             _productosController!.add(null);
           }

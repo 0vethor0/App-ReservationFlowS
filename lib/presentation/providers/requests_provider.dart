@@ -61,7 +61,9 @@ class RequestsProvider extends ChangeNotifier {
 
     _realtimeSubscription = _requestsRepository.streamAllRequests().listen(
       (updatedRequests) {
-        debugPrint('[RequestsProvider] Received real-time update with ${updatedRequests.length} requests');
+        debugPrint(
+          '[RequestsProvider] Received real-time update with ${updatedRequests.length} requests',
+        );
 
         final now = DateTime.now();
         final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
@@ -73,16 +75,18 @@ class RequestsProvider extends ChangeNotifier {
         final end = start.add(const Duration(days: 7));
 
         final filteredRequests = updatedRequests.where((r) {
-          final isInCurrentWeek = r.date.isAtSameMomentAs(start) ||
+          final isInCurrentWeek =
+              r.date.isAtSameMomentAs(start) ||
               (r.date.isAfter(start) && r.date.isBefore(end));
 
-          final isFutureRequest = r.date.isAtSameMomentAs(now) || r.date.isAfter(now) ;
+          final isFutureRequest =
+              r.date.isAtSameMomentAs(now) || r.date.isAfter(now);
 
           return isInCurrentWeek || isFutureRequest;
         }).toList();
 
         _allRequests = filteredRequests;
-        
+
         _isLoading = false;
         notifyListeners();
       },
@@ -99,7 +103,9 @@ class RequestsProvider extends ChangeNotifier {
     try {
       debugPrint('[RequestsProvider] Loading requests from repository...');
       _allRequests = await _requestsRepository.loadAllRequests();
-      debugPrint('[RequestsProvider] Successfully loaded ${_allRequests.length} requests');
+      debugPrint(
+        '[RequestsProvider] Successfully loaded ${_allRequests.length} requests',
+      );
     } catch (e, stack) {
       debugPrint('[RequestsProvider] Error loading requests: $e');
       debugPrint('[RequestsProvider] Stack trace: $stack');
@@ -170,7 +176,9 @@ class RequestsProvider extends ChangeNotifier {
   @override
   void dispose() {
     _realtimeSubscription?.cancel();
-    debugPrint('[RequestsProvider] Disposed and cancelled real-time subscription');
+    debugPrint(
+      '[RequestsProvider] Disposed and cancelled real-time subscription',
+    );
     super.dispose();
   }
 }

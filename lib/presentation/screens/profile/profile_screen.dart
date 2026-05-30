@@ -84,11 +84,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (userId == null) return;
 
     final repository = context.read<IUserManagementRepository>();
-    _adminStatusSubscription =
-        repository.watchAdminRequestStatus(userId).listen((status) {
-      if (!mounted) return;
-      setState(() => _adminRequestStatus = status);
-    });
+    _adminStatusSubscription = repository
+        .watchAdminRequestStatus(userId)
+        .listen((status) {
+          if (!mounted) return;
+          setState(() => _adminRequestStatus = status);
+        });
   }
 
   Future<void> _submitAdminRequest() async {

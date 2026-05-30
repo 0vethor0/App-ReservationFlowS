@@ -138,11 +138,19 @@ class InitErrorApp extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.error_outline, size: 64, color: Colors.redAccent),
+                const Icon(
+                  Icons.error_outline,
+                  size: 64,
+                  color: Colors.redAccent,
+                ),
                 const SizedBox(height: 16),
                 const Text(
                   'Error de inicialización',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white),
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -183,7 +191,8 @@ class _BeamReserveAppState extends State<BeamReserveApp> {
   late final DashboardRepository _dashboardRepository;
   late final RequestsRepository _requestsRepository;
   late final IUserManagementRepository _usersManagementRepository;
-  late final ViewReservationCalendarRepository _viewReservationCalendarRepository;
+  late final ViewReservationCalendarRepository
+  _viewReservationCalendarRepository;
   late final IMessagingRepository _messagingRepository;
 
   @override
@@ -202,7 +211,8 @@ class _BeamReserveAppState extends State<BeamReserveApp> {
     final dashboardRemoteDataSource = DashboardRemoteDataSource(supabaseClient);
     final requestsRemoteDataSource = RequestsRemoteDataSource(supabaseClient);
     final usersRemoteDataSource = UsersRemoteDataSource(supabaseClient);
-    final viewReservationCalendarRemoteDataSource = ViewReservationCalendarRemoteDataSource(supabaseClient);
+    final viewReservationCalendarRemoteDataSource =
+        ViewReservationCalendarRemoteDataSource(supabaseClient);
     final messagingRemoteDataSource = MessagingRemoteDataSource(supabaseClient);
 
     // Clean Architecture: Initialize Repositories
@@ -227,13 +237,18 @@ class _BeamReserveAppState extends State<BeamReserveApp> {
     // Initialize Notification service (FCM push notifications)
     _notificationService = NotificationServiceImpl();
     try {
-      _notificationService.initialize(); // fire-and-forget: permisos, canales, listeners
+      _notificationService
+          .initialize(); // fire-and-forget: permisos, canales, listeners
     } catch (e) {
       debugPrint('Warning: NotificationService.initialize() failed: $e');
     }
 
     // Create SINGLE AuthProvider instance (shared by router AND UI)
-    _authProvider = AuthProvider(_authRepository, _storageRepository, _notificationService);
+    _authProvider = AuthProvider(
+      _authRepository,
+      _storageRepository,
+      _notificationService,
+    );
 
     // Create the router instance once, passing the SAME auth provider
     _router = AppRouter.router(_authProvider);
@@ -272,7 +287,9 @@ class _BeamReserveAppState extends State<BeamReserveApp> {
           create: (_) => UserManagementProvider(_usersManagementRepository),
         ),
         ChangeNotifierProvider(
-          create: (_) => ViewReservationCalendarProvider(_viewReservationCalendarRepository),
+          create: (_) => ViewReservationCalendarProvider(
+            _viewReservationCalendarRepository,
+          ),
         ),
         ChangeNotifierProvider(
           create: (_) => MessagingProvider(_messagingRepository),
@@ -284,10 +301,7 @@ class _BeamReserveAppState extends State<BeamReserveApp> {
         theme: AppTheme.lightTheme,
         routerConfig: _router,
         locale: const Locale('es'),
-        supportedLocales: const [
-          Locale('es'),
-          Locale('en'),
-        ],
+        supportedLocales: const [Locale('es'), Locale('en')],
         localizationsDelegates: const [
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,

@@ -96,7 +96,9 @@ class RequestsRepositoryImpl implements RequestsRepository {
       userAvatarUrl: u['foto_url'] as String?,
       notes: item['notas'] as String?,
       isRead: item['leido_por_admin'] as bool? ?? false,
-      createdAt: item['creado_en'] != null ? DateTime.parse(item['creado_en']) : null,
+      createdAt: item['creado_en'] != null
+          ? DateTime.parse(item['creado_en'])
+          : null,
     );
   }
 

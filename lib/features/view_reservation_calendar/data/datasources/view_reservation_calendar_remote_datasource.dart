@@ -68,9 +68,7 @@ class ViewReservationCalendarRemoteDataSource {
         schema: 'public',
         table: 'reservas',
         callback: (payload) {
-          debugPrint(
-            '[CalendarDataSource] reservas ${payload.eventType}',
-          );
+          debugPrint('[CalendarDataSource] reservas ${payload.eventType}');
           emit();
         },
       )

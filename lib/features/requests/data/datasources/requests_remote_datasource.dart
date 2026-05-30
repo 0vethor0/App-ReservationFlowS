@@ -21,12 +21,16 @@ class RequestsRemoteDataSource {
         .eq('estado_reserva', 'pendiente')
         .order('hora_inicio', ascending: true);
 
-    debugPrint('[RequestsDataSource] Found ${response.length} pending requests');
+    debugPrint(
+      '[RequestsDataSource] Found ${response.length} pending requests',
+    );
     return response;
   }
 
   Future<List<Map<String, dynamic>>> loadAllRequests() async {
-    debugPrint('[RequestsDataSource] Loading current week + future pending requests...');
+    debugPrint(
+      '[RequestsDataSource] Loading current week + future pending requests...',
+    );
 
     final now = DateTime.now();
     final startOfToday = DateTime(now.year, now.month, now.day);
@@ -68,7 +72,9 @@ class RequestsRemoteDataSource {
       return dateA.compareTo(dateB);
     });
 
-    debugPrint('[RequestsDataSource] Found ${allRequests.length} requests (current week + future)');
+    debugPrint(
+      '[RequestsDataSource] Found ${allRequests.length} requests (current week + future)',
+    );
     return allRequests;
   }
 
@@ -76,7 +82,9 @@ class RequestsRemoteDataSource {
     required String requestId,
     required String status,
   }) async {
-    debugPrint('[RequestsDataSource] Updating request $requestId status to: $status');
+    debugPrint(
+      '[RequestsDataSource] Updating request $requestId status to: $status',
+    );
 
     final reservationData = await client
         .from('reservas')
@@ -109,9 +117,12 @@ class RequestsRemoteDataSource {
   }
 
   Stream<List<Map<String, dynamic>>> streamAllRequests() {
-    debugPrint('[RequestsDataSource] Setting up real-time stream for all requests');
+    debugPrint(
+      '[RequestsDataSource] Setting up real-time stream for all requests',
+    );
 
-    _allRequestsController = StreamController<List<Map<String, dynamic>>>.broadcast();
+    _allRequestsController =
+        StreamController<List<Map<String, dynamic>>>.broadcast();
 
     loadAllRequests().then((data) {
       if (!_allRequestsController!.isClosed) {
@@ -125,7 +136,9 @@ class RequestsRemoteDataSource {
         schema: 'public',
         table: 'reservas',
         callback: (payload) {
-          debugPrint('[RequestsDataSource] Database change detected, reloading...');
+          debugPrint(
+            '[RequestsDataSource] Database change detected, reloading...',
+          );
           loadAllRequests().then((data) {
             if (!_allRequestsController!.isClosed) {
               _allRequestsController!.add(data);
@@ -139,9 +152,12 @@ class RequestsRemoteDataSource {
   }
 
   Stream<List<Map<String, dynamic>>> streamPendingRequests() {
-    debugPrint('[RequestsDataSource] Setting up real-time stream for pending requests');
+    debugPrint(
+      '[RequestsDataSource] Setting up real-time stream for pending requests',
+    );
 
-    _pendingRequestsController = StreamController<List<Map<String, dynamic>>>.broadcast();
+    _pendingRequestsController =
+        StreamController<List<Map<String, dynamic>>>.broadcast();
 
     loadPendingRequests().then((data) {
       if (!_pendingRequestsController!.isClosed) {
@@ -155,7 +171,9 @@ class RequestsRemoteDataSource {
         schema: 'public',
         table: 'reservas',
         callback: (payload) {
-          debugPrint('[RequestsDataSource] Database change detected, reloading pending...');
+          debugPrint(
+            '[RequestsDataSource] Database change detected, reloading pending...',
+          );
           loadPendingRequests().then((data) {
             if (!_pendingRequestsController!.isClosed) {
               _pendingRequestsController!.add(data);

@@ -60,7 +60,8 @@ class NotificationServiceImpl implements NotificationService {
 
     await _localNotifications
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.createNotificationChannel(channel);
 
     // 5. Escuchar mensajes cuando la app está ABIERTA (foreground)
@@ -68,7 +69,7 @@ class NotificationServiceImpl implements NotificationService {
       final notification = message.notification;
       if (notification != null) {
         String body = notification.body ?? '';
-        
+
         // Ajustar hora en el cuerpo si contiene una hora en formato HH:mm
         // Como se solicitó, ajustar de UTC a UTC-4 (restando 4 horas)
         body = _adjustTimeInBody(body);
@@ -95,11 +96,11 @@ class NotificationServiceImpl implements NotificationService {
       try {
         int hour = int.parse(match.group(1)!);
         final minute = match.group(2)!;
-        
+
         // Ajuste manual de UTC a UTC-4
         hour = (hour - 4) % 24;
         if (hour < 0) hour += 24;
-        
+
         return '${hour.toString().padLeft(2, '0')}:$minute';
       } catch (e) {
         return match.group(0)!;
@@ -137,7 +138,7 @@ class NotificationServiceImpl implements NotificationService {
           styleInformation: BigTextStyleInformation(
             body,
             contentTitle: title,
-            htmlFormatBigText: true,  // Permite HTML
+            htmlFormatBigText: true, // Permite HTML
             htmlFormatTitle: true,
           ),
         ),

@@ -71,7 +71,10 @@ class UserManagementProvider extends ChangeNotifier {
     );
   }
 
-  Future<void> approveAdminPromotion(String userId, BuildContext context) async {
+  Future<void> approveAdminPromotion(
+    String userId,
+    BuildContext context,
+  ) async {
     await _handleAction(
       context: context,
       action: () => _repository.approveAdminPromotion(userId),
@@ -110,10 +113,7 @@ class UserManagementProvider extends ChangeNotifier {
       notifyListeners();
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(_error!),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text(_error!), backgroundColor: Colors.red),
         );
       }
     }

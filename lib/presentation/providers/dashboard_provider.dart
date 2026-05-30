@@ -347,7 +347,9 @@ class DashboardProvider extends ChangeNotifier {
       userAvatarUrl: u['foto_url'] as String?,
       notes: r['notas'] as String?,
       isRead: r['leido_por_admin'] as bool? ?? false,
-      createdAt: r['creado_en'] != null ? DateTime.parse(r['creado_en']).toLocal() : null,
+      createdAt: r['creado_en'] != null
+          ? DateTime.parse(r['creado_en']).toLocal()
+          : null,
     );
   }
 

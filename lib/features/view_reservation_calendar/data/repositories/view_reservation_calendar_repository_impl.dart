@@ -11,7 +11,9 @@ class ViewReservationCalendarRepositoryImpl
   final ViewReservationCalendarRemoteDataSource remoteDataSource;
 
   @override
-  Future<List<ReservationEntity>> fetchReservationsForDate(DateTime date) async {
+  Future<List<ReservationEntity>> fetchReservationsForDate(
+    DateTime date,
+  ) async {
     final rawData = await remoteDataSource.fetchReservationsForDate(date);
     return rawData.map(_mapToReservationEntity).toList();
   }

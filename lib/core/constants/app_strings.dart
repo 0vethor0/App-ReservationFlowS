@@ -132,17 +132,17 @@ abstract final class AppStrings {
   static const String inProgress = 'En curso';
   static const String cancelled = 'Canceladas';
   static const String completed = 'Finalizadas';
-  
+
   static const String cancelReservation = 'Cancelar';
   static const String cancelConfirmTitle = '¿Cancelar reservación?';
   static const String cancelConfirmMessage =
       'Esta acción no se puede deshacer. La reservación será cancelada permanentemente.';
-      
+
   static const String completeReservation = 'Finalizar';
   static const String completeConfirmTitle = '¿Finalizar reservación?';
   static const String completeConfirmMessage =
       'Esta acción cambiará el estado de la reservación a finalizada. ¿Deseas continuar?';
-      
+
   static const String confirm = 'Confirmar';
   static const String cancel = 'Cancelar';
 

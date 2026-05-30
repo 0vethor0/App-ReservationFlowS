@@ -16,7 +16,11 @@ class AuthProvider extends ChangeNotifier {
   final StorageRepository? _storageRepository;
   final NotificationService? _notificationService;
 
-  AuthProvider(this._authRepository, [this._storageRepository, this._notificationService]) {
+  AuthProvider(
+    this._authRepository, [
+    this._storageRepository,
+    this._notificationService,
+  ]) {
     _init();
   }
 
@@ -49,7 +53,9 @@ class AuthProvider extends ChangeNotifier {
       _isAuthenticated = true;
       _currentUser = _authRepository.getCurrentUser();
       if (_currentUser != null) {
-        debugPrint('[${DateTime.now()}] AuthProvider._init - Sesión existente detectada: ${_currentUser!.id}');
+        debugPrint(
+          '[${DateTime.now()}] AuthProvider._init - Sesión existente detectada: ${_currentUser!.id}',
+        );
         _checkAdditionalData(_currentUser!.id);
         _saveDeviceToken(); // fire-and-forget: guarda el token FCM
       }
@@ -65,18 +71,20 @@ class AuthProvider extends ChangeNotifier {
       debugPrint('[${DateTime.now()}] AuthProvider - Evento: $event');
 
       switch (event) {
-          case AuthChangeEvent.signedIn:
-          case AuthChangeEvent.tokenRefreshed:
-            if (session != null) {
-              _isAuthenticated = true;
-              _currentUser = _authRepository.getCurrentUser();
-              if (_currentUser != null) {
-                debugPrint('[${DateTime.now()}] AuthProvider - Usuario: ${_currentUser!.id}. Verificando datos...');
-                await _checkAdditionalData(_currentUser!.id);
-                _saveDeviceToken(); // fire-and-forget: guarda el token FCM tras login
-              }
-              notifyListeners();
+        case AuthChangeEvent.signedIn:
+        case AuthChangeEvent.tokenRefreshed:
+          if (session != null) {
+            _isAuthenticated = true;
+            _currentUser = _authRepository.getCurrentUser();
+            if (_currentUser != null) {
+              debugPrint(
+                '[${DateTime.now()}] AuthProvider - Usuario: ${_currentUser!.id}. Verificando datos...',
+              );
+              await _checkAdditionalData(_currentUser!.id);
+              _saveDeviceToken(); // fire-and-forget: guarda el token FCM tras login
             }
+            notifyListeners();
+          }
           break;
         case AuthChangeEvent.signedOut:
           _isAuthenticated = false;
@@ -92,8 +100,10 @@ class AuthProvider extends ChangeNotifier {
     });
   }
 
-Future<void> _checkAdditionalData(String userId) async {
-    debugPrint('[${DateTime.now()}] _checkAdditionalData - Iniciando para: $userId');
+  Future<void> _checkAdditionalData(String userId) async {
+    debugPrint(
+      '[${DateTime.now()}] _checkAdditionalData - Iniciando para: $userId',
+    );
     _isLoadingAdditionalData = true;
     notifyListeners();
 
@@ -123,7 +133,9 @@ Future<void> _checkAdditionalData(String userId) async {
 
       await _setupStatusSubscription(userId);
 
-      debugPrint('[${DateTime.now()}] _checkAdditionalData - hasAdditionalData: $_hasAdditionalData | status: $_currentUserStatus');
+      debugPrint(
+        '[${DateTime.now()}] _checkAdditionalData - hasAdditionalData: $_hasAdditionalData | status: $_currentUserStatus',
+      );
     } catch (e) {
       debugPrint('[${DateTime.now()}] _checkAdditionalData - ERROR: $e');
       _error = 'Error al cargar información de perfil';
@@ -140,7 +152,9 @@ Future<void> _checkAdditionalData(String userId) async {
   /// siguen faltando (o si ya fueron completados desde otro lugar).
   Future<void> refreshAdditionalDataCheck() async {
     if (_currentUser == null) return;
-    debugPrint('[${DateTime.now()}] refreshAdditionalDataCheck - Forzando re-verificación desde DB');
+    debugPrint(
+      '[${DateTime.now()}] refreshAdditionalDataCheck - Forzando re-verificación desde DB',
+    );
     await _checkAdditionalData(_currentUser!.id);
   }
 
@@ -148,17 +162,23 @@ Future<void> _checkAdditionalData(String userId) async {
 
   UserRole _mapRole(String? roleStr) {
     switch (roleStr) {
-      case 'super-admin': return UserRole.superAdmin;
-      case 'admin':       return UserRole.admin;
-      default:            return UserRole.user;
+      case 'super-admin':
+        return UserRole.superAdmin;
+      case 'admin':
+        return UserRole.admin;
+      default:
+        return UserRole.user;
     }
   }
 
   UserStatus _mapStatus(String? statusStr) {
     switch (statusStr) {
-      case 'approved': return UserStatus.approved;
-      case 'rejected': return UserStatus.rejected;
-      default:         return UserStatus.pending;
+      case 'approved':
+        return UserStatus.approved;
+      case 'rejected':
+        return UserStatus.rejected;
+      default:
+        return UserStatus.pending;
     }
   }
 
@@ -173,29 +193,31 @@ Future<void> _checkAdditionalData(String userId) async {
         debugPrint('[${DateTime.now()}] AuthProvider - FCM token guardado');
       }
     } catch (e) {
-      debugPrint('[${DateTime.now()}] AuthProvider - Error guardando FCM token: $e');
+      debugPrint(
+        '[${DateTime.now()}] AuthProvider - Error guardando FCM token: $e',
+      );
     }
   }
 
   Future<void> _setupStatusSubscription(String userId) async {
     await _statusSubscription?.cancel();
-    _statusSubscription = _authRepository
-        .watchCurrentUserStatus(userId)
-        .listen((newStatus) {
-      if (_currentUser != null && _currentUserStatus != newStatus) {
-        _currentUserStatus = newStatus;
-        _currentUser = UserEntity(
-          id: _currentUser!.id,
-          fullName: _currentUser!.fullName,
-          email: _currentUser!.email,
-          avatarUrl: _currentUser!.avatarUrl,
-          department: _currentUser!.department,
-          role: _currentUser!.role,
-          status: newStatus,
-        );
-        notifyListeners();
-      }
-    });
+    _statusSubscription = _authRepository.watchCurrentUserStatus(userId).listen(
+      (newStatus) {
+        if (_currentUser != null && _currentUserStatus != newStatus) {
+          _currentUserStatus = newStatus;
+          _currentUser = UserEntity(
+            id: _currentUser!.id,
+            fullName: _currentUser!.fullName,
+            email: _currentUser!.email,
+            avatarUrl: _currentUser!.avatarUrl,
+            department: _currentUser!.department,
+            role: _currentUser!.role,
+            status: newStatus,
+          );
+          notifyListeners();
+        }
+      },
+    );
   }
 
   Future<bool> saveAdditionalData({
@@ -212,7 +234,8 @@ Future<void> _checkAdditionalData(String userId) async {
     notifyListeners();
 
     try {
-      if (_currentUser == null) throw Exception('No hay ningún usuario conectado');
+      if (_currentUser == null)
+        throw Exception('No hay ningún usuario conectado');
 
       String? finalPhotoUrl = photoUrl;
 
@@ -242,8 +265,10 @@ Future<void> _checkAdditionalData(String userId) async {
         notifyListeners();
 
         // Then refresh from database in background (non-blocking for UI)
-       await _checkAdditionalData(_currentUser!.id);
-       debugPrint('[${DateTime.now()}] [AUTH] Datos guardados con éxito. _hasAdditionalData: $_hasAdditionalData');
+        await _checkAdditionalData(_currentUser!.id);
+        debugPrint(
+          '[${DateTime.now()}] [AUTH] Datos guardados con éxito. _hasAdditionalData: $_hasAdditionalData',
+        );
       }
 
       _isLoading = false;

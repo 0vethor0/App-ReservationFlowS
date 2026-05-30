@@ -14,8 +14,5 @@ abstract class StorageRepository {
   });
 
   /// Delete a file from storage
-  Future<void> deleteFile({
-    required String bucket,
-    required String filePath,
-  });
+  Future<void> deleteFile({required String bucket, required String filePath});
 }

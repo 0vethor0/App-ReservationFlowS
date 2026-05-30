@@ -130,19 +130,21 @@ class ReservationRemoteDataSource {
       'p_reservas': dates,
       'p_notas_globales': globalNotes,
     };
-    debugPrint('[ReservationRemoteDataSource] Llamando RPC intentar_reservas_multiples con params: $params');
-    
+    debugPrint(
+      '[ReservationRemoteDataSource] Llamando RPC intentar_reservas_multiples con params: $params',
+    );
+
     final response = await client.rpc(
       'intentar_reservas_multiples',
       params: params,
     );
-    
+
     debugPrint('[ReservationRemoteDataSource] Respuesta RPC: $response');
-    
+
     // Asumimos que la respuesta es un Map, pero client.rpc puede devolver otras cosas según la función.
     // Si la función devuelve jsonb, debería ser un Map o List.
     if (response is Map<String, dynamic>) {
-        return response;
+      return response;
     }
     return {'success': false, 'message': 'Respuesta inesperada: $response'};
   }

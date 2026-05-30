@@ -32,10 +32,7 @@ class AuthRepositoryImpl implements AuthRepository {
     required String password,
   }) async {
     try {
-      await remoteDataSource.signUpWithEmail(
-        email: email,
-        password: password,
-      );
+      await remoteDataSource.signUpWithEmail(email: email, password: password);
       return true;
     } on AuthException catch (e) {
       throw Exception(e.message);
@@ -79,7 +76,8 @@ class AuthRepositoryImpl implements AuthRepository {
       if (profile == null) return false;
 
       final primerNombre = profile['primer_nombre']?.toString().trim() ?? '';
-      final primerApellido = profile['primer_apellido']?.toString().trim() ?? '';
+      final primerApellido =
+          profile['primer_apellido']?.toString().trim() ?? '';
       final fotoUrl = profile['foto_url']?.toString().trim() ?? '';
       final especialidad = profile['especialidad']?.toString().trim() ?? '';
 

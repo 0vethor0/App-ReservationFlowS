@@ -30,9 +30,7 @@ class CalendarFilterBar extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surfaceLight,
         border: Border(
-          top: BorderSide(
-            color: AppColors.border.withValues(alpha: 0.35),
-          ),
+          top: BorderSide(color: AppColors.border.withValues(alpha: 0.35)),
         ),
         boxShadow: [
           BoxShadow(

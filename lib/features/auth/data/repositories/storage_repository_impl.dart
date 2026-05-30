@@ -28,9 +28,6 @@ class StorageRepositoryImpl implements StorageRepository {
     required String bucket,
     required String filePath,
   }) async {
-    await dataSource.deleteFile(
-      bucket: bucket,
-      filePath: filePath,
-    );
+    await dataSource.deleteFile(bucket: bucket, filePath: filePath);
   }
 }

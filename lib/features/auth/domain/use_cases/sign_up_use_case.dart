@@ -13,9 +13,6 @@ class SignUpUseCase {
     required String password,
     required String fullName,
   }) {
-    return repository.signUpWithEmail(
-      email: email,
-      password: password,
-    );
+    return repository.signUpWithEmail(email: email, password: password);
   }
 }

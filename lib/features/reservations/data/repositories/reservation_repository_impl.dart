@@ -46,8 +46,7 @@ class ReservationRepositoryImpl implements ReservationRepository {
   }
 
   @override
-  Future<List<Map<String, dynamic>>>
-  fetchApprovedReservationsForProductOnDate({
+  Future<List<Map<String, dynamic>>> fetchApprovedReservationsForProductOnDate({
     required String videobeamId,
     required DateTime date,
   }) async {
@@ -98,10 +97,12 @@ class ReservationRepositoryImpl implements ReservationRepository {
         dates: dates,
         globalNotes: globalNotes,
       );
-      
+
       final success = response['success'] as bool? ?? false;
       if (!success) {
-        developer.log('[ReservationRepositoryImpl] Error desde RPC: ${response['message']}');
+        developer.log(
+          '[ReservationRepositoryImpl] Error desde RPC: ${response['message']}',
+        );
       }
       return success;
     } catch (e) {

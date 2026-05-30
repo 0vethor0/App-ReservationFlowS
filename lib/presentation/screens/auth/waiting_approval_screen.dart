@@ -38,10 +38,7 @@ class WaitingApprovalScreen extends StatelessWidget {
                       tween: Tween(begin: 0.8, end: 1.0),
                       duration: const Duration(seconds: 1),
                       builder: (context, value, child) {
-                        return Transform.scale(
-                          scale: value,
-                          child: child,
-                        );
+                        return Transform.scale(scale: value, child: child);
                       },
                       child: Container(
                         padding: const EdgeInsets.all(32),

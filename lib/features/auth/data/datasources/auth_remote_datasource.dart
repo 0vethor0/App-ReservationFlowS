@@ -25,10 +25,7 @@ class AuthRemoteDataSource {
     required String email,
     required String password,
   }) async {
-    return await client.auth.signUp(
-      email: email,
-      password: password,
-    );
+    return await client.auth.signUp(email: email, password: password);
   }
 
   /// Realizar inicio de sesion con Google OAuth.
@@ -145,18 +142,16 @@ class AuthRemoteDataSource {
 
   /// Observar cambios de estado de usuario en tiempo real
   Stream<UserStatus> watchCurrentUserStatus(String uid) {
-    return client
-        .from('perfiles')
-        .stream(primaryKey: ['id'])
-        .eq('id', uid)
-        .map((maps) {
-      if (maps.isEmpty) return UserStatus.pending;
-      final statusStr = maps.first['status'] as String? ?? 'pending';
-      return statusStr == 'approved'
-          ? UserStatus.approved
-          : (statusStr == 'rejected'
-              ? UserStatus.rejected
-              : UserStatus.pending);
-    });
+    return client.from('perfiles').stream(primaryKey: ['id']).eq('id', uid).map(
+      (maps) {
+        if (maps.isEmpty) return UserStatus.pending;
+        final statusStr = maps.first['status'] as String? ?? 'pending';
+        return statusStr == 'approved'
+            ? UserStatus.approved
+            : (statusStr == 'rejected'
+                  ? UserStatus.rejected
+                  : UserStatus.pending);
+      },
+    );
   }
 }

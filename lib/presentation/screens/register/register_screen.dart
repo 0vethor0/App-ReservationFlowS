@@ -79,19 +79,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
     if (!mounted) return;
     if (success) {
-// No navegues manualmente; deja que el router maneje la redirección según el estado de autenticación
-// El router redirigirá automáticamente a /additional-data
+      // No navegues manualmente; deja que el router maneje la redirección según el estado de autenticación
+      // El router redirigirá automáticamente a /additional-data
 
       Fluttertoast.showToast(
-          msg: "Operación realizada con éxito. Revisa tu correo y confirma tu cuenta",
-          toastLength: Toast.LENGTH_LONG, // Duración (SHORT o LONG)
-          gravity: ToastGravity.TOP,    // Posición: BOTTOM, CENTER, TOP
-          timeInSecForIosWeb: 2,           // Duración específica en iOS/Web
-          backgroundColor: Colors.green,   // Color de fondo
-          textColor: Colors.white,         // Color del texto
-          fontSize: 16.0
+        msg:
+            "Operación realizada con éxito. Revisa tu correo y confirma tu cuenta",
+        toastLength: Toast.LENGTH_LONG, // Duración (SHORT o LONG)
+        gravity: ToastGravity.TOP, // Posición: BOTTOM, CENTER, TOP
+        timeInSecForIosWeb: 2, // Duración específica en iOS/Web
+        backgroundColor: Colors.green, // Color de fondo
+        textColor: Colors.white, // Color del texto
+        fontSize: 16.0,
       );
-      
     }
     context.go('/login');
   }
@@ -244,7 +244,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       text: AppStrings.createAccount,
                       onPressed: _handleRegister,
                       isLoading: auth.isLoading,
-                      
                     ),
                   ),
                 ),

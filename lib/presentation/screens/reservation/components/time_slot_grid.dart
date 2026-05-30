@@ -78,7 +78,6 @@ class _TimePickerSectionState extends State<TimePickerSection> {
 
   /// Despliega el BottomSheet con el selector de rodillo vertical personalizado de 12 horas.
 
-
   /// Despliega el BottomSheet con el selector de rodillo vertical personalizado de 12 horas.
 
   /// Despliega el BottomSheet con el selector de rodillo vertical personalizado de 12 horas.
@@ -111,9 +110,7 @@ class _TimePickerSectionState extends State<TimePickerSection> {
     if (minutes < minAllowed || minutes > maxAllowed) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-            'Solo se permiten reservaciones de 7:00 AM a 5:00 PM',
-          ),
+          content: Text('Solo se permiten reservaciones de 7:00 AM a 5:00 PM'),
           backgroundColor: AppColors.error,
         ),
       );
@@ -205,18 +202,14 @@ class _TimePickerSectionState extends State<TimePickerSection> {
           final existingStart = DateTime.parse(
             reservation['hora_inicio'] as String,
           );
-          final existingEnd = DateTime.parse(
-            reservation['hora_fin'] as String,
-          );
+          final existingEnd = DateTime.parse(reservation['hora_fin'] as String);
 
           final startMinutes =
               widget.startTime!.hour * 60 + widget.startTime!.minute;
-          final endMinutes =
-              widget.endTime!.hour * 60 + widget.endTime!.minute;
+          final endMinutes = widget.endTime!.hour * 60 + widget.endTime!.minute;
           final existingStartMinutes =
               existingStart.hour * 60 + existingStart.minute;
-          final existingEndMinutes =
-              existingEnd.hour * 60 + existingEnd.minute;
+          final existingEndMinutes = existingEnd.hour * 60 + existingEnd.minute;
 
           if ((startMinutes >= existingStartMinutes &&
                   startMinutes < existingEndMinutes) ||
@@ -269,7 +262,9 @@ class _TimePickerSectionState extends State<TimePickerSection> {
         ),
         const SizedBox(height: 16),
         _TimeRangeBar(
-          blockedRanges: context.watch<ReservationProvider>().bloquesOcupadosDelDia,
+          blockedRanges: context
+              .watch<ReservationProvider>()
+              .bloquesOcupadosDelDia,
           startTime: widget.startTime,
           endTime: widget.endTime,
           minHour: _minHour,
@@ -285,8 +280,7 @@ class _TimePickerSectionState extends State<TimePickerSection> {
             children: [
               const TextSpan(text: 'Horario permitido: '),
               TextSpan(
-                text:
-                    '${_formatHour(_minHour)} - ${_formatHour(_maxHour)}',
+                text: '${_formatHour(_minHour)} - ${_formatHour(_maxHour)}',
                 style: const TextStyle(
                   fontWeight: FontWeight.w600,
                   color: AppColors.primaryBlue,
@@ -295,25 +289,33 @@ class _TimePickerSectionState extends State<TimePickerSection> {
             ],
           ),
         ),
-        if (context.watch<ReservationProvider>().bloquesOcupadosDelDia.isNotEmpty) ...[
+        if (context
+            .watch<ReservationProvider>()
+            .bloquesOcupadosDelDia
+            .isNotEmpty) ...[
           const SizedBox(height: 4),
-          ...List.generate(context.watch<ReservationProvider>().bloquesOcupadosDelDia.length, (i) {
-            final r = context.watch<ReservationProvider>().bloquesOcupadosDelDia[i];
-            final sh = r.start.hour;
-            final sm = r.start.minute;
-            final eh = r.end.hour;
-            final em = r.end.minute;
-            return Padding(
-              padding: const EdgeInsets.only(top: 2),
-              child: Text(
-                '• ${sh.toString().padLeft(2, '0')}:${sm.toString().padLeft(2, '0')} - ${eh.toString().padLeft(2, '0')}:${em.toString().padLeft(2, '0')} ${sh < 12 ? 'AM' : 'PM'} (reservado)',
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  color: AppColors.error.withValues(alpha: 0.8),
+          ...List.generate(
+            context.watch<ReservationProvider>().bloquesOcupadosDelDia.length,
+            (i) {
+              final r = context
+                  .watch<ReservationProvider>()
+                  .bloquesOcupadosDelDia[i];
+              final sh = r.start.hour;
+              final sm = r.start.minute;
+              final eh = r.end.hour;
+              final em = r.end.minute;
+              return Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Text(
+                  '• ${sh.toString().padLeft(2, '0')}:${sm.toString().padLeft(2, '0')} - ${eh.toString().padLeft(2, '0')}:${em.toString().padLeft(2, '0')} ${sh < 12 ? 'AM' : 'PM'} (reservado)',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    color: AppColors.error.withValues(alpha: 0.8),
+                  ),
                 ),
-              ),
-            );
-          }),
+              );
+            },
+          ),
         ],
         if (_isCheckingAvailability) ...[
           const SizedBox(height: 12),
@@ -470,7 +472,10 @@ class _VerticalScrollTimePickerModalState
   late FixedExtentScrollController _minuteController;
   late FixedExtentScrollController _periodController;
 
-  final List<int> _hoursList = List.generate(12, (index) => index + 1); // 1 al 12
+  final List<int> _hoursList = List.generate(
+    12,
+    (index) => index + 1,
+  ); // 1 al 12
   final List<int> _minutesList = List.generate(60, (index) => index); // 0 al 59
   final List<String> _periodsList = ['AM', 'PM'];
 
@@ -752,7 +757,9 @@ class _TimeRangeBar extends StatelessWidget {
                       (slotStart <= startMin && slotEnd >= endMin);
                 });
 
-                final isSelected = startTime != null && endTime != null &&
+                final isSelected =
+                    startTime != null &&
+                    endTime != null &&
                     hour >= startTime!.hour &&
                     hour < endTime!.hour;
 
@@ -762,8 +769,8 @@ class _TimeRangeBar extends StatelessWidget {
                       color: isBlocked
                           ? AppColors.error.withValues(alpha: 0.25)
                           : isSelected
-                              ? AppColors.success.withValues(alpha: 0.3)
-                              : AppColors.primaryBlue.withValues(alpha: 0.08),
+                          ? AppColors.success.withValues(alpha: 0.3)
+                          : AppColors.primaryBlue.withValues(alpha: 0.08),
                       border: i < totalSlots - 1
                           ? const Border(
                               right: BorderSide(
@@ -782,8 +789,8 @@ class _TimeRangeBar extends StatelessWidget {
                         color: isBlocked
                             ? AppColors.error
                             : isSelected
-                                ? AppColors.success
-                                : AppColors.textSecondary,
+                            ? AppColors.success
+                            : AppColors.textSecondary,
                       ),
                     ),
                   ),
@@ -844,10 +851,7 @@ class _LegendText extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: GoogleFonts.inter(
-        fontSize: 9,
-        color: AppColors.textSecondary,
-      ),
+      style: GoogleFonts.inter(fontSize: 9, color: AppColors.textSecondary),
     );
   }
 }

@@ -1,6 +1,5 @@
 library;
 
-
 class TimeSlot {
   final DateTime start;
   final DateTime end;
