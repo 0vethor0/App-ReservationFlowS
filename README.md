@@ -27,17 +27,17 @@ La aplicación se integra de forma nativa con **Supabase** como backend-as-a-ser
 
 ## 🛠️ Tecnologías que utiliza
 
-| Categoría | Tecnologías |
-| :--- | :--- |
-| **☕ Lenguaje** | Dart 3.x |
-| **⚡ Framework** | Flutter (Soporte multiplataforma: Android, iOS, Web) |
-| **☁️ Backend** | Supabase (Auth, Database, Realtime, Storage) |
-| **🧠 Gestor de Estado**| Provider + ChangeNotifier |
-| **🗺️ Enrutamiento** | GoRouter |
-| **🎨 UI/UX** | Google Fonts, Animate_do, Font Awesome Icons, Table Calendar |
-| **📐 Arquitectura** | Clean Architecture con un enfoque de organización **Feature-First** |
-| **🛡️ Seguridad/Config**| flutter_dotenv (Manejo seguro de variables de entorno) |
-| **📦 Librerías Extra** | intl (fechas en español), url_launcher, modal_bottom_sheet, fluttertoast |
+| Categoría              | Tecnologías                                                              |
+| :--------------------- | :----------------------------------------------------------------------- |
+| **☕ Lenguaje**         | Dart 3.x                                                                 |
+| **⚡ Framework**        | Flutter (Soporte multiplataforma: Android, iOS, Web)                     |
+| **☁️ Backend**          | Supabase (Auth, Database, Realtime, Storage)                             |
+| **🧠 Gestor de Estado** | Provider + ChangeNotifier                                                |
+| **🗺️ Enrutamiento**     | GoRouter                                                                 |
+| **🎨 UI/UX**            | Google Fonts, Animate_do, Font Awesome Icons, Table Calendar             |
+| **📐 Arquitectura**     | Clean Architecture con un enfoque de organización **Feature-First**      |
+| **🛡️ Seguridad/Config** | flutter_dotenv (Manejo seguro de variables de entorno)                   |
+| **📦 Librerías Extra**  | intl (fechas en español), url_launcher, modal_bottom_sheet, fluttertoast |
 
 ---
 
@@ -123,14 +123,12 @@ El proyecto adopta rigurosamente los principios de **Clean Architecture** distri
 1. **Capa de Dominio (`domain/`)**: La más interna y pura. Libre de dependencias externas o del framework (Flutter). Contiene las entidades esenciales de negocio y los contratos abstractos (interfaces de repositorios).
 2. **Capa de Datos (`data/`)**: Implementa los contratos definidos en el dominio. Interactúa de forma directa con APIs y servicios en la nube a través de los *Data Sources* concretos de Supabase.
 3. **Capa de Presentación (`presentation/`)**: Contiene la lógica de las pantallas. Utiliza el patrón **Provider (ChangeNotifier)** para notificar cambios de estado a la UI. El flujo de eventos sigue una estructura unidireccional:
-   
-   $$\text{UI (Pantallas/Widgets)} \longrightarrow \text{Provider} \longrightarrow \text{Repositorio (Dominio)} \longrightarrow \text{Datasource (Supabase)} \longrightarrow \text{Base de Datos}$$
-
+ 
 ---
 
 ## 🔄 Novedades y Correcciones de Sincronización (SDPT) 🛠️
 
-En las últimas versiones, el sistema ha sido optimizado con correcciones profundas de husos horarios y asincronía (SDPT) para garantizar consistencia horaria global de la base de datos (UTC) con la hora del dispositivo local (por ejemplo, Venezuela/Caracas):
+En las últimas versiones, el sistema ha sido optimizado con correcciones profundas de horarios y asincronía (SDPT) para garantizar consistencia horaria global de la base de datos (UTC) con la hora del dispositivo local (por ejemplo, Venezuela/Caracas):
 
 * 🕐 **Fronteras Locales Absolutas:** Se corrigió el método `escucharReservasPorDia` en `ReservationProvider`. Ya no define los límites del día actual usando strings UTC directamente (lo cual causaba que reservas de madrugada se filtraran de manera invisible). Ahora utiliza el huso horario local puro (`00:00:00` a `23:59:59`) para realizar el corte del día de manera exacta.
 * 🛰️ **Parseo Integrado a Local:** El stream en tiempo real de Supabase ahora convierte automáticamente los campos `hora_inicio` y `hora_fin` mediante `.toLocal()` antes de agregarlos al listado de la interfaz. Los bloques pintados en rojo (`TimeSlot`) reflejan con exactitud matemática el espacio horario seleccionado.
