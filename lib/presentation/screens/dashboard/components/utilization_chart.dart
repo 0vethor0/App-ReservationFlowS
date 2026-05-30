@@ -7,6 +7,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../providers/dashboard_provider.dart';
@@ -25,7 +26,10 @@ class _UtilizationChartState extends State<UtilizationChart> {
   @override
   void initState() {
     super.initState();
-    initializeDateFormatting('es', null);// para que el datepicker muestre la fecha en español
+    initializeDateFormatting(
+      'es',
+      null,
+    ); // para que el datepicker muestre la fecha en español
     // Setup notification callback via provider
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final dashProvider = context.read<DashboardProvider>();
@@ -58,7 +62,9 @@ class _UtilizationChartState extends State<UtilizationChart> {
           height: 300,
           padding: const EdgeInsets.only(top: 6.0),
           decoration: BoxDecoration(
-            color: isDarkMode ? const Color(0xFF1E1E1E) : CupertinoColors.systemBackground.resolveFrom(context),
+            color: isDarkMode
+                ? const Color(0xFF1E1E1E)
+                : CupertinoColors.systemBackground.resolveFrom(context),
             borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(20),
               topRight: Radius.circular(20),
@@ -73,11 +79,16 @@ class _UtilizationChartState extends State<UtilizationChart> {
               child: Column(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       border: Border(
                         bottom: BorderSide(
-                          color: isDarkMode ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.1),
+                          color: isDarkMode
+                              ? Colors.white.withValues(alpha: 0.1)
+                              : Colors.black.withValues(alpha: 0.1),
                           width: 0.5,
                         ),
                       ),
@@ -87,12 +98,18 @@ class _UtilizationChartState extends State<UtilizationChart> {
                       children: [
                         CupertinoButton(
                           padding: EdgeInsets.zero,
-                          child: const Text('Cancelar', style: TextStyle(color: Colors.red)),
+                          child: const Text(
+                            'Cancelar',
+                            style: TextStyle(color: Colors.red),
+                          ),
                           onPressed: () => Navigator.of(context).pop(),
                         ),
                         CupertinoButton(
                           padding: EdgeInsets.zero,
-                          child: const Text('Aceptar', style: TextStyle(color: AppColors.primaryBlue)),
+                          child: const Text(
+                            'Aceptar',
+                            style: TextStyle(color: AppColors.primaryBlue),
+                          ),
                           onPressed: () => Navigator.of(context).pop(),
                         ),
                       ],
@@ -186,7 +203,12 @@ class _UtilizationChartState extends State<UtilizationChart> {
                                     style: GoogleFonts.inter(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,
-                                      color: const Color.fromARGB(255, 255, 255, 255),
+                                      color: const Color.fromARGB(
+                                        255,
+                                        255,
+                                        255,
+                                        255,
+                                      ),
                                     ),
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -532,6 +554,13 @@ class DashboardRequestCard extends StatelessWidget {
   void _confirmComplete(BuildContext context) {
     File? selectedEvidence;
 
+    // Capture providers and state BEFORE opening the bottom sheet
+    // This prevents "Looking up a deactivated widget's ancestor is unsafe"
+    // if the DashboardRequestCard is removed from the tree while the bottom sheet is open.
+    final msgProvider = context.read<MessagingProvider>();
+    final dashProvider = context.read<DashboardProvider>();
+    final dashState = context.findAncestorStateOfType<DashboardScreenState>();
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -563,7 +592,11 @@ class DashboardRequestCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
-                      const Icon(Icons.camera_alt_rounded, size: 48, color: AppColors.primaryBlue),
+                      const Icon(
+                        Icons.camera_alt_rounded,
+                        size: 48,
+                        color: AppColors.primaryBlue,
+                      ),
                       const SizedBox(height: 12),
                       Text(
                         'Evidencia fotográfica',
@@ -577,7 +610,10 @@ class DashboardRequestCard extends StatelessWidget {
                       Text(
                         'Para finalizar la reservación, adjunta una foto del equipo en su estado actual.',
                         textAlign: TextAlign.center,
-                        style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary),
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                       const SizedBox(height: 20),
 
@@ -598,14 +634,20 @@ class DashboardRequestCard extends StatelessWidget {
                               top: 8,
                               right: 8,
                               child: GestureDetector(
-                                onTap: () => setModalState(() => selectedEvidence = null),
+                                onTap: () => setModalState(
+                                  () => selectedEvidence = null,
+                                ),
                                 child: Container(
                                   padding: const EdgeInsets.all(4),
                                   decoration: BoxDecoration(
                                     color: Colors.black.withValues(alpha: 0.5),
                                     shape: BoxShape.circle,
                                   ),
-                                  child: const Icon(Icons.close, color: Colors.white, size: 18),
+                                  child: const Icon(
+                                    Icons.close,
+                                    color: Colors.white,
+                                    size: 18,
+                                  ),
                                 ),
                               ),
                             ),
@@ -619,12 +661,30 @@ class DashboardRequestCard extends StatelessWidget {
                                 icon: Icons.camera_alt_outlined,
                                 label: 'Cámara',
                                 onTap: () async {
-                                  final xfile = await ImagePicker().pickImage(
-                                    source: ImageSource.camera,
-                                    imageQuality: 70,
-                                  );
-                                  if (xfile != null) {
-                                    setModalState(() => selectedEvidence = File(xfile.path));
+                                  try {
+                                    // Request camera permission explicitly
+                                    final status = await Permission.camera
+                                        .request();
+                                    if (status.isPermanentlyDenied) {
+                                      openAppSettings();
+                                      return;
+                                    }
+                                    if (!status.isGranted) return;
+
+                                    final xfile = await ImagePicker().pickImage(
+                                      source: ImageSource.camera,
+                                      imageQuality: 70,
+                                    );
+                                    if (xfile != null) {
+                                      setModalState(
+                                        () =>
+                                            selectedEvidence = File(xfile.path),
+                                      );
+                                    }
+                                  } catch (e) {
+                                    debugPrint(
+                                      'Error picking image from camera: $e',
+                                    );
                                   }
                                 },
                               ),
@@ -635,12 +695,42 @@ class DashboardRequestCard extends StatelessWidget {
                                 icon: Icons.photo_library_outlined,
                                 label: 'Galería',
                                 onTap: () async {
-                                  final xfile = await ImagePicker().pickImage(
-                                    source: ImageSource.gallery,
-                                    imageQuality: 70,
-                                  );
-                                  if (xfile != null) {
-                                    setModalState(() => selectedEvidence = File(xfile.path));
+                                  try {
+                                    // Request gallery/photos permission
+                                    if (Platform.isAndroid) {
+                                      final photosStatus = await Permission
+                                          .photos
+                                          .request();
+                                      if (!photosStatus.isGranted &&
+                                          !photosStatus.isLimited) {
+                                        final storageStatus = await Permission
+                                            .storage
+                                            .request();
+                                        if (!storageStatus.isGranted) return;
+                                      }
+                                    } else {
+                                      final status = await Permission.photos
+                                          .request();
+                                      if (!status.isGranted &&
+                                          !status.isLimited) {
+                                        return;
+                                      }
+                                    }
+
+                                    final xfile = await ImagePicker().pickImage(
+                                      source: ImageSource.gallery,
+                                      imageQuality: 70,
+                                    );
+                                    if (xfile != null) {
+                                      setModalState(
+                                        () =>
+                                            selectedEvidence = File(xfile.path),
+                                      );
+                                    }
+                                  } catch (e) {
+                                    debugPrint(
+                                      'Error picking image from gallery: $e',
+                                    );
                                   }
                                 },
                               ),
@@ -657,9 +747,6 @@ class DashboardRequestCard extends StatelessWidget {
                           onPressed: selectedEvidence == null
                               ? null
                               : () {
-                                  final msgProvider = context.read<MessagingProvider>();
-                                  final dashProvider = context.read<DashboardProvider>();
-
                                   // 1. Set image for optimistic upload
                                   msgProvider.selectImage(selectedEvidence!);
 
@@ -669,8 +756,9 @@ class DashboardRequestCard extends StatelessWidget {
                                   // 3. Get or create canal for this reservation, then navigate
                                   msgProvider.loadCanales().then((_) async {
                                     try {
-                                      if (!context.mounted) return;
-                                      await msgProvider.openCanalForReserva(request.id);
+                                      await msgProvider.openCanalForReserva(
+                                        request.id,
+                                      );
 
                                       // Send evidence optimistically
                                       await msgProvider.enviarMensaje(
@@ -678,13 +766,19 @@ class DashboardRequestCard extends StatelessWidget {
                                       );
 
                                       // Complete reservation in DB
-                                      dashProvider.completeMyReservation(request.id);
+                                      dashProvider.completeMyReservation(
+                                        request.id,
+                                      );
 
                                       // Navigate to Chat tab (index 3 in dashboard)
-                                      if (!context.mounted) return;
-                                      _navigateToChatTab(context);
+                                      if (dashState != null &&
+                                          dashState.mounted) {
+                                        dashState.switchToTab(3);
+                                      }
                                     } catch (e) {
-                                      debugPrint('Error enviando evidencia: $e');
+                                      debugPrint(
+                                        'Error enviando evidencia: $e',
+                                      );
                                     }
                                   });
                                 },
@@ -725,14 +819,6 @@ class DashboardRequestCard extends StatelessWidget {
         );
       },
     );
-  }
-
-  /// Notifies the DashboardScreen to switch to Chat tab (index 3).
-  void _navigateToChatTab(BuildContext context) {
-    final dashState = context.findAncestorStateOfType<DashboardScreenState>();
-    if (dashState != null && dashState.mounted) {
-      dashState.switchToTab(3);
-    }
   }
 }
 
@@ -903,11 +989,7 @@ class _ArrowButton extends StatelessWidget {
           onTap: onPressed,
           child: Padding(
             padding: const EdgeInsets.all(12.0),
-            child: Icon(
-              icon,
-              color: AppColors.primaryBlue,
-              size: 20,
-            ),
+            child: Icon(icon, color: AppColors.primaryBlue, size: 20),
           ),
         ),
       ),

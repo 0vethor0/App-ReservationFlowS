@@ -67,10 +67,16 @@ class NotificationServiceImpl implements NotificationService {
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       final notification = message.notification;
       if (notification != null) {
+        String body = notification.body ?? '';
+        
+        // Ajustar hora en el cuerpo si contiene una hora en formato HH:mm
+        // Como se solicitó, ajustar de UTC a UTC-4 (restando 4 horas)
+        body = _adjustTimeInBody(body);
+
         showLocalNotification(
           id: notification.hashCode,
           title: notification.title ?? 'BeamFlow',
-          body: notification.body ?? '',
+          body: body,
           payload: message.data,
         );
       }
@@ -79,6 +85,25 @@ class NotificationServiceImpl implements NotificationService {
     // 6. (Opcional) Escuchar cuando el usuario toca una notificación con la app en segundo plano
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       _handleNavigation(message.data);
+    });
+  }
+
+  String _adjustTimeInBody(String body) {
+    // Busca patrones de hora HH:mm
+    final regExp = RegExp(r'(\d{1,2}):(\d{2})');
+    return body.replaceAllMapped(regExp, (match) {
+      try {
+        int hour = int.parse(match.group(1)!);
+        final minute = match.group(2)!;
+        
+        // Ajuste manual de UTC a UTC-4
+        hour = (hour - 4) % 24;
+        if (hour < 0) hour += 24;
+        
+        return '${hour.toString().padLeft(2, '0')}:$minute';
+      } catch (e) {
+        return match.group(0)!;
+      }
     });
   }
 

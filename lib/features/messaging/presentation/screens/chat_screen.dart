@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -64,112 +63,145 @@ class _CanalesListView extends StatelessWidget {
         automaticallyImplyLeading: false,
       ),
       body: provider.isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primaryBlue))
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.primaryBlue),
+            )
           : provider.canales.isEmpty
-              ? const Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.chat_bubble_outline, size: 64, color: AppColors.textTertiary),
-                      SizedBox(height: 16),
-                      Text(
-                        'No hay tickets activos',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      Text(
-                        'Inicia uno desde una reservación activa',
-                        style: TextStyle(fontSize: 13, color: AppColors.textTertiary),
+          ? const Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.chat_bubble_outline,
+                    size: 64,
+                    color: AppColors.textTertiary,
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'No hay tickets activos',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Inicia uno desde una reservación activa',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textTertiary,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: provider.canales.length,
+              itemBuilder: (context, index) {
+                final canal = provider.canales[index];
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceLight,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.04),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: provider.canales.length,
-                  itemBuilder: (context, index) {
-                    final canal = provider.canales[index];
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceLight,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.04),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(16),
-                          onTap: () => provider.selectCanal(canal),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 48,
-                                  height: 48,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.lightBlue,
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: const Icon(Icons.support_agent, color: AppColors.primaryBlue, size: 24),
-                                ),
-                                const SizedBox(width: 14),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(16),
+                      onTap: () => provider.selectCanal(canal),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: AppColors.lightBlue,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(
+                                Icons.support_agent,
+                                color: AppColors.primaryBlue,
+                                size: 24,
+                              ),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    canal.userName ??
                                         'Reserva #${canal.reservaId.substring(0, 8)}',
-                                        style: GoogleFonts.inter(
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 15,
-                                          color: AppColors.textPrimary,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        'Abierto ${DateFormat('dd/MM HH:mm').format(canal.creadoEn)}',
-                                        style: GoogleFonts.inter(fontSize: 12, color: AppColors.textTertiary),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.successLight,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    'Abierto',
                                     style: GoogleFonts.inter(
-                                      fontSize: 11,
                                       fontWeight: FontWeight.w600,
-                                      color: AppColors.success,
+                                      fontSize: 15,
+                                      color: AppColors.textPrimary,
                                     ),
                                   ),
-                                ),
-                                const SizedBox(width: 8),
-                                const Icon(Icons.chevron_right, color: AppColors.textTertiary),
-                              ],
+                                  const SizedBox(height: 2),
+                                  if (canal.userSpecialty != null)
+                                    Text(
+                                      canal.userSpecialty!,
+                                      style: GoogleFonts.inter(
+                                        fontSize: 12,
+                                        color: AppColors.primaryBlue,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Abierto ${DateFormat('dd/MM HH:mm').format(canal.creadoEn)}',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 12,
+                                      color: AppColors.textTertiary,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.successLight,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                'Abierto',
+                                style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.success,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            const Icon(
+                              Icons.chevron_right,
+                              color: AppColors.textTertiary,
+                            ),
+                          ],
                         ),
                       ),
-                    );
-                  },
-                ),
+                    ),
+                  ),
+                );
+              },
+            ),
     );
   }
 }
@@ -219,7 +251,11 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textPrimary, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: AppColors.textPrimary,
+            size: 20,
+          ),
           onPressed: () => provider.clearSelectedCanal(),
         ),
         title: Column(
@@ -235,7 +271,10 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
             ),
             Text(
               'Los mensajes expiran en 24h',
-              style: GoogleFonts.inter(fontSize: 11, color: AppColors.textTertiary),
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                color: AppColors.textTertiary,
+              ),
             ),
           ],
         ),
@@ -249,22 +288,33 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.photo_camera_outlined, size: 48, color: AppColors.textTertiary),
+                        Icon(
+                          Icons.photo_camera_outlined,
+                          size: 48,
+                          color: AppColors.textTertiary,
+                        ),
                         SizedBox(height: 12),
                         Text(
                           'Envía la evidencia fotográfica',
-                          style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppColors.textSecondary,
+                          ),
                         ),
                       ],
                     ),
                   )
                 : ListView.builder(
                     controller: _scrollController,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                     itemCount: provider.mensajes.length,
                     itemBuilder: (context, index) {
                       final msg = provider.mensajes[index];
-                      final isMe = msg.remitenteId == currentUserId ||
+                      final isMe =
+                          msg.remitenteId == currentUserId ||
                           msg.remitenteId.isEmpty; // temp optimistic msg
                       return _MessageBubble(
                         mensaje: msg,
@@ -300,11 +350,18 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
                   Expanded(
                     child: Text(
                       'Imagen seleccionada',
-                      style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary),
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close_rounded, color: AppColors.textTertiary, size: 20),
+                    icon: const Icon(
+                      Icons.close_rounded,
+                      color: AppColors.textTertiary,
+                      size: 20,
+                    ),
                     onPressed: () => provider.clearSelectedImage(),
                   ),
                 ],
@@ -313,7 +370,7 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
 
           // ── Input Bar ──
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: const BoxDecoration(
               color: AppColors.surfaceLight,
               border: Border(top: BorderSide(color: AppColors.divider)),
@@ -322,60 +379,59 @@ class _ChatRoomViewState extends State<_ChatRoomView> {
               top: false,
               child: Row(
                 children: [
-                  // Camera button
-                  _CircleActionButton(
-                    icon: Icons.camera_alt_outlined,
-                    onPressed: () async {
-                      final picker = ImagePicker();
-                      final xfile = await picker.pickImage(source: ImageSource.camera, imageQuality: 70);
-                      if (xfile != null) {
-                        provider.selectImage(File(xfile.path));
-                      }
-                    },
-                  ),
-                  const SizedBox(width: 6),
-                  // Gallery button
-                  _CircleActionButton(
-                    icon: Icons.image_outlined,
-                    onPressed: () async {
-                      final picker = ImagePicker();
-                      final xfile = await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
-                      if (xfile != null) {
-                        provider.selectImage(File(xfile.path));
-                      }
-                    },
-                  ),
-                  const SizedBox(width: 8),
                   // Text field
                   Expanded(
                     child: TextField(
                       controller: _textController,
-                      style: GoogleFonts.inter(color: AppColors.textPrimary, fontSize: 14),
+                      style: GoogleFonts.inter(
+                        color: AppColors.textPrimary,
+                        fontSize: 14,
+                      ),
                       textCapitalization: TextCapitalization.sentences,
                       decoration: InputDecoration(
                         hintText: 'Escribe un mensaje...',
-                        hintStyle: GoogleFonts.inter(color: AppColors.textTertiary, fontSize: 14),
+                        hintStyle: GoogleFonts.inter(
+                          color: AppColors.textTertiary,
+                          fontSize: 14,
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(24),
                           borderSide: BorderSide.none,
                         ),
                         filled: true,
                         fillColor: Colors.white,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 12),
                   // Send button
                   Container(
+                    height: 44,
+                    width: 44,
                     decoration: BoxDecoration(
                       gradient: AppColors.primaryGradient,
-                      borderRadius: BorderRadius.circular(24),
+                      borderRadius: BorderRadius.circular(22),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primaryBlue.withValues(alpha: 0.2),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
                     child: IconButton(
-                      icon: const Icon(Icons.send_rounded, color: Colors.white, size: 20),
+                      icon: const Icon(
+                        Icons.send_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
                       onPressed: () async {
-                        if (_textController.text.trim().isNotEmpty || provider.selectedImage != null) {
+                        if (_textController.text.trim().isNotEmpty ||
+                            provider.selectedImage != null) {
                           final text = _textController.text;
                           _textController.clear();
                           await provider.enviarMensaje(text);
@@ -431,7 +487,9 @@ class _MessageBubble extends StatelessWidget {
               ),
             ],
           ),
-          constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.72),
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width * 0.72,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -464,13 +522,12 @@ class _MessageBubble extends StatelessWidget {
                     DateFormat('HH:mm').format(mensaje.creadoEn),
                     style: GoogleFonts.inter(
                       fontSize: 10,
-                      color: isMe ? Colors.white.withValues(alpha: 0.6) : AppColors.textTertiary,
+                      color: isMe
+                          ? Colors.white.withValues(alpha: 0.6)
+                          : AppColors.textTertiary,
                     ),
                   ),
-                  if (isMe) ...[
-                    const SizedBox(width: 4),
-                    _buildStatusIcon(),
-                  ],
+                  if (isMe) ...[const SizedBox(width: 4), _buildStatusIcon()],
                 ],
               ),
             ],
@@ -482,12 +539,14 @@ class _MessageBubble extends StatelessWidget {
 
   bool get _hasImage =>
       mensaje.archivoUrl != null ||
-      (mensaje.archivoLocalPath != null && mensaje.estado != MensajeEstado.enviado);
+      (mensaje.archivoLocalPath != null &&
+          mensaje.estado != MensajeEstado.enviado);
 
   Widget _buildImage() {
     // Optimistic: show from local cache
     if (mensaje.archivoLocalPath != null &&
-        (mensaje.estado == MensajeEstado.enviando || mensaje.estado == MensajeEstado.error)) {
+        (mensaje.estado == MensajeEstado.enviando ||
+            mensaje.estado == MensajeEstado.error)) {
       return Stack(
         children: [
           ClipRRect(
@@ -539,7 +598,10 @@ class _MessageBubble extends StatelessWidget {
               child: SizedBox(
                 width: 24,
                 height: 24,
-                child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primaryBlue),
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.primaryBlue,
+                ),
               ),
             ),
           ),
@@ -549,7 +611,9 @@ class _MessageBubble extends StatelessWidget {
               color: AppColors.errorLight,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Center(child: Icon(Icons.broken_image_outlined, color: AppColors.error)),
+            child: const Center(
+              child: Icon(Icons.broken_image_outlined, color: AppColors.error),
+            ),
           ),
         ),
       );
@@ -561,37 +625,23 @@ class _MessageBubble extends StatelessWidget {
   Widget _buildStatusIcon() {
     switch (mensaje.estado) {
       case MensajeEstado.enviando:
-        return Icon(Icons.access_time_rounded, size: 14, color: Colors.white.withValues(alpha: 0.6));
+        return Icon(
+          Icons.access_time_rounded,
+          size: 14,
+          color: Colors.white.withValues(alpha: 0.6),
+        );
       case MensajeEstado.enviado:
-        return Icon(Icons.done_all_rounded, size: 14, color: Colors.white.withValues(alpha: 0.8));
+        return Icon(
+          Icons.done_all_rounded,
+          size: 14,
+          color: Colors.white.withValues(alpha: 0.8),
+        );
       case MensajeEstado.error:
-        return const Icon(Icons.error_outline_rounded, size: 14, color: Colors.redAccent);
+        return const Icon(
+          Icons.error_outline_rounded,
+          size: 14,
+          color: Colors.redAccent,
+        );
     }
-  }
-}
-
-// ─── Small Circle Button ────────────────────────────────────────
-
-class _CircleActionButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onPressed;
-
-  const _CircleActionButton({required this.icon, required this.onPressed});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 38,
-      height: 38,
-      child: Material(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(19),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(19),
-          onTap: onPressed,
-          child: Icon(icon, size: 20, color: AppColors.primaryBlue),
-        ),
-      ),
-    );
   }
 }

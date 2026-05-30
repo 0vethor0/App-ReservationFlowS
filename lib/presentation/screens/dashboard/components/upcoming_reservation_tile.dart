@@ -24,7 +24,7 @@ class UpcomingReservationTile extends StatelessWidget {
     String formattedTime = '';
     try {
       if (startTimeRaw.isNotEmpty) {
-        final dt = DateTime.parse(startTimeRaw);
+        final dt = DateTime.parse(startTimeRaw).toLocal();
         formattedTime =
             '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
       }

@@ -16,7 +16,7 @@ class MessagingRemoteDataSource {
     // 1. Intentar buscar canal existente
     final existing = await _supabase
         .from('canales_reserva')
-        .select()
+        .select('*, perfiles(*)')
         .eq('reserva_id', reservaId)
         .maybeSingle();
 
@@ -25,17 +25,14 @@ class MessagingRemoteDataSource {
     }
 
     // 2. Crear si no existe. 
-    // Para administradores que intentan crear canal de otra reserva, podria fallar si la RLS de insert exige usuario_id = auth.uid()
-    // Como el admin no deberia iniciar el canal (o si lo hace asume usuario_id de la reserva),
-    // Primero buscamos de quien es la reserva.
-    final reserva = await _supabase.from('reservas').select('usuario_id').eq('id', reservaId).single();
-    final ownerId = reserva['usuario_id'] as String;
+    final reserva = await _supabase.from('reservas').select('id_usuario').eq('id', reservaId).single();
+    final ownerId = reserva['id_usuario'] as String;
 
     final inserted = await _supabase.from('canales_reserva').insert({
       'reserva_id': reservaId,
       'usuario_id': ownerId,
       'estado': 'abierto',
-    }).select().single();
+    }).select('*, perfiles(*)').single();
 
     return CanalModel.fromMap(inserted);
   }
@@ -43,7 +40,7 @@ class MessagingRemoteDataSource {
   Future<List<CanalModel>> getActiveCanales() async {
     final res = await _supabase
         .from('canales_reserva')
-        .select()
+        .select('*, perfiles(*)')
         .eq('estado', 'abierto')
         .order('creado_en', ascending: false);
     
