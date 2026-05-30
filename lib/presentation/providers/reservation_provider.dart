@@ -323,31 +323,43 @@ class ReservationProvider extends ChangeNotifier {
         .from('reservas')
         .stream(primaryKey: ['id'])
         .eq('id_producto', productoId)
-        .listen((List<Map<String, dynamic>> snapshot) {
-      
-        final List<TimeSlot> nuevosBloques = [];
+        .listen(
+          (List<Map<String, dynamic>> snapshot) {
+            final List<TimeSlot> nuevosBloques = [];
 
-        for (var data in snapshot) {
-          final estado = data['estado_reserva'] as String?;
-          final validStatus = ['aprobada', 'en_curso', 'finalizada'];
-          
-          if (estado != null && validStatus.contains(estado) && data['hora_inicio'] != null && data['hora_fin'] != null) {
-            // Convertimos la hora UTC de la base de datos directamente a la hora local del dispositivo
-            final DateTime horaInicioLocal = DateTime.parse(data['hora_inicio']).toLocal();
-            final DateTime horaFinLocal = DateTime.parse(data['hora_fin']).toLocal();
+            for (var data in snapshot) {
+              final estado = data['estado_reserva'] as String?;
+              final validStatus = ['aprobada', 'en_curso', 'finalizada'];
 
-            // Comparamos manzanas con manzanas (Hora Local vs Fronteras Locales)
-            if (horaInicioLocal.isAfter(inicioDiaLocal) && horaInicioLocal.isBefore(finDiaLocal)) {
-              nuevosBloques.add(TimeSlot(start: horaInicioLocal, end: horaFinLocal));
+              if (estado != null &&
+                  validStatus.contains(estado) &&
+                  data['hora_inicio'] != null &&
+                  data['hora_fin'] != null) {
+                // Convertimos la hora UTC de la base de datos directamente a la hora local del dispositivo
+                final DateTime horaInicioLocal = DateTime.parse(
+                  data['hora_inicio'],
+                ).toLocal();
+                final DateTime horaFinLocal = DateTime.parse(
+                  data['hora_fin'],
+                ).toLocal();
+
+                // Comparamos manzanas con manzanas (Hora Local vs Fronteras Locales)
+                if (horaInicioLocal.isAfter(inicioDiaLocal) &&
+                    horaInicioLocal.isBefore(finDiaLocal)) {
+                  nuevosBloques.add(
+                    TimeSlot(start: horaInicioLocal, end: horaFinLocal),
+                  );
+                }
+              }
             }
-          }
-        }
 
-        _bloquesOcupadosDelDia = nuevosBloques;
-        notifyListeners(); // Notifica a la UI para repintar los cuadros en su posición real
-      }, onError: (error) {
-        debugPrint('Error en el stream de reservas: $error');
-      });
+            _bloquesOcupadosDelDia = nuevosBloques;
+            notifyListeners(); // Notifica a la UI para repintar los cuadros en su posición real
+          },
+          onError: (error) {
+            debugPrint('Error en el stream de reservas: $error');
+          },
+        );
   }
 
   /// Cancela la escucha activa (Llamar en el dispose del Screen o widget)

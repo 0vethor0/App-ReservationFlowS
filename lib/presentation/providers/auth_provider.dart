@@ -234,8 +234,9 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      if (_currentUser == null)
+      if (_currentUser == null) {
         throw Exception('No hay ningún usuario conectado');
+      }
 
       String? finalPhotoUrl = photoUrl;
 
