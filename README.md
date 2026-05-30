@@ -1,47 +1,60 @@
-# BeamFlow
+# 🚀 BeamFlow - Gestión de Reservas para Videobeams 📽️
 
-Sistema de gestión de reservas para videobeams (proyectores) diseñado para entornos educativos e institucionales. Permite a los usuarios solicitar equipos, a los administradores aprobar/rechazar solicitudes y a todos visualizar la disponibilidad en tiempo real.
+Sistema moderno y robusto de gestión de reservas para videobeams (proyectores) diseñado específicamente para entornos educativos e institucionales. Permite a los usuarios solicitar equipos, a los administradores gestionar solicitudes (aprobar/rechazar) y a todos visualizar la disponibilidad en tiempo real sin fricciones de zonas horarias.
 
-## Propósito y funcionamiento
+---
 
-### ¿Qué hace?
-BeamFlow es una aplicación móvil (Flutter) que centraliza todo el flujo de reserva de videobeams. Los usuarios pueden:
-- Registrarse e iniciar sesión (correo/contraseña o Google OAuth).
-- Solicitar la reserva de un videobeam seleccionando fecha, hora y equipo.
-- Consultar el calendario general con reservas de otros usuarios.
-- Recibir notificaciones en tiempo real sobre cambios en sus solicitudes.
-- Los administradores gestionan solicitudes pendientes, aprueban/rechazan reservas y administran el catálogo de equipos.
+## 🌟 Propósito y funcionamiento
 
-### Propósito general e integraciones
-El objetivo es optimizar el uso de recursos compartidos (videobeams) evitando conflictos de horarios y proporcionando una experiencia fluida tanto para usuarios como para administradores. Se integra con **Supabase** como backend-as-a-service (autenticación, base de datos PostgreSQL en tiempo real, almacenamiento de archivos y canal de presencia en vivo).
+### 📱 ¿Qué hace?
+BeamFlow es una aplicación móvil desarrollada en Flutter que centraliza todo el flujo de reserva de videobeams. Los usuarios pueden:
+- 🔐 **Autenticación Segura:** Registro e inicio de sesión con correo electrónico/contraseña o mediante Google OAuth.
+- 📅 **Reservas Inteligentes:** Solicitar la reserva de un videobeam seleccionando fecha, hora específica y el equipo deseado.
+- 📆 **Calendario Interactivo:** Visualizar un calendario general con la ocupación y reservas de otros usuarios para evitar conflictos.
+- 🔔 **Notificaciones en Tiempo Real:** Recibir avisos automáticos sobre cambios de estado en sus solicitudes de reserva.
+- 🛠️ **Panel de Administración (Admin):** Gestión ágil de solicitudes pendientes, aprobación o rechazo de reservas y administración del catálogo de equipos de la institución.
 
-### Tecnologías que utiliza
-| Categoría          | Tecnologías                                                                 |
-|--------------------|-----------------------------------------------------------------------------|
-| **Lenguaje**       | Dart 3.x                                                                    |
-| **Framework**      | Flutter (multiplataforma: Android, iOS, Web)                                |
-| **Backend**        | Supabase (Auth, Database, Realtime, Storage)                                |
-| **Estado**         | Provider + ChangeNotifier                                                   |
-| **Ruteo**          | GoRouter                                                                    |
-| **UI/UX**          | Google Fonts, Animate_do, Font Awesome Icons, Table Calendar                |
-| **Arquitectura**   | Clean Architecture con patrón Feature-First                                 |
-| **Variables entorno** | flutter_dotenv                                                           |
-| **Otros**          | intl (fechas en español), url_launcher, modal_bottom_sheet, fluttertoast    |
+### 🔌 Propósito general e integraciones
+El objetivo principal es optimizar el uso de recursos compartidos (videobeams), eliminando por completo los solapamientos de horarios y garantizando una experiencia de usuario fluida tanto para el personal docente como para el equipo administrativo. 
 
-## Estructura y arquitectura
+La aplicación se integra de forma nativa con **Supabase** como backend-as-a-service, aprovechando al máximo sus servicios de:
+- 🔑 **Supabase Auth** para control de accesos.
+- 🗄️ **PostgreSQL** como base de datos relacional robusta.
+- ⚡ **Supabase Realtime** para la sincronización instantánea de las cuadrículas de horarios.
+- 📁 **Supabase Storage** para almacenar fotos de perfil e inventario.
 
-### Esquema de la estructura del proyecto
+---
+
+## 🛠️ Tecnologías que utiliza
+
+| Categoría | Tecnologías |
+| :--- | :--- |
+| **☕ Lenguaje** | Dart 3.x |
+| **⚡ Framework** | Flutter (Soporte multiplataforma: Android, iOS, Web) |
+| **☁️ Backend** | Supabase (Auth, Database, Realtime, Storage) |
+| **🧠 Gestor de Estado**| Provider + ChangeNotifier |
+| **🗺️ Enrutamiento** | GoRouter |
+| **🎨 UI/UX** | Google Fonts, Animate_do, Font Awesome Icons, Table Calendar |
+| **📐 Arquitectura** | Clean Architecture con un enfoque de organización **Feature-First** |
+| **🛡️ Seguridad/Config**| flutter_dotenv (Manejo seguro de variables de entorno) |
+| **📦 Librerías Extra** | intl (fechas en español), url_launcher, modal_bottom_sheet, fluttertoast |
+
+---
+
+## 📐 Estructura y Arquitectura
+
+### 📁 Esquema de carpetas del proyecto
 ```
 App ReservationFlowS/
 ├── lib/
-│   ├── core/                     # Capa de infraestructura compartida
+│   ├── core/                     # 🛡️ Capa de infraestructura compartida
 │   │   ├── constants/            # Constantes globales (AppStrings, AppColors)
-│   │   ├── theme/                # Tema de la aplicación
-│   │   ├── utils/                # Validadores y utilidades
-│   │   ├── widgets/              # Widgets reutilizables (NeonTextField, NeonButton, etc.)
+│   │   ├── theme/                # Tema de la aplicación (Modo Oscuro/Claro)
+│   │   ├── utils/                # Validadores y utilidades utilitarias
+│   │   ├── widgets/              # Widgets con estilo "Neon" reutilizables (NeonTextField, NeonButton, etc.)
 │   │   └── router/               # Configuración del GoRouter (app_router.dart)
-│   ├── features/                 # Módulos de funcionalidades (Feature-First)
-│   │   ├── auth/                 # Módulo de autenticación
+│   ├── features/                 # 🚀 Módulos de funcionalidades (Feature-First)
+│   │   ├── auth/                 # Módulo de autenticación completa
 │   │   │   ├── data/
 │   │   │   │   ├── datasources/  # AuthRemoteDataSource, StorageRemoteDataSource
 │   │   │   │   └── repositories/ # AuthRepositoryImpl, StorageRepositoryImpl
@@ -56,37 +69,37 @@ App ReservationFlowS/
 │   │   │   └── domain/
 │   │   │       ├── entities/     # ReservationEntity, VideobeamEntity, ReservationStatus
 │   │   │       └── repositories/ # ReservationRepository (abstracto)
-│   │   ├── dashboard/            # Módulo de panel principal
+│   │   ├── dashboard/            # Módulo de panel principal y métricas
 │   │   │   ├── data/
 │   │   │   │   ├── datasources/  # DashboardRemoteDataSource
 │   │   │   │   └── repositories/ # DashboardRepositoryImpl
 │   │   │   └── domain/
 │   │   │       ├── entities/     # DashboardMetrics
 │   │   │       └── repositories/ # DashboardRepository (abstracto)
-│   │   ├── requests/             # Módulo de solicitudes (admin)
+│   │   ├── requests/             # Módulo de solicitudes (administrador)
 │   │   │   ├── data/
 │   │   │   │   ├── datasources/  # RequestsRemoteDataSource
 │   │   │   │   └── repositories/ # RequestsRepositoryImpl
 │   │   │   └── domain/
 │   │   │       ├── entities/     # Reutiliza ReservationEntity
 │   │   │       └── repositories/ # RequestsRepository (abstracto)
-│   │   ├── users_management/     # Módulo de gestión de usuarios (admin)
+│   │   ├── users_management/     # Módulo de gestión de usuarios (administrador)
 │   │   │   ├── data/
 │   │   │   │   ├── datasources/  # UsersRemoteDataSource
 │   │   │   │   └── repositories/ # UserManagementRepositoryImpl
 │   │   │   └── domain/
 │   │   │       ├── entities/     # PendingUserEntity, AdminRequestStatusEntity
 │   │   │       └── repositories/ # IUserManagementRepository (abstracto)
-│   │   └── view_reservation_calendar/  # Módulo de calendario general
+│   │   └── view_reservation_calendar/  # Módulo de calendario general institucional
 │   │       ├── data/
 │   │       │   ├── datasources/  # ViewReservationCalendarRemoteDataSource
 │   │       │   └── repositories/ # ViewReservationCalendarRepositoryImpl
 │   │       └── domain/
 │   │           ├── entities/     # CalendarProductEntity, CalendarStatusFilter
 │   │           └── repositories/ # ViewReservationCalendarRepository (abstracto)
-│   └── presentation/             # Capa de presentación global
+│   └── presentation/             # 🎨 Capa de presentación global
 │       ├── providers/            # Providers de alto nivel (Auth, Dashboard, Reservations, Requests, etc.)
-│       ├── screens/              # Pantallas de la aplicación
+│       ├── screens/              # Pantallas de la aplicación organizadas por flujos
 │       │   ├── splash/           
 │       │   ├── login/            
 │       │   ├── register/         
@@ -95,126 +108,89 @@ App ReservationFlowS/
 │       │   ├── profile/          
 │       │   ├── auth/             # Waiting approval, additional data
 │       │   └── admin/            # User approvals
-│       └── components/           # Widgets reutilizables específicos de presentación
+│       └── components/           # Widgets de presentación específicos
 ├── assets/
-│   ├── icon/                     # Iconos de la aplicación
-│   └── fonts/                    # Fuentes personalizadas (si las hay)
-├── .env                          # Variables de entorno (Supabase URL, anon key)
-├── pubspec.yaml
+│   ├── icon/                     # Iconografía oficial
+│   └── fonts/                    # Tipografías personalizadas
+├── .env                          # ⚠️ Configuración de llaves de Supabase (No incluir en commits)
+├── pubspec.yaml                  # Archivo de configuración de dependencias de Flutter
 └── ...
 ```
 
-### Arquitectura que está utilizando y cómo la implementa
-El proyecto sigue **Clean Architecture** con tres capas principales:
+### 🧠 Implementación de Arquitectura Limpia (Clean Architecture)
+El proyecto adopta rigurosamente los principios de **Clean Architecture** distribuidos en tres capas por cada *Feature*:
 
-1. **Capa de dominio** (`domain/`): Contiene las entidades puras de Dart (sin dependencias externas) y las interfaces abstractas de repositorios. Define el contrato que deben cumplir las implementaciones.
+1. **Capa de Dominio (`domain/`)**: La más interna y pura. Libre de dependencias externas o del framework (Flutter). Contiene las entidades esenciales de negocio y los contratos abstractos (interfaces de repositorios).
+2. **Capa de Datos (`data/`)**: Implementa los contratos definidos en el dominio. Interactúa de forma directa con APIs y servicios en la nube a través de los *Data Sources* concretos de Supabase.
+3. **Capa de Presentación (`presentation/`)**: Contiene la lógica de las pantallas. Utiliza el patrón **Provider (ChangeNotifier)** para notificar cambios de estado a la UI. El flujo de eventos sigue una estructura unidireccional:
+   
+   $$\text{UI (Pantallas/Widgets)} \longrightarrow \text{Provider} \longrightarrow \text{Repositorio (Dominio)} \longrightarrow \text{Datasource (Supabase)} \longrightarrow \text{Base de Datos}$$
 
-2. **Capa de datos** (`data/`): Implementa los repositorios abstractos (`*Impl`) y contiene las fuentes de datos concretas (remotas mediante Supabase). Se encarga de mapear los modelos de base de datos a entidades de dominio.
+---
 
-3. **Capa de presentación** (`presentation/`): Incluye los Providers (ChangeNotifier) que exponen el estado a la UI, y las pantallas/widgets que construyen la interfaz. Los Providers inyectan los repositorios a través del constructor (Patrón de inyección de dependencias manual).
+## 🔄 Novedades y Correcciones de Sincronización (SDPT) 🛠️
 
-**Flujo típico**:  
-`UI` → `Provider` → `Repository (abstracción)` → `DataSource (Supabase)` → `Base de datos`  
-Los cambios en la base de datos se propagan en tiempo real mediante canales Realtime de Supabase.
+En las últimas versiones, el sistema ha sido optimizado con correcciones profundas de husos horarios y asincronía (SDPT) para garantizar consistencia horaria global de la base de datos (UTC) con la hora del dispositivo local (por ejemplo, Venezuela/Caracas):
 
-**Patrón Feature-First**: Cada funcionalidad (auth, reservations, dashboard, etc.) agrupa sus propias capas de data/domain/presentation, lo que facilita el mantenimiento y la escalabilidad.
+* 🕐 **Fronteras Locales Absolutas:** Se corrigió el método `escucharReservasPorDia` en `ReservationProvider`. Ya no define los límites del día actual usando strings UTC directamente (lo cual causaba que reservas de madrugada se filtraran de manera invisible). Ahora utiliza el huso horario local puro (`00:00:00` a `23:59:59`) para realizar el corte del día de manera exacta.
+* 🛰️ **Parseo Integrado a Local:** El stream en tiempo real de Supabase ahora convierte automáticamente los campos `hora_inicio` y `hora_fin` mediante `.toLocal()` antes de agregarlos al listado de la interfaz. Los bloques pintados en rojo (`TimeSlot`) reflejan con exactitud matemática el espacio horario seleccionado.
+* 🖥️ **Corrección en Interfaz de Administrador y Calendarios:** Se erradicó el uso del método manual `.substring(11, 16)` para los campos de hora textuales en pantallas del administrador (`RequestsRepositoryImpl`), el panel del dashboard (`DashboardProvider`) y el calendario general (`ViewReservationCalendarRepositoryImpl`). Toda hora extraída en texto plano ahora se parsea adecuadamente como un objeto de tiempo local (`.toLocal()`) y se formatea de forma segura garantizando siempre las dos cifras (`HH:mm`).
+* 🚨 **Validación Robusta de Colisiones:** Se sincronizó `tieneConflictoDeHorario` para comparar exclusivamente intervalos locales, evitando colisiones fantasmas o aprobación de reservas solapadas en husos mixtos.
+* 🛡️ **Compilación con Análisis Estricto:** Se corrigieron advertencias menores de formateo y sintaxis en la totalidad del proyecto, asegurando un paso limpio de `flutter analyze` al 100%.
 
-## Esquema de carpetas con descripción de cada archivo
+---
 
-A continuación se describen los archivos más relevantes del sistema:
+## 📋 Requisitos del Entorno
 
-### `main.dart`
-Punto de entrada. Inicializa `flutter_dotenv`, `Supabase`, el locale en español, y crea el `MaterialApp.router` con los providers globales. Construye las instancias de todos los repositorios y los provee al árbol de widgets mediante `MultiProvider`.
-
-### `core/`
-- **`constants/`**: `app_strings.dart` – cadenas de texto en español (títulos, etiquetas, mensajes).  
-- **`theme/`**: `app_theme.dart` y `app_colors.dart` – definición del tema claro con colores corporativos (azul primario, tonos de fondo).  
-- **`utils/`**: `validators.dart` – funciones de validación de email y contraseña.  
-- **`widgets/`**: Componentes reutilizables con estilo "neon": `NeonTextField`, `NeonButton`, `NeonCard`.  
-- **`router/app_router.dart`**: Configuración de `GoRouter` con todas las rutas y lógica de redirección basada en el estado de autenticación y datos adicionales.
-
-### `features/auth/`
-- **`data/datasources/`**: `auth_remote_datasource.dart` – llama a los métodos de Supabase Auth (signIn, signUp, signInWithGoogle, signOut, getUserProfile).  
-- **`data/repositories/`**: `auth_repository_impl.dart` – implementa `AuthRepository` usando el data source.  
-- **`domain/entities/`**: `user_entity.dart` – define `UserEntity`, `UserRole` (user, admin, superAdmin), `UserStatus` (pending, approved, rejected).  
-- **`domain/repositories/`**: `auth_repository.dart` – interfaz con métodos de autenticación.  
-- **`presentation/providers/`**: `auth_provider.dart` – maneja el estado de sesión, carga de perfil, verificación de datos adicionales y suscripción a cambios de estado.
-
-### `features/dashboard/`
-- **Dominio**: `dashboard_metrics_entity.dart` – métricas del panel.  
-- **Repositorio**: `dashboard_repository.dart` – interfaz.  
-- **Implementación**: `dashboard_repository_impl.dart` – obtiene productos, reservas del día, conteo de pendientes.  
-- **Provider**: `dashboard_provider.dart` – carga métricas, reservas próximas, manejo de tiempo real.
-
-### `features/reservations/`
-- **Entidades**: `videobeam_entity.dart`, `reservation_entity.dart` con sus enumeraciones.  
-- **Repositorio**: `reservation_repository.dart` – CRUD de videobeams y reservas.  
-- **Provider**: `reservation_provider.dart` – estado del formulario de nueva reserva, selección de equipo, fecha, hora, validación de conflictos.
-
-### `features/requests/`
-- **Repositorio**: `requests_repository.dart` – carga de solicitudes pendientes, filtros.  
-- **Provider**: `requests_provider.dart` – lista filtrada por estado, búsqueda, acciones de aprobar/rechazar.
-
-### `features/users_management/`
-- **Entidades**: `pending_user_entity.dart`, `admin_request_status_entity.dart`.  
-- **Repositorio**: `i_user_management_repository.dart` – aprobar/rechazar usuarios, promover a admin.  
-- **Provider**: `user_management_provider.dart` – gestión de usuarios pendientes.
-
-### `features/view_reservation_calendar/`
-- **Entidades**: `calendar_product_entity.dart`, `calendar_status_filter.dart`.  
-- **Repositorio**: `view_reservation_calendar_repository.dart` – carga reservas del calendario con filtros.  
-- **Provider**: `reservation_calendar_provider.dart` – usado en la vista de calendario mensual.
-
-### `presentation/screens/`
-- **`splash/`**: `splash_screen.dart` – animación de logo y barra de progreso.  
-- **`login/`**: `login_screen.dart` – formulario de inicio de sesión con opción de Google.  
-- **`register/`**: `register_screen.dart` – registro con validación en tiempo real y aceptación de términos.  
-- **`dashboard/`**: `dashboard_screen.dart` – panel principal con métricas, gráfico de utilización, reservas próximas, acciones de admin.  
-- **`reservation/`**: `reservation_screen.dart` – flujo de nueva reserva (pasos: decisión de ver calendario, selección de equipo, fecha, horario y confirmación).  
-- **`profile/`**: `profile_screen.dart` – perfil del usuario, datos personales, solicitud de rol admin y políticas de uso.  
-- **`auth/`**: `waiting_approval_screen.dart`, `additional_user_data_screen.dart` – pantallas para completar perfil y esperar aprobación.  
-- **`admin/`**: `user_approvals_screen.dart` – lista de usuarios pendientes de aprobación.  
-- **`view_reservation_calendar/`**: `view_reservation_calendar_screen.dart` – calendario semanal con detalles de reservas.  
-- **`reservation/`**: `reservation_calendar_view.dart` – calendario mensual completo con filtros por producto y estado.
-
-## Requisitos del entorno
-
-- Flutter SDK 3.x
-- Dart 3.x
-- Una cuenta en Supabase con proyecto configurado (Auth con email/contraseña y Google OAuth, base de datos con tablas `productos`, `perfiles`, `reservas`, `solicitudes_admin`, etc.)
-- Archivo `.env` en la raíz con las claves:
-  ```
+- **Flutter SDK:** `^3.x`
+- **Dart:** `^3.x`
+- **Supabase Account:** Proyecto configurado con tablas relacionales (`productos`, `perfiles`, `reservas`, `solicitudes_admin`, etc.).
+- **Archivo de Configuración `.env`** en la raíz del proyecto con la siguiente estructura:
+  ```env
   SUPABASE_URL=https://tu-proyecto.supabase.co
-  SUPABASE_ANON_KEY=tu-anon-key
+  SUPABASE_ANON_KEY=tu-anon-key-de-supabase
   ```
 
-## Cómo ejecutar
+---
+
+## 🚀 Cómo ejecutar
+
+Sigue estos sencillos pasos para iniciar el proyecto en tu entorno local:
 
 ```bash
 # 1. Clonar el repositorio
 git clone https://github.com/0vethor0/App-ReservationFlowS.git
 
-# 2. Entrar al directorio
-cd beam_reserve
+# 2. Entrar al directorio del proyecto
+cd "App ReservationFlowS"
 
-# 3. Crear el archivo .env con las credenciales de Supabase
+# 3. Asegúrate de crear el archivo .env en la raíz con tus credenciales
 
-# 4. Obtener dependencias
+# 4. Obtener todos los paquetes y dependencias de Flutter
 flutter pub get
 
-# 5. Ejecutar en modo debug
+# 5. Ejecutar la aplicación en tu emulador o dispositivo físico favorito
 flutter run
 ```
 
-## Contribuciones
+---
 
-Las contribuciones son bienvenidas. Por favor, abre un issue o pull request en el repositorio de GitHub.
+## 🤝 Contribuciones
 
-## Licencia
-
-Este proyecto está bajo la licencia MIT. Consulta el archivo `LICENSE` para más detalles.
+¿Quieres mejorar BeamFlow? ¡Las contribuciones de todo tipo son bien recibidas!
+1. Haz un **Fork** del proyecto.
+2. Crea una rama para tu funcionalidad (`git checkout -b feature/nueva-mejora`).
+3. Realiza un commit con tus cambios (`git commit -m 'feat: Agregada nueva funcionalidad visual'`).
+4. Sube la rama (`git push origin feature/nueva-mejora`).
+5. Abre un **Pull Request**.
 
 ---
 
-Desarrollado por [0vethor0](https://github.com/0vethor0)  
-© 2026 BeamFlow. Todos los derechos reservados.
+## 📄 Licencia
+
+Este proyecto se distribuye bajo la licencia **MIT**. Para más detalles, consulta el archivo `LICENSE` dentro de la raíz del repositorio.
+
+---
+
+Desarrollado con ❤️ por [0vethor0](https://github.com/0vethor0)  
+*© 2026 BeamFlow. Todos los derechos reservados.*
