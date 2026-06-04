@@ -57,7 +57,9 @@ class DashboardScreenState extends State<DashboardScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _initPresence();
-      context.read<VersionUpdateProvider>().inicializarEscuchaDeVersiones(context);
+      context.read<VersionUpdateProvider>().inicializarEscuchaDeVersiones(
+        context,
+      );
     });
   }
 
