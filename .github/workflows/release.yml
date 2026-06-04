@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main 
+  release: 
+    types: [published]     
 
 permissions:
   contents: write
@@ -22,7 +24,111 @@ jobs:
         with:
           release-type: dart
           token: ${{ secrets.RELEASE_BOT_TOKEN }}
+  
+    # ──────────────────────────────────────────────
+  # JOB 2: Compilar APK de producción y subirlo al release
+  # Corre cuando GitHub publica el release (merge del PR de release-please)
+  # ──────────────────────────────────────────────
+  build-and-attach-apk:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release' && github.event.action == 'published'
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
 
+      - name: Configurar Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Configurar Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.9'
+          cache: true
+
+      - name: Crear archivo .env con secrets
+        run: |
+          echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> .env
+          echo "SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}" >> .env
+          echo "WS_SERVER_URL=${{ secrets.WS_SERVER_URL }}" >> .env
+
+      - name: Instalar dependencias
+        run: flutter pub get
+
+      # Derivar el version_codigo (entero) del tag semver para comparación en Flutter
+      # Tag: "v1.2.3" → major=1, minor=2, patch=3 → codigo = 10203
+      - name: Calcular version_codigo desde el tag
+        id: version
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          # Quitar el prefijo 'v'
+          VERSION="${TAG#v}"
+          MAJOR=$(echo "$VERSION" | cut -d. -f1)
+          MINOR=$(echo "$VERSION" | cut -d. -f2)
+          PATCH=$(echo "$VERSION" | cut -d. -f3)
+          CODIGO=$(( MAJOR * 10000 + MINOR * 100 + PATCH ))
+          echo "version_codigo=$CODIGO" >> $GITHUB_OUTPUT
+          echo "version_nombre=$TAG" >> $GITHUB_OUTPUT
+          echo "Version calculada: $TAG → codigo $CODIGO"
+
+      # Actualizar pubspec.yaml para que buildNumber coincida con version_codigo
+      # Flutter lee "1.2.3+10203" → versionName="1.2.3", buildNumber="10203"
+      - name: Actualizar buildNumber en pubspec.yaml
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          VERSION="${TAG#v}"
+          CODIGO="${{ steps.version.outputs.version_codigo }}"
+          sed -i "s/^version: .*/version: ${VERSION}+${CODIGO}/" pubspec.yaml
+          echo "pubspec.yaml actualizado: version: ${VERSION}+${CODIGO}"
+          cat pubspec.yaml | grep "^version:"
+
+      - name: Compilar APK de producción (release)
+        run: flutter build apk --release
+
+      # El APK se genera en build/app/outputs/flutter-apk/app-release.apk
+      - name: Renombrar APK con el nombre de la versión
+        run: |
+          mv build/app/outputs/flutter-apk/app-release.apk \
+             build/app/outputs/flutter-apk/beamflow-${{ github.event.release.tag_name }}.apk
+
+      - name: Adjuntar APK al GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.release.tag_name }}
+          files: build/app/outputs/flutter-apk/beamflow-${{ github.event.release.tag_name }}.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Notificar a Supabase DESPUÉS de que el APK ya está subido
+      # Usando service_role key (no anon key) para escritura desde CI/CD
+      - name: Notificar nueva versión a Supabase
+        run: |
+          # Obtener la URL de descarga del APK recién subido
+          # El formato de GitHub es predecible para assets de releases
+          DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/download/${{ github.event.release.tag_name }}/beamflow-${{ github.event.release.tag_name }}.apk"
+          
+          curl -X POST "${{ secrets.SUPABASE_URL }}/rest/v1/versiones_app" \
+            -H "apikey: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: resolution=merge-duplicates" \
+            -d "{
+              \"version_codigo\": ${{ steps.version.outputs.version_codigo }},
+              \"version_nombre\": \"${{ steps.version.outputs.version_nombre }}\",
+              \"url_descarga\": \"$DOWNLOAD_URL\",
+              \"obligatoria\": true
+            }"
+          
+          echo "✅ Supabase notificado: versión ${{ steps.version.outputs.version_nombre }}"
+
+  # ──────────────────────────────────────────────
+  # JOB 3: Generar notas de release con IA
+  # Depende del job 1 (release-please) si se creó un release
+  # ──────────────────────────────────────────────
+  
   generate-release-notes:
     runs-on: ubuntu-latest
     needs: release-please

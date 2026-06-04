@@ -4,6 +4,7 @@
 /// Arquitectura Clean Architecture con patrón Feature-First.
 library;
 
+import 'package:beam_reserve/presentation/providers/version_update_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
@@ -277,6 +278,7 @@ class _BeamReserveAppState extends State<BeamReserveApp> {
         ChangeNotifierProvider(
           create: (_) => DashboardProvider(_dashboardRepository),
         ),
+        ChangeNotifierProvider(create: (_) => VersionUpdateProvider()),
         ChangeNotifierProvider(
           create: (_) => ReservationProvider(_reservationRepository),
         ),

@@ -14,6 +14,8 @@ dependencies:
   firebase_core: ^4.9.0
   firebase_messaging: ^16.2.2
   flutter_local_notifications: ^21.0.0
+  package_info_plus: ^10.1.0
+  r_upgrade: ^0.4.2
   cupertino_icons: ^1.0.8
   supabase_flutter: ^2.12.4
   flutter_dotenv: ^6.0.1

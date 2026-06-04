@@ -15,6 +15,7 @@ import '../../providers/dashboard_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/reservation_provider.dart';
 import '../../providers/reservation_calendar_provider.dart';
+import '../../providers/version_update_provider.dart';
 import '../../../features/view_reservation_calendar/domain/repositories/view_reservation_calendar_repository.dart';
 
 import '../reservation/reservation_screen.dart';
@@ -54,7 +55,9 @@ class DashboardScreenState extends State<DashboardScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       _initPresence();
+      context.read<VersionUpdateProvider>().inicializarEscuchaDeVersiones(context);
     });
   }
 
