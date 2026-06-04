@@ -100,7 +100,10 @@ class VersionUpdateProvider extends ChangeNotifier {
       notifyListeners();
 
       // Lanzar instalador nativo de Android
-      await OpenFilex.open(filePath, type: 'application/vnd.android.package-archive');
+      await OpenFilex.open(
+        filePath,
+        type: 'application/vnd.android.package-archive',
+      );
 
       _descargando = false;
       notifyListeners();
