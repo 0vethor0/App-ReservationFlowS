@@ -2,15 +2,17 @@
 library;
 
 import 'dart:async';
+import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:open_filex/open_filex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:r_upgrade/r_upgrade.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class VersionUpdateProvider extends ChangeNotifier {
   final _supabase = Supabase.instance.client;
   StreamSubscription? _realtimeSubscription;
-  StreamSubscription<DownloadInfo>? _downloadSubscription;
 
   double _progresoDescarga = 0.0;
   double get progresoDescarga => _progresoDescarga;
@@ -74,67 +76,39 @@ class VersionUpdateProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Iniciar la descarga. RUpgrade.upgrade retorna un int (download id).
-      await RUpgrade.upgrade(
+      // Ruta local donde guardar el APK
+      final dir = await getExternalStorageDirectory();
+      final filePath = '${dir!.path}/beamflow_update.apk';
+      final file = File(filePath);
+      if (await file.exists()) await file.delete();
+
+      // Descarga con progreso
+      final dio = Dio();
+      await dio.download(
         url,
-        fileName: 'beamflow_update.apk', // nombre del archivo local
-        installType:
-            RUpgradeInstallType.normal, // instala automáticamente al terminar
-        useDownloadManager: false, // usar servicio propio (soporta https)
-        notificationStyle:
-            NotificationStyle.speechAndPlanTime, // "100kb/s  1s left"
-      );
-
-      // Cancelar suscripción anterior si existía
-      await _downloadSubscription?.cancel();
-
-      // Escuchar el progreso desde el stream de r_upgrade
-      _downloadSubscription = RUpgrade.stream.listen(
-        (DownloadInfo info) {
-          switch (info.status) {
-            case DownloadStatus.STATUS_RUNNING:
-              _progresoDescarga = (info.percent ?? 0) / 100.0;
-              final speed = info.speed?.toStringAsFixed(0) ?? '0';
-              _estadoDescarga =
-                  'Descargando... ${info.percent?.toStringAsFixed(0)}%  ($speed kb/s)';
-              notifyListeners();
-              break;
-
-            case DownloadStatus.STATUS_SUCCESSFUL:
-              _descargando = false;
-              _progresoDescarga = 1.0;
-              _estadoDescarga = 'Instalando...';
-              notifyListeners();
-              break;
-
-            case DownloadStatus.STATUS_FAILED:
-              _descargando = false;
-              _estadoDescarga = 'Error en la descarga. Intenta de nuevo.';
-              notifyListeners();
-              debugPrint('[OTA] Descarga fallida.');
-              break;
-
-            case DownloadStatus.STATUS_PAUSED:
-              _estadoDescarga = 'Descarga pausada.';
-              notifyListeners();
-              break;
-
-            default:
-              break;
-          }
-        },
-        onError: (error) {
-          _descargando = false;
-          _estadoDescarga = 'Error inesperado: $error';
+        filePath,
+        onReceiveProgress: (received, total) {
+          if (total <= 0) return;
+          _progresoDescarga = received / total;
+          _estadoDescarga =
+              'Descargando... ${(_progresoDescarga * 100).toStringAsFixed(0)}%';
           notifyListeners();
-          debugPrint('[OTA] Error en stream de descarga: $error');
         },
       );
+
+      _estadoDescarga = 'Instalando...';
+      notifyListeners();
+
+      // Lanzar instalador nativo de Android
+      await OpenFilex.open(filePath, type: 'application/vnd.android.package-archive');
+
+      _descargando = false;
+      notifyListeners();
     } catch (e) {
       _descargando = false;
-      _estadoDescarga = 'No se pudo iniciar la actualización.';
+      _estadoDescarga = 'Error: $e';
       notifyListeners();
-      debugPrint('[OTA] Excepción al iniciar descarga: $e');
+      debugPrint('[OTA] Error descarga/instalación: $e');
     }
   }
 
@@ -188,7 +162,6 @@ class VersionUpdateProvider extends ChangeNotifier {
   @override
   void dispose() {
     _realtimeSubscription?.cancel();
-    _downloadSubscription?.cancel();
     super.dispose();
   }
 }

@@ -3,17 +3,22 @@ name: Release Management
 on:
   push:
     branches:
-      - main 
-  release: 
-    types: [published]     
+      - main
+  release:
+    types: [published]  # Segundo trigger: cuando release-please crea el release
 
 permissions:
   contents: write
   pull-requests: write
 
 jobs:
+  # ──────────────────────────────────────────────
+  # JOB 1: release-please gestiona el PR de versión
+  # Solo corre en push a main
+  # ──────────────────────────────────────────────
   release-please:
     runs-on: ubuntu-latest
+    if: github.event_name == 'push'
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
@@ -24,8 +29,8 @@ jobs:
         with:
           release-type: dart
           token: ${{ secrets.RELEASE_BOT_TOKEN }}
-  
-    # ──────────────────────────────────────────────
+
+  # ──────────────────────────────────────────────
   # JOB 2: Compilar APK de producción y subirlo al release
   # Corre cuando GitHub publica el release (merge del PR de release-please)
   # ──────────────────────────────────────────────
@@ -128,11 +133,12 @@ jobs:
   # JOB 3: Generar notas de release con IA
   # Depende del job 1 (release-please) si se creó un release
   # ──────────────────────────────────────────────
-  
   generate-release-notes:
     runs-on: ubuntu-latest
     needs: release-please
-    if: ${{ needs.release-please.outputs.release_created }}
+    if: |
+      github.event_name == 'push' &&
+      needs.release-please.outputs.release_created == 'true'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -140,7 +146,7 @@ jobs:
       - name: AI Release Notes Generation
         id: ai-notes
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }} 
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           RELEASE_BODY: ${{ needs.release-please.outputs.body }}
         run: |
           curl https://api.openai.com/v1/chat/completions \
@@ -150,17 +156,16 @@ jobs:
               "model": "gpt-4o",
               "messages": [
                 {
-                  "role": "system", 
-                  "content": "Eres un experto redactor técnico. Tu tarea es transformar una lista de commits técnicos en Release Notes amigables, estructuradas y orientadas al valor para el usuario. Usa emojis y secciones claras (Novedades, Correcciones, Mejoras)."
+                  "role": "system",
+                  "content": "Eres un experto redactor técnico. Transforma commits técnicos en Release Notes amigables con secciones: Novedades, Correcciones, Mejoras."
                 },
                 {
-                  "role": "user", 
-                  "content": "Convierte estos commits en notas de lanzamiento profesionales: '"$RELEASE_BODY"'"
+                  "role": "user",
+                  "content": "Convierte estos commits en notas de lanzamiento: '"$RELEASE_BODY"'"
                 }
               ]
             }' > ai_response.json
-          
-          # Extraer y manejar notas multilínea de forma segura para GITHUB_ENV
+
           CONTENT=$(jq -r '.choices[0].message.content' ai_response.json)
           echo "PROMPT_RESPONSE<<EOF" >> $GITHUB_ENV
           echo "$CONTENT" >> $GITHUB_ENV
@@ -171,6 +176,6 @@ jobs:
         with:
           tag_name: ${{ needs.release-please.outputs.tag_name }}
           body: ${{ env.PROMPT_RESPONSE }}
-          append_body: false 
+          append_body: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
