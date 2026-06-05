@@ -25,6 +25,16 @@ La aplicación se integra de forma nativa con **Supabase** como backend-as-a-ser
 
 ---
 
+## 📦 Descargas y Actualizaciones Automáticas (Releases)
+
+¡BeamFlow ahora cuenta con distribución oficial de APKs a través de **GitHub Releases**! 
+
+El frontend está **estrechamente vinculado** a este sistema de versiones. Esto significa que cada vez que se compila y sube una nueva release (APK) –ya sea de forma manual o automatizada mediante flujos CI/CD–, **la aplicación detecta automáticamente la nueva versión** y muestra un aviso interactivo en la interfaz de usuario invitando a los usuarios a actualizar sin necesidad de salir de la app.
+
+Puedes descargar la versión más reciente, lista para instalar en Android, directamente desde la pestaña de **[Releases](https://github.com/0vethor0/App-ReservationFlowS/releases)**.
+
+---
+
 ## 🛠️ Tecnologías que utiliza
 
 | Categoría              | Tecnologías                                                              |
