@@ -90,8 +90,19 @@ jobs:
           echo "pubspec.yaml actualizado: version: ${VERSION}+${CODIGO}"
           cat pubspec.yaml | grep "^version:"
 
+      - name: Decodificar Keystore de Producción
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
+
       - name: Compilar APK de producción (release)
-        run: flutter build apk --release
+        env:
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          flutter build apk --release --build-name=${{ steps.version.outputs.version_nombre }} --build-number=${{ steps.version.outputs.version_codigo }}
 
       # El APK se genera en build/app/outputs/flutter-apk/app-release.apk
       - name: Renombrar APK con el nombre de la versión
