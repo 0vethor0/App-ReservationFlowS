@@ -10,6 +10,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
+import '../../../../core/services/pending_evidence_service.dart';
 import '../../../providers/dashboard_provider.dart';
 import '../../../../features/reservations/domain/entities/reservation_entity.dart';
 import '../../../../features/messaging/presentation/providers/messaging_provider.dart';
@@ -34,7 +35,42 @@ class _UtilizationChartState extends State<UtilizationChart> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final dashProvider = context.read<DashboardProvider>();
       dashProvider.onNewReservation = _mostrarNotificacion;
+      _checkPendingEvidence();
     });
+  }
+
+  Future<void> _checkPendingEvidence() async {
+    final pendingId = await PendingEvidenceService.instance
+        .getPendingReservationId();
+    if (pendingId == null) return;
+
+    try {
+      final response = await ImagePicker().retrieveLostData();
+      if (response.isEmpty) {
+        await PendingEvidenceService.instance.clearPending();
+        return;
+      }
+
+      final file = response.file;
+      if (file != null) {
+        if (!mounted) return;
+        // Limpiamos el pendiente
+        await PendingEvidenceService.instance.clearPending();
+
+        // Abrimos el bottom sheet con la foto ya precargada
+        if (!mounted) return;
+        showEvidenceBottomSheet(
+          context,
+          pendingId,
+          preselectedEvidence: File(file.path),
+        );
+      } else {
+        await PendingEvidenceService.instance.clearPending();
+      }
+    } catch (e) {
+      debugPrint('Error recovering lost data: $e');
+      await PendingEvidenceService.instance.clearPending();
+    }
   }
 
   void _mostrarNotificacion(Map<String, dynamic> reserva) {
@@ -476,7 +512,8 @@ class DashboardRequestCard extends StatelessWidget {
                       const SizedBox(width: 12),
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: () => _confirmComplete(context),
+                          onPressed: () =>
+                              showEvidenceBottomSheet(context, request.id),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             side: BorderSide(color: Colors.amber[600]!),
@@ -550,276 +587,293 @@ class DashboardRequestCard extends StatelessWidget {
       ),
     );
   }
+}
 
-  void _confirmComplete(BuildContext context) {
-    File? selectedEvidence;
+void showEvidenceBottomSheet(
+  BuildContext context,
+  String reservationId, {
+  File? preselectedEvidence,
+}) {
+  File? selectedEvidence = preselectedEvidence;
 
-    // Capture providers and state BEFORE opening the bottom sheet
-    // This prevents "Looking up a deactivated widget's ancestor is unsafe"
-    // if the DashboardRequestCard is removed from the tree while the bottom sheet is open.
-    final msgProvider = context.read<MessagingProvider>();
-    final dashProvider = context.read<DashboardProvider>();
-    final dashState = context.findAncestorStateOfType<DashboardScreenState>();
+  // Capture providers and state BEFORE opening the bottom sheet
+  // This prevents "Looking up a deactivated widget's ancestor is unsafe"
+  // if the DashboardRequestCard is removed from the tree while the bottom sheet is open.
+  final msgProvider = context.read<MessagingProvider>();
+  final dashProvider = context.read<DashboardProvider>();
+  final dashState = context.findAncestorStateOfType<DashboardScreenState>();
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (innerCtx, setModalState) {
-            return Container(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(innerCtx).viewInsets.bottom,
-              ),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-              ),
-              child: SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Handle bar
-                      Container(
-                        width: 40,
-                        height: 4,
-                        margin: const EdgeInsets.only(bottom: 20),
-                        decoration: BoxDecoration(
-                          color: AppColors.divider,
-                          borderRadius: BorderRadius.circular(2),
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (ctx) {
+      return StatefulBuilder(
+        builder: (innerCtx, setModalState) {
+          return Container(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(innerCtx).viewInsets.bottom,
+            ),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Handle bar
+                    Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 20),
+                      decoration: BoxDecoration(
+                        color: AppColors.divider,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const Icon(
+                      Icons.camera_alt_rounded,
+                      size: 48,
+                      color: AppColors.primaryBlue,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Evidencia fotográfica',
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Para finalizar la reservación, adjunta una foto del equipo en su estado actual.',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Image preview or picker
+                    if (selectedEvidence != null)
+                      Stack(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: Image.file(
+                              selectedEvidence!,
+                              width: double.infinity,
+                              height: 200,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          Positioned(
+                            top: 8,
+                            right: 8,
+                            child: GestureDetector(
+                              onTap: () =>
+                                  setModalState(() => selectedEvidence = null),
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withValues(alpha: 0.5),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.close,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      )
+                    else
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _EvidencePickerButton(
+                              icon: Icons.camera_alt_outlined,
+                              label: 'Cámara',
+                              onTap: () async {
+                                try {
+                                  // Request camera permission explicitly
+                                  final status = await Permission.camera
+                                      .request();
+                                  if (status.isPermanentlyDenied) {
+                                    openAppSettings();
+                                    return;
+                                  }
+                                  if (!status.isGranted) return;
+
+                                  // Guardamos el estado pendiente antes de abrir la cámara
+                                  await PendingEvidenceService.instance
+                                      .savePending(reservationId);
+
+                                  final xfile = await ImagePicker().pickImage(
+                                    source: ImageSource.camera,
+                                    imageQuality: 70,
+                                  );
+
+                                  if (xfile != null) {
+                                    await PendingEvidenceService.instance
+                                        .clearPending();
+                                    setModalState(
+                                      () => selectedEvidence = File(xfile.path),
+                                    );
+                                  } else {
+                                    await PendingEvidenceService.instance
+                                        .clearPending();
+                                  }
+                                } catch (e) {
+                                  debugPrint(
+                                    'Error picking image from camera: $e',
+                                  );
+                                }
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _EvidencePickerButton(
+                              icon: Icons.photo_library_outlined,
+                              label: 'Galería',
+                              onTap: () async {
+                                try {
+                                  // Request gallery/photos permission
+                                  if (Platform.isAndroid) {
+                                    final photosStatus = await Permission.photos
+                                        .request();
+                                    if (!photosStatus.isGranted &&
+                                        !photosStatus.isLimited) {
+                                      final storageStatus = await Permission
+                                          .storage
+                                          .request();
+                                      if (!storageStatus.isGranted) return;
+                                    }
+                                  } else {
+                                    final status = await Permission.photos
+                                        .request();
+                                    if (!status.isGranted &&
+                                        !status.isLimited) {
+                                      return;
+                                    }
+                                  }
+
+                                  await PendingEvidenceService.instance
+                                      .savePending(reservationId);
+
+                                  final xfile = await ImagePicker().pickImage(
+                                    source: ImageSource.gallery,
+                                    imageQuality: 70,
+                                  );
+
+                                  if (xfile != null) {
+                                    await PendingEvidenceService.instance
+                                        .clearPending();
+                                    setModalState(
+                                      () => selectedEvidence = File(xfile.path),
+                                    );
+                                  } else {
+                                    await PendingEvidenceService.instance
+                                        .clearPending();
+                                  }
+                                } catch (e) {
+                                  debugPrint(
+                                    'Error picking image from gallery: $e',
+                                  );
+                                }
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+
+                    const SizedBox(height: 20),
+
+                    // Send button
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: selectedEvidence == null
+                            ? null
+                            : () {
+                                // 1. Set image for optimistic upload
+                                msgProvider.selectImage(selectedEvidence!);
+
+                                // 2. Close modal
+                                Navigator.pop(innerCtx);
+
+                                // 3. Get or create canal for this reservation, then navigate
+                                msgProvider.loadCanales().then((_) async {
+                                  try {
+                                    await msgProvider.openCanalForReserva(
+                                      reservationId,
+                                    );
+
+                                    // Send evidence optimistically
+                                    await msgProvider.enviarMensaje(
+                                      'Evidencia fotográfica - Finalización de reserva',
+                                    );
+
+                                    // Complete reservation in DB
+                                    dashProvider.completeMyReservation(
+                                      reservationId,
+                                    );
+
+                                    // Navigate to Chat tab (index 3 in dashboard)
+                                    if (dashState != null &&
+                                        dashState.mounted) {
+                                      dashState.switchToTab(3);
+                                    }
+                                  } catch (e) {
+                                    debugPrint('Error enviando evidencia: $e');
+                                  }
+                                });
+                              },
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.primaryBlue,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        child: Text(
+                          'Enviar y Finalizar',
+                          style: GoogleFonts.inter(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
-                      const Icon(
-                        Icons.camera_alt_rounded,
-                        size: 48,
-                        color: AppColors.primaryBlue,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Evidencia fotográfica',
-                        style: GoogleFonts.poppins(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        'Para finalizar la reservación, adjunta una foto del equipo en su estado actual.',
-                        textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    TextButton(
+                      onPressed: () => Navigator.pop(innerCtx),
+                      child: Text(
+                        'Cancelar',
                         style: GoogleFonts.inter(
-                          fontSize: 13,
+                          fontSize: 14,
                           color: AppColors.textSecondary,
                         ),
                       ),
-                      const SizedBox(height: 20),
-
-                      // Image preview or picker
-                      if (selectedEvidence != null)
-                        Stack(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(16),
-                              child: Image.file(
-                                selectedEvidence!,
-                                width: double.infinity,
-                                height: 200,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                            Positioned(
-                              top: 8,
-                              right: 8,
-                              child: GestureDetector(
-                                onTap: () => setModalState(
-                                  () => selectedEvidence = null,
-                                ),
-                                child: Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: BoxDecoration(
-                                    color: Colors.black.withValues(alpha: 0.5),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.close,
-                                    color: Colors.white,
-                                    size: 18,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        )
-                      else
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _EvidencePickerButton(
-                                icon: Icons.camera_alt_outlined,
-                                label: 'Cámara',
-                                onTap: () async {
-                                  try {
-                                    // Request camera permission explicitly
-                                    final status = await Permission.camera
-                                        .request();
-                                    if (status.isPermanentlyDenied) {
-                                      openAppSettings();
-                                      return;
-                                    }
-                                    if (!status.isGranted) return;
-
-                                    final xfile = await ImagePicker().pickImage(
-                                      source: ImageSource.camera,
-                                      imageQuality: 70,
-                                    );
-                                    if (xfile != null) {
-                                      setModalState(
-                                        () =>
-                                            selectedEvidence = File(xfile.path),
-                                      );
-                                    }
-                                  } catch (e) {
-                                    debugPrint(
-                                      'Error picking image from camera: $e',
-                                    );
-                                  }
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _EvidencePickerButton(
-                                icon: Icons.photo_library_outlined,
-                                label: 'Galería',
-                                onTap: () async {
-                                  try {
-                                    // Request gallery/photos permission
-                                    if (Platform.isAndroid) {
-                                      final photosStatus = await Permission
-                                          .photos
-                                          .request();
-                                      if (!photosStatus.isGranted &&
-                                          !photosStatus.isLimited) {
-                                        final storageStatus = await Permission
-                                            .storage
-                                            .request();
-                                        if (!storageStatus.isGranted) return;
-                                      }
-                                    } else {
-                                      final status = await Permission.photos
-                                          .request();
-                                      if (!status.isGranted &&
-                                          !status.isLimited) {
-                                        return;
-                                      }
-                                    }
-
-                                    final xfile = await ImagePicker().pickImage(
-                                      source: ImageSource.gallery,
-                                      imageQuality: 70,
-                                    );
-                                    if (xfile != null) {
-                                      setModalState(
-                                        () =>
-                                            selectedEvidence = File(xfile.path),
-                                      );
-                                    }
-                                  } catch (e) {
-                                    debugPrint(
-                                      'Error picking image from gallery: $e',
-                                    );
-                                  }
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-
-                      const SizedBox(height: 20),
-
-                      // Send button
-                      SizedBox(
-                        width: double.infinity,
-                        child: FilledButton(
-                          onPressed: selectedEvidence == null
-                              ? null
-                              : () {
-                                  // 1. Set image for optimistic upload
-                                  msgProvider.selectImage(selectedEvidence!);
-
-                                  // 2. Close modal
-                                  Navigator.pop(innerCtx);
-
-                                  // 3. Get or create canal for this reservation, then navigate
-                                  msgProvider.loadCanales().then((_) async {
-                                    try {
-                                      await msgProvider.openCanalForReserva(
-                                        request.id,
-                                      );
-
-                                      // Send evidence optimistically
-                                      await msgProvider.enviarMensaje(
-                                        'Evidencia fotográfica - Finalización de reserva',
-                                      );
-
-                                      // Complete reservation in DB
-                                      dashProvider.completeMyReservation(
-                                        request.id,
-                                      );
-
-                                      // Navigate to Chat tab (index 3 in dashboard)
-                                      if (dashState != null &&
-                                          dashState.mounted) {
-                                        dashState.switchToTab(3);
-                                      }
-                                    } catch (e) {
-                                      debugPrint(
-                                        'Error enviando evidencia: $e',
-                                      );
-                                    }
-                                  });
-                                },
-                          style: FilledButton.styleFrom(
-                            backgroundColor: AppColors.primaryBlue,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          child: Text(
-                            'Enviar y Finalizar',
-                            style: GoogleFonts.inter(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextButton(
-                        onPressed: () => Navigator.pop(innerCtx),
-                        child: Text(
-                          'Cancelar',
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
-            );
-          },
-        );
-      },
-    );
-  }
+            ),
+          );
+        },
+      );
+    },
+  );
 }
 
 class _StatusBadge extends StatelessWidget {
