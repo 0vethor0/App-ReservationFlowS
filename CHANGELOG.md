@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/0vethor0/App-ReservationFlowS/compare/v1.5.0...v1.6.0) (2026-06-05)
+
+
+### Features
+
+* Implementar un proceso automatizado de lanzamiento de CI/CD con firma de APK, implementación y notas de lanzamiento generadas por IA ([d4c43c2](https://github.com/0vethor0/App-ReservationFlowS/commit/d4c43c2a4d902992eb544c1af53cbc34dbad57d4))
+
 ## [1.5.0](https://github.com/0vethor0/App-ReservationFlowS/compare/v1.4.0...v1.5.0) (2026-06-05)
 
 
