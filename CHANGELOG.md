@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.3.0](https://github.com/0vethor0/App-ReservationFlowS/compare/v1.2.0...v1.3.0) (2026-06-04)
+
+
+### Features
+
+* format code ([4d40fb8](https://github.com/0vethor0/App-ReservationFlowS/commit/4d40fb8e846b67da0f591324892f3963e54308f5))
+* Implementar un proceso automatizado de lanzamiento de CI/CD con distribución APK y soporte de actualización de versiones dentro de la aplicación ([5f69bec](https://github.com/0vethor0/App-ReservationFlowS/commit/5f69bec492f219a419b1aece90f5653052f9e44b))
+
+
+### Bug Fixes
+
+* error de construccion (build) del apk fue corregido ([a68355b](https://github.com/0vethor0/App-ReservationFlowS/commit/a68355bc35ff5dc4ac39d15385b4667858af3c96))
+* formateo del codigo ([d776541](https://github.com/0vethor0/App-ReservationFlowS/commit/d776541819476db41da589c6a9157f9f0585d49f))
+
 ## [1.2.0](https://github.com/0vethor0/App-ReservationFlowS/compare/v1.1.0...v1.2.0) (2026-05-30)
 
 
