@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/0vethor0/App-ReservationFlowS/compare/v1.3.1...v1.4.0) (2026-06-05)
+
+
+### Features
+
+* implement secure navigation routing, user data model, and authentication provider integration (modificaciones a modo de prueba para estudiar el comportamiento del build apk desde github) ([8bfe1ea](https://github.com/0vethor0/App-ReservationFlowS/commit/8bfe1ea1c4988e8b0c13d021d8707f4cd143d7f3))
+
 ## [1.3.1](https://github.com/0vethor0/App-ReservationFlowS/compare/v1.3.0...v1.3.1) (2026-06-05)
 
 
