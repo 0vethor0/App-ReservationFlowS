@@ -168,9 +168,8 @@ class _AdminAccessButton extends StatelessWidget {
     final auth = context.watch<AuthProvider>();
     final user = auth.currentUser;
 
-    // Only show for admin or superAdmin
-    if (user == null ||
-        (user.role != UserRole.admin && user.role != UserRole.superAdmin)) {
+    // Only show for superAdmin
+    if (user == null || user.role != UserRole.superAdmin) {
       return const SizedBox.shrink();
     }
 

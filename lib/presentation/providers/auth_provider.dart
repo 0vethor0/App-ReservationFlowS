@@ -160,7 +160,7 @@ class AuthProvider extends ChangeNotifier {
 
   UserRole _mapRole(String? roleStr) {
     switch (roleStr) {
-      case 'super-admin':
+      case 'super_admin':
         return UserRole.superAdmin;
       case 'admin':
         return UserRole.admin;

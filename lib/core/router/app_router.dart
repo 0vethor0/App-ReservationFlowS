@@ -102,6 +102,14 @@ class AppRouter {
           if (isGoingToLogin || isGoingToRegister || isGoingToSplash) {
             return hasAdditionalData ? '/' : '/additional-data';
           }
+
+          // Verificación de acceso a la pantalla de solicitudes (solo super_admin)
+          if (matchedLocation == '/admin/user-approvals') {
+            final userRole = authProvider.currentUser?.role;
+            if (userRole != UserRole.superAdmin) {
+              return '/';
+            }
+          }
         }
 
         return null;

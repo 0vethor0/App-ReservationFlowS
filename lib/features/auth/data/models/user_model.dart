@@ -19,7 +19,7 @@ class UserModel extends UserEntity {
   factory UserModel.fromMap(Map<String, dynamic> map) {
     // Parse role
     final roleStr = map['rol'] as String? ?? 'usuario';
-    final role = roleStr == 'super-admin'
+    final role = roleStr == 'super_admin'
         ? UserRole.superAdmin
         : (roleStr == 'admin' ? UserRole.admin : UserRole.user);
 
