@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/0vethor0/App-ReservationFlowS/compare/v1.4.0...v1.5.0) (2026-06-05)
+
+
+### Features
+
+* Implementar la persistencia de la evidencia pendiente para recuperar la captura de imágenes después de la destrucción de la actividad de Android ([625734a](https://github.com/0vethor0/App-ReservationFlowS/commit/625734a6e97062bf02d343b533698c4e46847dfa))
+
 ## [1.4.0](https://github.com/0vethor0/App-ReservationFlowS/compare/v1.3.1...v1.4.0) (2026-06-05)
 
 
