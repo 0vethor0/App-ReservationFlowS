@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1](https://github.com/0vethor0/App-ReservationFlowS/compare/v1.3.0...v1.3.1) (2026-06-05)
+
+
+### Bug Fixes
+
+* refactirzacion del codigo. Se corrigio las secciones que se conectan al cliente de supabase a traves de la capa de presentacion ([d3ed1a9](https://github.com/0vethor0/App-ReservationFlowS/commit/d3ed1a9b40692afa8a0cc7f361f5608b0b39009a))
+
 ## [1.3.0](https://github.com/0vethor0/App-ReservationFlowS/compare/v1.2.0...v1.3.0) (2026-06-04)
 
 
