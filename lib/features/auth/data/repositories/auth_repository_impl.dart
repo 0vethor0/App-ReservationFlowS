@@ -153,4 +153,18 @@ class AuthRepositoryImpl implements AuthRepository {
       return null;
     }
   }
+
+  @override
+  Future<Map<String, dynamic>?> getUserProfile(String userId) async {
+    try {
+      return await remoteDataSource.getUserProfile(userId);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  @override
+  Stream<AuthState> get onAuthStateChange {
+    return Supabase.instance.client.auth.onAuthStateChange;
+  }
 }

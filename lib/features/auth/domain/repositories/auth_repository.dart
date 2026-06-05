@@ -3,6 +3,7 @@
 /// Defines the contract for authentication operations.
 library;
 
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../entities/user_entity.dart';
 
 abstract class AuthRepository {
@@ -56,6 +57,12 @@ abstract class AuthRepository {
   /// Obtener perfil completo del usuario
   /// Get complete user profile with all fields
   Future<UserProfileComplete?> getUserProfileComplete(String userId);
+
+  /// Obtener datos crudos del perfil del usuario
+  Future<Map<String, dynamic>?> getUserProfile(String userId);
+
+  /// Stream of auth state changes
+  Stream<AuthState> get onAuthStateChange;
 
   /// Actualizar el token FCM del dispositivo en la tabla perfiles
   /// Update the device FCM token in the perfiles table

@@ -5,6 +5,8 @@ library;
 
 import '../entities/videobeam_entity.dart';
 import '../entities/reservation_entity.dart';
+import '../entities/time_slot.dart';
+import 'package:flutter/material.dart';
 
 abstract class ReservationRepository {
   /// Load all videobeams (any status) for reservation UI
@@ -17,6 +19,20 @@ abstract class ReservationRepository {
   Stream<void> watchProductAvailability();
 
   void disposeProductRealtime();
+
+  /// Stream that emits the occupied time slots for a product on a specific date
+  Stream<List<TimeSlot>> watchReservationsForProductOnDate({
+    required String productId,
+    required DateTime date,
+  });
+
+  /// Check if a time slot is available for a product on a given date
+  Future<bool> checkSlotAvailability({
+    required String videobeamId,
+    required DateTime date,
+    required TimeOfDay startTime,
+    required TimeOfDay endTime,
+  });
 
   /// Fetch reservations for a specific date
   Future<List<ReservationEntity>> fetchReservations(DateTime date);

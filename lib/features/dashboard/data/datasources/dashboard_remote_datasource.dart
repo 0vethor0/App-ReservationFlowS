@@ -27,15 +27,44 @@ class DashboardRemoteDataSource {
   }) async {
     return client
         .from('reservas')
-        .select()
-        .gte('fecha', startDate)
-        .lte('fecha', endDate);
+        .select('*, productos(*), perfiles(*)')
+        .gte('hora_inicio', startDate)
+        .lte('hora_inicio', endDate);
+  }
+
+  /// Get my reservations for a date
+  Future<List<Map<String, dynamic>>> getMyReservations({
+    required String email,
+    required String startDate,
+    required String endDate,
+  }) async {
+    final profileData = await client
+        .from('perfiles')
+        .select('id')
+        .eq('correo', email)
+        .single();
+    final profileId = profileData['id'];
+
+    return client
+        .from('reservas')
+        .select('*, productos(*), perfiles(*)')
+        .eq('id_usuario', profileId)
+        .gte('hora_inicio', startDate)
+        .lt('hora_inicio', endDate)
+        .order('hora_inicio', ascending: true);
   }
 
   /// Get today's reservations count
   Future<int> getTodayReservationsCount() async {
-    final today = DateTime.now().toIso8601String().split('T').first;
-    final data = await client.from('reservas').select().eq('fecha', today);
+    final now = DateTime.now();
+    final startOfToday = DateTime(now.year, now.month, now.day);
+    final endOfToday = DateTime(now.year, now.month, now.day, 23, 59, 59);
+
+    final data = await client
+        .from('reservas')
+        .select('id')
+        .gte('hora_inicio', startOfToday.toIso8601String())
+        .lte('hora_inicio', endOfToday.toIso8601String());
 
     return data.length;
   }

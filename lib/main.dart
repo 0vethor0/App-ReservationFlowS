@@ -45,6 +45,9 @@ import 'features/users_management/data/datasources/users_remote_datasource.dart'
 import 'features/users_management/data/repositories/user_management_repository_impl.dart';
 import 'features/users_management/domain/repositories/i_user_management_repository.dart';
 import 'features/users_management/presentation/providers/user_management_provider.dart';
+import 'features/products/data/datasources/products_remote_datasource.dart';
+import 'features/products/data/repositories/products_repository_impl.dart';
+import 'features/products/domain/repositories/i_products_repository.dart';
 
 // View Reservation Calendar imports
 import 'features/view_reservation_calendar/data/datasources/view_reservation_calendar_remote_datasource.dart';
@@ -195,6 +198,7 @@ class _BeamReserveAppState extends State<BeamReserveApp> {
   late final ViewReservationCalendarRepository
   _viewReservationCalendarRepository;
   late final IMessagingRepository _messagingRepository;
+  late final IProductsRepository _productsRepository;
 
   @override
   void initState() {
@@ -215,6 +219,7 @@ class _BeamReserveAppState extends State<BeamReserveApp> {
     final viewReservationCalendarRemoteDataSource =
         ViewReservationCalendarRemoteDataSource(supabaseClient);
     final messagingRemoteDataSource = MessagingRemoteDataSource(supabaseClient);
+    final productsRemoteDataSource = ProductsRemoteDataSource(supabaseClient);
 
     // Clean Architecture: Initialize Repositories
     _authRepository = AuthRepositoryImpl(authRemoteDataSource);
@@ -234,6 +239,7 @@ class _BeamReserveAppState extends State<BeamReserveApp> {
       viewReservationCalendarRemoteDataSource,
     );
     _messagingRepository = MessagingRepositoryImpl(messagingRemoteDataSource);
+    _productsRepository = ProductsRepositoryImpl(productsRemoteDataSource);
 
     // Initialize Notification service (FCM push notifications)
     _notificationService = NotificationServiceImpl();
@@ -272,6 +278,7 @@ class _BeamReserveAppState extends State<BeamReserveApp> {
           value: _viewReservationCalendarRepository,
         ),
         Provider<IMessagingRepository>.value(value: _messagingRepository),
+        Provider<IProductsRepository>.value(value: _productsRepository),
 
         // Existing providers (refactored to use repositories)
         ChangeNotifierProvider<AuthProvider>.value(value: _authProvider),

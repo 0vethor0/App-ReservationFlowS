@@ -6,6 +6,9 @@ import '../../domain/entities/videobeam_entity.dart';
 import '../../domain/entities/reservation_entity.dart';
 import '../datasources/reservation_remote_datasource.dart';
 import 'dart:developer' as developer;
+import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../domain/entities/time_slot.dart';
 
 class ReservationRepositoryImpl implements ReservationRepository {
   ReservationRepositoryImpl(this.remoteDataSource);
@@ -32,6 +35,95 @@ class ReservationRepositoryImpl implements ReservationRepository {
   @override
   void disposeProductRealtime() {
     remoteDataSource.disposeProductRealtime();
+  }
+
+  @override
+  Stream<List<TimeSlot>> watchReservationsForProductOnDate({
+    required String productId,
+    required DateTime date,
+  }) {
+    final inicioDiaLocal = DateTime(date.year, date.month, date.day, 0, 0, 0);
+    final finDiaLocal = DateTime(date.year, date.month, date.day, 23, 59, 59);
+
+    return Supabase.instance.client
+        .from('reservas')
+        .stream(primaryKey: ['id'])
+        .eq('id_producto', productId)
+        .map((snapshot) {
+          final List<TimeSlot> nuevosBloques = [];
+          for (var data in snapshot) {
+            final estado = data['estado_reserva'] as String?;
+            final validStatus = ['aprobada', 'en_curso', 'finalizada'];
+
+            if (estado != null &&
+                validStatus.contains(estado) &&
+                data['hora_inicio'] != null &&
+                data['hora_fin'] != null) {
+              final DateTime horaInicioLocal = DateTime.parse(
+                data['hora_inicio'],
+              ).toLocal();
+              final DateTime horaFinLocal = DateTime.parse(
+                data['hora_fin'],
+              ).toLocal();
+
+              if (horaInicioLocal.isAfter(inicioDiaLocal) &&
+                  horaInicioLocal.isBefore(finDiaLocal)) {
+                nuevosBloques.add(
+                  TimeSlot(start: horaInicioLocal, end: horaFinLocal),
+                );
+              }
+            }
+          }
+          return nuevosBloques;
+        });
+  }
+
+  @override
+  Future<bool> checkSlotAvailability({
+    required String videobeamId,
+    required DateTime date,
+    required TimeOfDay startTime,
+    required TimeOfDay endTime,
+  }) async {
+    final existingReservations =
+        await fetchApprovedReservationsForProductOnDate(
+          videobeamId: videobeamId,
+          date: date,
+        );
+
+    if (existingReservations.isEmpty) return true;
+
+    final startMinutes = startTime.hour * 60 + startTime.minute;
+    final endMinutes = endTime.hour * 60 + endTime.minute;
+
+    for (final reservation in existingReservations) {
+      final existingStart = DateTime.parse(
+        reservation['hora_inicio'] as String,
+      );
+      final existingEnd = DateTime.parse(reservation['hora_fin'] as String);
+
+      final existingStartMinutes =
+          existingStart.hour * 60 + existingStart.minute;
+      final existingEndMinutes = existingEnd.hour * 60 + existingEnd.minute;
+
+      if ((startMinutes >= existingStartMinutes &&
+              startMinutes < existingEndMinutes) ||
+          (endMinutes > existingStartMinutes &&
+              endMinutes <= existingEndMinutes) ||
+          (startMinutes <= existingStartMinutes &&
+              endMinutes >= existingEndMinutes)) {
+        final existingDate = existingStart.day;
+        final existingMonth = existingStart.month;
+        final existingYear = existingStart.year;
+
+        if (existingDate == date.day &&
+            existingMonth == date.month &&
+            existingYear == date.year) {
+          return false; // Conflicto
+        }
+      }
+    }
+    return true; // Disponible
   }
 
   @override

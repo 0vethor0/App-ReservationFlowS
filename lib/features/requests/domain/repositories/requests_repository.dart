@@ -17,4 +17,6 @@ abstract class RequestsRepository {
   });
 
   Future<bool> markAsRead(String requestId);
+
+  Future<bool> markAllAsRead();
 }

@@ -9,13 +9,13 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/widgets/neon_card.dart';
 import '../../../core/widgets/neon_button.dart';
 import '../../../features/users_management/domain/entities/admin_request_status_entity.dart';
 import '../../../features/users_management/domain/repositories/i_user_management_repository.dart';
+import '../../../features/auth/domain/repositories/auth_repository.dart';
 import '../../providers/auth_provider.dart';
 import '../../components/global_back_button.dart';
 
@@ -52,13 +52,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _fetchUserProfile() async {
     try {
-      final user = Supabase.instance.client.auth.currentUser;
+      final authProvider = context.read<AuthProvider>();
+      final user = authProvider.currentUser;
       if (user != null) {
-        final data = await Supabase.instance.client
-            .from('perfiles')
-            .select()
-            .eq('id', user.id)
-            .single();
+        final authRepo = context.read<AuthRepository>();
+        final data = await authRepo.getUserProfile(user.id);
         if (!mounted) return;
         setState(() {
           _userProfile = data;
@@ -80,7 +78,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _watchAdminRequestStatus() {
-    final userId = Supabase.instance.client.auth.currentUser?.id;
+    final authProvider = context.read<AuthProvider>();
+    final userId = authProvider.currentUser?.id;
     if (userId == null) return;
 
     final repository = context.read<IUserManagementRepository>();
@@ -93,7 +92,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _submitAdminRequest() async {
-    final userId = Supabase.instance.client.auth.currentUser?.id;
+    final authProvider = context.read<AuthProvider>();
+    final userId = authProvider.currentUser?.id;
     if (userId == null) return;
 
     setState(() => _isSubmittingAdminRequest = true);

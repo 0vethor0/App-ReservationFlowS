@@ -4,9 +4,9 @@ library;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/neon_card.dart';
+import '../../../../features/products/domain/repositories/i_products_repository.dart';
 import '../../../providers/auth_provider.dart';
 
 class ProductsManagementModal extends StatefulWidget {
@@ -18,7 +18,6 @@ class ProductsManagementModal extends StatefulWidget {
 }
 
 class _ProductsManagementModalState extends State<ProductsManagementModal> {
-  final _supabase = Supabase.instance.client;
   List<Map<String, dynamic>> _products = [];
   final List<Map<String, dynamic>> _estados = const [
     {"idx": 0, "id": 1, "nombre": "disponible"},
@@ -36,10 +35,8 @@ class _ProductsManagementModalState extends State<ProductsManagementModal> {
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     try {
-      final prods = await _supabase
-          .from('productos')
-          .select()
-          .order('fecha_registro', ascending: false);
+      final repository = context.read<IProductsRepository>();
+      final prods = await repository.getProducts();
       if (mounted) {
         setState(() {
           _products = List<Map<String, dynamic>>.from(prods);
@@ -176,13 +173,11 @@ class _ProductsManagementModalState extends State<ProductsManagementModal> {
                 'id_administrador_p_cargo': adminId,
               };
               try {
+                final repository = context.read<IProductsRepository>();
                 if (product == null) {
-                  await _supabase.from('productos').insert(data);
+                  await repository.createProduct(data);
                 } else {
-                  await _supabase
-                      .from('productos')
-                      .update(data)
-                      .eq('id', product['id']);
+                  await repository.updateProduct(product['id'], data);
                 }
               } catch (e) {
                 debugPrint('Error saving product: $e');
@@ -218,7 +213,8 @@ class _ProductsManagementModalState extends State<ProductsManagementModal> {
     }
 
     try {
-      await _supabase.from('productos').delete().eq('id', id);
+      final repository = context.read<IProductsRepository>();
+      await repository.deleteProduct(id);
       _loadData();
     } catch (e) {
       debugPrint('Error deleting product: $e');

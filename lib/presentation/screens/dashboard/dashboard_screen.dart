@@ -17,6 +17,7 @@ import '../../providers/reservation_provider.dart';
 import '../../providers/reservation_calendar_provider.dart';
 import '../../providers/version_update_provider.dart';
 import '../../../features/view_reservation_calendar/domain/repositories/view_reservation_calendar_repository.dart';
+import '../../../features/requests/domain/repositories/requests_repository.dart';
 
 import '../reservation/reservation_screen.dart';
 import '../reservation/reservation_calendar_view.dart';
@@ -41,7 +42,6 @@ class DashboardScreenState extends State<DashboardScreen>
     with WidgetsBindingObserver {
   int _currentIndex = 0;
   RealtimeChannel? _presenceChannel; // Ahora puede ser nula
-  final SupabaseClient _supabase = Supabase.instance.client;
 
   /// Allows child widgets to switch the active bottom navigation tab.
   void switchToTab(int index) {
@@ -71,7 +71,8 @@ class DashboardScreenState extends State<DashboardScreen>
 
     if (!isAdmin) return;
 
-    _presenceChannel = _supabase.channel('admin_presence');
+    final supabase = Supabase.instance.client;
+    _presenceChannel = supabase.channel('admin_presence');
 
     // Usamos el operador ?. para seguridad
     _presenceChannel?.subscribe((status, [error]) async {
@@ -100,10 +101,8 @@ class DashboardScreenState extends State<DashboardScreen>
 
   Future<void> _marcarComoLeido() async {
     try {
-      await _supabase
-          .from('reservas')
-          .update({'leido_por_admin': true})
-          .eq('leido_por_admin', false);
+      final repository = context.read<RequestsRepository>();
+      await repository.markAllAsRead();
     } catch (e) {
       debugPrint('Error marking as read: $e');
     }
@@ -115,7 +114,7 @@ class DashboardScreenState extends State<DashboardScreen>
 
     // Solo intentamos removerlo si realmente fue inicializado
     if (_presenceChannel != null) {
-      _supabase.removeChannel(_presenceChannel!);
+      Supabase.instance.client.removeChannel(_presenceChannel!);
     }
 
     super.dispose();

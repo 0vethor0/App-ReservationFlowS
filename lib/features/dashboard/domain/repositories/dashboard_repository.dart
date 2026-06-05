@@ -15,7 +15,7 @@ abstract class DashboardRepository {
   Future<List<ReservationEntity>> loadUpcomingReservations();
 
   /// Load user's reservations
-  Future<List<ReservationEntity>> loadMyReservations(String userId);
+  Future<List<ReservationEntity>> loadMyReservations(DateTime date);
 
   /// Subscribe to realtime updates for reservations
   Stream<List<Map<String, dynamic>>> subscribeToReservationsRealtime();

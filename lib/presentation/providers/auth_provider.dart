@@ -48,23 +48,21 @@ class AuthProvider extends ChangeNotifier {
     _authRepository.listenToAuthStateChanges();
 
     // Check if session already exists at startup (avoids race on hot restart)
-    final existingSession = Supabase.instance.client.auth.currentSession;
-    if (existingSession != null) {
+    final existingUser = _authRepository.getCurrentUser();
+    if (existingUser != null) {
       _isAuthenticated = true;
-      _currentUser = _authRepository.getCurrentUser();
-      if (_currentUser != null) {
-        debugPrint(
-          '[${DateTime.now()}] AuthProvider._init - Sesión existente detectada: ${_currentUser!.id}',
-        );
-        _checkAdditionalData(_currentUser!.id);
-        _saveDeviceToken(); // fire-and-forget: guarda el token FCM
-      }
+      _currentUser = existingUser;
+      debugPrint(
+        '[${DateTime.now()}] AuthProvider._init - Sesión existente detectada: ${_currentUser!.id}',
+      );
+      _checkAdditionalData(_currentUser!.id);
+      _saveDeviceToken(); // fire-and-forget: guarda el token FCM
     } else {
       // No session: no need to wait for data
       _isLoadingAdditionalData = false;
     }
 
-    Supabase.instance.client.auth.onAuthStateChange.listen((data) async {
+    _authRepository.onAuthStateChange.listen((data) async {
       final AuthChangeEvent event = data.event;
       final Session? session = data.session;
 

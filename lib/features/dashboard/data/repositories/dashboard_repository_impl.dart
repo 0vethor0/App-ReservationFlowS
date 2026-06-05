@@ -55,8 +55,20 @@ class DashboardRepositoryImpl implements DashboardRepository {
   }
 
   @override
-  Future<List<ReservationEntity>> loadMyReservations(String userId) async {
-    return [];
+  Future<List<ReservationEntity>> loadMyReservations(DateTime date) async {
+    final user = client.auth.currentUser;
+    if (user == null || user.email == null) return [];
+
+    final startOfDay = DateTime(date.year, date.month, date.day);
+    final endOfDay = startOfDay.add(const Duration(days: 1));
+
+    final data = await remoteDataSource.getMyReservations(
+      email: user.email!,
+      startDate: startOfDay.toUtc().toIso8601String(),
+      endDate: endOfDay.toUtc().toIso8601String(),
+    );
+
+    return data.map(_mapToReservationEntity).toList();
   }
 
   @override
@@ -79,29 +91,64 @@ class DashboardRepositoryImpl implements DashboardRepository {
     remoteDataSource.disposeProductRealtime();
   }
 
-  ReservationEntity _mapToReservationEntity(Map<String, dynamic> item) {
+  ReservationEntity _mapToReservationEntity(Map<String, dynamic> r) {
+    final productosData = r['productos'];
+    final perfilesData = r['perfiles'];
+
+    final p = productosData is Map<String, dynamic>
+        ? productosData
+        : <String, dynamic>{};
+    final u = perfilesData is Map<String, dynamic>
+        ? perfilesData
+        : <String, dynamic>{};
+
     return ReservationEntity(
-      id: item['id']?.toString() ?? 'unknown',
-      userId: item['usuario_id'] ?? '',
-      userName: item['usuario_nombre'] ?? '',
-      videobeamId: item['videobeam_id'] ?? '',
-      videobeamName: item['videobeam_nombre'] ?? '',
-      date: DateTime.parse(item['fecha']),
-      startTime: item['hora_inicio'] ?? '',
-      endTime: item['hora_fin'] ?? '',
-      status: _mapStatus(item['estado']),
+      id: r['id']?.toString() ?? 'unknown',
+      userId: u['id']?.toString() ?? 'unknown',
+      userName:
+          '${u['primer_nombre'] ?? 'Usuario'} ${u['primer_apellido'] ?? ''}',
+      videobeamId: p['id']?.toString() ?? 'unknown',
+      videobeamName: p['nombre'] as String? ?? 'Videobeam',
+      date: r['hora_inicio'] != null
+          ? DateTime.parse(r['hora_inicio'])
+          : DateTime.now(),
+      startTime: r['hora_inicio'] != null
+          ? "${DateTime.parse(r['hora_inicio']).toLocal().hour.toString().padLeft(2, '0')}:${DateTime.parse(r['hora_inicio']).toLocal().minute.toString().padLeft(2, '0')}"
+          : '00:00',
+      endTime: r['hora_fin'] != null
+          ? "${DateTime.parse(r['hora_fin']).toLocal().hour.toString().padLeft(2, '0')}:${DateTime.parse(r['hora_fin']).toLocal().minute.toString().padLeft(2, '0')}"
+          : '00:00',
+      status: _mapStatus(r['estado_reserva']),
+      department: u['especialidad'] as String? ?? u['carrera'] as String? ?? '',
+      priority: r['prioridad'] == 'alta'
+          ? RequestPriority.high
+          : RequestPriority.normal,
+      userAvatarUrl: u['foto_url'] as String?,
+      notes: r['notas'] as String?,
+      isRead: r['leido_por_admin'] as bool? ?? false,
+      createdAt: r['creado_en'] != null
+          ? DateTime.parse(r['creado_en']).toLocal()
+          : null,
     );
   }
 
   ReservationStatus _mapStatus(String? status) {
-    switch (status) {
-      case 'approved':
+    if (status == null) return ReservationStatus.pending;
+    switch (status.toLowerCase()) {
+      case 'aprobado':
+      case 'aprobada':
         return ReservationStatus.approved;
-      case 'rejected':
+      case 'rechazado':
+      case 'rechazada':
+      case 'desaprobado':
         return ReservationStatus.rejected;
-      case 'completed':
+      case 'en_curso':
+        return ReservationStatus.inProgress;
+      case 'completado':
+      case 'finalizada':
         return ReservationStatus.completed;
-      case 'cancelled':
+      case 'cancelado':
+      case 'cancelada':
         return ReservationStatus.cancelled;
       default:
         return ReservationStatus.pending;

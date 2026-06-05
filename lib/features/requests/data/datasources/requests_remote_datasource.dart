@@ -116,6 +116,14 @@ class RequestsRemoteDataSource {
         .eq('id', requestId);
   }
 
+  Future<void> markAllAsRead() async {
+    debugPrint('[RequestsDataSource] Marking all requests as read');
+    await client
+        .from('reservas')
+        .update({'leido_por_admin': true})
+        .eq('leido_por_admin', false);
+  }
+
   Stream<List<Map<String, dynamic>>> streamAllRequests() {
     debugPrint(
       '[RequestsDataSource] Setting up real-time stream for all requests',

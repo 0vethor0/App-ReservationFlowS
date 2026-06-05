@@ -63,6 +63,16 @@ class RequestsRepositoryImpl implements RequestsRepository {
     }
   }
 
+  @override
+  Future<bool> markAllAsRead() async {
+    try {
+      await remoteDataSource.markAllAsRead();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
   ReservationEntity _mapToReservationEntity(Map<String, dynamic> item) {
     final productosData = item['productos'];
     final perfilesData = item['perfiles'];

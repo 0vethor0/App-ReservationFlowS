@@ -5,7 +5,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../providers/reservation_provider.dart';
 import '../../../../features/reservations/domain/entities/time_slot.dart';
@@ -185,45 +184,19 @@ class _TimePickerSectionState extends State<TimePickerSection> {
     });
 
     try {
-      final supabase = Supabase.instance.client;
-
-      final dateStr =
-          '${widget.selectedDate.year}-${widget.selectedDate.month.toString().padLeft(2, '0')}-${widget.selectedDate.day.toString().padLeft(2, '0')}';
-
-      final response = await supabase
-          .from('reservas')
-          .select('hora_inicio, hora_fin')
-          .eq('id_producto', widget.videobeamId!)
-          .inFilter('estado_reserva', ['aprobada', 'en_curso'])
-          .like('hora_inicio', '$dateStr%');
-
-      if (response.isNotEmpty) {
-        for (final reservation in response) {
-          final existingStart = DateTime.parse(
-            reservation['hora_inicio'] as String,
+      final isAvailable = await context
+          .read<ReservationProvider>()
+          .checkAvailability(
+            widget.selectedDate,
+            widget.startTime!,
+            widget.endTime!,
           );
-          final existingEnd = DateTime.parse(reservation['hora_fin'] as String);
 
-          final startMinutes =
-              widget.startTime!.hour * 60 + widget.startTime!.minute;
-          final endMinutes = widget.endTime!.hour * 60 + widget.endTime!.minute;
-          final existingStartMinutes =
-              existingStart.hour * 60 + existingStart.minute;
-          final existingEndMinutes = existingEnd.hour * 60 + existingEnd.minute;
-
-          if ((startMinutes >= existingStartMinutes &&
-                  startMinutes < existingEndMinutes) ||
-              (endMinutes > existingStartMinutes &&
-                  endMinutes <= existingEndMinutes) ||
-              (startMinutes <= existingStartMinutes &&
-                  endMinutes >= existingEndMinutes)) {
-            setState(() {
-              _availabilityError =
-                  'No puedes elegir ese bloque de horas en este día, ya que otro usuario ya tiene una reservación';
-            });
-            return;
-          }
-        }
+      if (!isAvailable && mounted) {
+        setState(() {
+          _availabilityError =
+              'No puedes elegir ese bloque de horas en este día, ya que otro usuario ya tiene una reservación';
+        });
       }
     } catch (e) {
       debugPrint('[TimeSlotGrid] Error checking availability: $e');
