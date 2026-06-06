@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.1](https://github.com/0vethor0/App-ReservationFlowS/compare/v1.6.0...v1.6.1) (2026-06-06)
+
+
+### Bug Fixes
+
+* He añadido la opción --ignore-garbage en el archivo release.yml para que el servidor ignore cualquier espacio o salto de línea que se haya copiado por error. ([b46f597](https://github.com/0vethor0/App-ReservationFlowS/commit/b46f5970c6665ae51e9c942c95b046104ab12b6d))
+
 ## [1.6.0](https://github.com/0vethor0/App-ReservationFlowS/compare/v1.5.0...v1.6.0) (2026-06-05)
 
 
