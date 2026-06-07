@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.2](https://github.com/0vethor0/App-ReservationFlowS/compare/v1.6.1...v1.6.2) (2026-06-06)
+
+
+### Bug Fixes
+
+* error de compilacion del keystore ([8e235dd](https://github.com/0vethor0/App-ReservationFlowS/commit/8e235dd4b311ee86fc55c605d5c8c0d41305d297))
+
 ## [1.6.1](https://github.com/0vethor0/App-ReservationFlowS/compare/v1.6.0...v1.6.1) (2026-06-06)
 
 
