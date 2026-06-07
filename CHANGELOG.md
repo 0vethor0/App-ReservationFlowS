@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.7.0](https://github.com/0vethor0/App-ReservationFlowS/compare/v1.6.2...v1.7.0) (2026-06-07)
+
+
+### Features
+
+* implement OTA app update system with Supabase realtime and version check provider ([fd86813](https://github.com/0vethor0/App-ReservationFlowS/commit/fd86813d75ab613a22170ae106e242cdd65980e5))
+
+
+### Bug Fixes
+
+* He eliminado la importación no utilizada de path_provider en el archivo ([b6d195f](https://github.com/0vethor0/App-ReservationFlowS/commit/b6d195f0d3ebd91823c239b34d782574ca90e3ee))
+
 ## [1.6.2](https://github.com/0vethor0/App-ReservationFlowS/compare/v1.6.1...v1.6.2) (2026-06-06)
 
 

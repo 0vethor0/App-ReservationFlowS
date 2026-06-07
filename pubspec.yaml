@@ -1,7 +1,7 @@
 name: beam_reserve
 description: "BeamFlow - Gestión y reservación de proyectores"
 publish_to: 'none'
-version: 1.6.2+10503
+version: 1.7.0+10504
 
 environment:
   sdk: ^3.11.5
