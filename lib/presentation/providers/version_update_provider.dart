@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class VersionUpdateProvider extends ChangeNotifier {
@@ -69,16 +71,33 @@ class VersionUpdateProvider extends ChangeNotifier {
         );
   }
 
+  Future<int> _getAndroidSdk() async {
+    final androidInfo = await DeviceInfoPlugin().androidInfo;
+    return androidInfo.version.sdkInt;
+  }
+
   Future<void> descargarEInstalarApk(String url) async {
+    if (Platform.isAndroid) {
+      final sdk = await _getAndroidSdk();
+      if (sdk < 30) {
+        final status = await Permission.storage.request();
+        if (!status.isGranted) {
+          _estadoDescarga = 'Permiso de almacenamiento denegado';
+          _descargando = false;
+          notifyListeners();
+          return;
+        }
+      }
+    }
+
     _descargando = true;
     _progresoDescarga = 0.0;
     _estadoDescarga = 'Iniciando descarga...';
     notifyListeners();
 
     try {
-      // Ruta local donde guardar el APK
-      final dir = await getExternalStorageDirectory();
-      final filePath = '${dir!.path}/beamflow_update.apk';
+      // Usar la carpeta pública de Downloads
+      const filePath = '/storage/emulated/0/Download/beamflow_update.apk';
       final file = File(filePath);
       if (await file.exists()) await file.delete();
 
